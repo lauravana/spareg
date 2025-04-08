@@ -3,7 +3,6 @@
 \name{spar.cv}
 \alias{spar.cv}
 \alias{spareg.cv}
-\alias{spareg}
 \title{Sparse Projected Averaged Regression}
 \usage{
 spar.cv(
@@ -24,22 +23,19 @@ spar.cv(
   ...
 )
 
-spareg(
+spareg.cv(
   x,
   y,
   family = gaussian("identity"),
-  model = NULL,
+  model = spar_glmnet(),
   rp = NULL,
   screencoef = NULL,
-  xval = NULL,
-  yval = NULL,
+  nfolds = 10,
   nnu = 20,
   nus = NULL,
   nummods = c(20),
   measure = c("deviance", "mse", "mae", "class", "1-auc"),
   parallel = FALSE,
-  inds = NULL,
-  RPMs = NULL,
   seed = NULL,
   set.seed.iteration = FALSE,
   ...

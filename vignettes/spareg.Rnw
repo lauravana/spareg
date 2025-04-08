@@ -950,28 +950,28 @@ $\beta$ having validation measure within one standard deviation from the minimum
 
 The \code{plot} methods return objects of class \class{ggplot} \citep{ggplotR}.
 %
-\subsection{Parallelization}
-%
-The package supports parallelization in the estimation of the marginal
+% \subsection{Parallelization}
+% %
+% The package supports parallelization in the estimation of the
 % marginal models in the ensemble via package \pkg{foreach} \citep{pkg:foreach}.
-This is possible by setting the parameter \code{parallel = TRUE} in \code{spar()} or
-\code{spar.cv()},
-assuming that a parallel backend for \pkg{foreach} is registered
-using the \code{registerDoParallel()}
-function of package \pkg{doParallel} \citep{pkg:doParallel}.
-A minimal example with a correlation-based
-probabilistic screening and a Gaussian random projection matrix
-is provided below:
-<<parallel_example,message=FALSE>>=
-library(doParallel)
-cl <- makeCluster(2, type = "PSOCK")
-registerDoParallel(cl)
-spar_res_par <- spar(example_data$x, example_data$y,
-                     screencoef = screen_cor(),
-                     rp = rp_gaussian(),
-                     parallel = TRUE)
-stopCluster(cl)
-@
+% This is possible by setting the parameter \code{parallel = TRUE} in \code{spar()} or
+% \code{spar.cv()},
+% assuming that a parallel backend for \pkg{foreach} is registered
+% using the \code{registerDoParallel()}
+% function of package \pkg{doParallel} \citep{pkg:doParallel}.
+% A minimal example with a correlation-based
+% probabilistic screening and a Gaussian random projection matrix
+% is provided below:
+% <<parallel_example,message=FALSE>>=
+% library(doParallel)
+% cl <- makeCluster(2, type = "PSOCK")
+% registerDoParallel(cl)
+% spar_res_par <- spar(example_data$x, example_data$y,
+%                      screencoef = screen_cor(),
+%                      rp = rp_gaussian(),
+%                      parallel = TRUE)
+% stopCluster(cl)
+% @
 %
 \section{Extensibility} \label{sec-extensibility}
 
