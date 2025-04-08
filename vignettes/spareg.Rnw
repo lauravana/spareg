@@ -20,9 +20,9 @@
 %% - Separate authors by \And or \AND (in \author) or by comma (in \Plainauthor).
 %% - \AND starts a new line, \And does not.
 \author{Roman Parzer~\orcidlink{0000-0003-0893-3190}\\TU Wien
-   \And Laura Vana-Gür~\orcidlink{0000-0002-9613-7604}\\TU Wien
-   \And Peter Filzmoser~\orcidlink{0000-0002-8014-4682}\\TU Wien
-   }
+\And Laura Vana-Gür~\orcidlink{0000-0002-9613-7604}\\TU Wien
+\And Peter Filzmoser~\orcidlink{0000-0002-8014-4682}\\TU Wien
+}
 \Plainauthor{Roman Parzer, Laura Vana Gür, Peter Filzmoser}
 
 %% - \title{} in title case
@@ -34,19 +34,19 @@
 
 %% - \Abstract{} almost as usual
 \Abstract{
-  The \pkg{spareg} package for \proglang{R} builds ensembles of predictive
-  generalized linear models for high-dimensional data. It employs an algorithm
-  that combines variable screening and random projection techniques to address
-  the computational challenges of large predictor sets. This package makes
-  this modeling approach more accessible, as variants of the algorithm have
-  demonstrated competitive predictive performance compared to
-  state-of-the-art methods, while maintaining low computational costs.
+The \pkg{spareg} package for \proglang{R} builds ensembles of predictive
+generalized linear models for high-dimensional data. It employs an algorithm
+that combines variable screening and random projection techniques to address
+the computational challenges of large predictor sets. This package makes
+this modeling approach more accessible, as variants of the algorithm have
+demonstrated competitive predictive performance compared to
+state-of-the-art methods, while maintaining low computational costs.
 
-  Designed with extensibility in mind, \pkg{spareg} implements screening and
-  random projection techniques as \proglang{S}3 classes with user-friendly
-  constructor functions. This modular design allows users to seamlessly
-  integrate and develop new procedures, making the package a versatile tool
-  for high-dimensional applications.
+Designed with extensibility in mind, \pkg{spareg} implements screening and
+random projection techniques as \proglang{S}3 classes with user-friendly
+constructor functions. This modular design allows users to seamlessly
+integrate and develop new procedures, making the package a versatile tool
+for high-dimensional applications.
 }
 
 \Keywords{random projection, variable screening, ensemble learning, \proglang{R}}
@@ -438,18 +438,18 @@ sampled from $\{-3,-2,-1,1,2,3\}$.
 The two main functions for fitting the SPAR algorithm are:
 \begin{Code}
 spar(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
-  screencoef = NULL, xval = NULL, yval = NULL, nnu = 20, nus = NULL,
-  nummods = c(20), measure = c("deviance", "mse", "mae", "class", "1-auc"),
-  parallel = FALSE, inds = NULL, RPMs = NULL, ...)
+screencoef = NULL, xval = NULL, yval = NULL, nnu = 20, nus = NULL,
+nummods = c(20), measure = c("deviance", "mse", "mae", "class", "1-auc"),
+parallel = FALSE, inds = NULL, RPMs = NULL, ...)
 \end{Code}
 which implements the algorithm in Section~\ref{sec-algo} without
 cross-validation and returns an object of class \class{spar},
 and
 \begin{Code}
 spar.cv(x, y, family = gaussian("identity"), model = NULL,
-  rp = NULL, screencoef = NULL, nfolds = 10, nnu = 20, nus = NULL,
-  nummods = c(20), measure = c("deviance", "mse", "mae", "class", "1-auc"),
-  parallel = FALSE, ...)
+rp = NULL, screencoef = NULL, nfolds = 10, nnu = 20, nus = NULL,
+nummods = c(20), measure = c("deviance", "mse", "mae", "class", "1-auc"),
+parallel = FALSE, ...)
 \end{Code}
 which implements the cross-validated procedure and returns an object of
 class `\code{spar.cv}'.
@@ -515,9 +515,9 @@ of the provided matrices in \code{RPM}.
 \item  \code{RPM}  is an optional list of length \code{max(nummods)} which
 contains  projection matrices to be used in each marginal model.
 \end{itemize}
- Function \code{spar.cv()} has the specific argument \code{nfolds} which is the
- number of folds to be used for cross-validation. It relies on a lightweight
- version of \code{spar()}
+Function \code{spar.cv()} has the specific argument \code{nfolds} which is the
+number of folds to be used for cross-validation. It relies on a lightweight
+version of \code{spar()}
 as a workhorse, which is called for each fold. The random projections
 for each model are held fixed throughout the cross-validation  to reduce the
 computational burden.
@@ -584,7 +584,7 @@ screening coefficient. This function should have as following arguments:
 \code{x} -- the matrix of standardized predictors --  and \code{y} -- the
 vector of (standardized in the Gaussian case) responses, and the argument
 \code{object}, which is a \class{screencoef} object itself.
- It returns a vector of screening coefficients of length $p$.
+It returns a vector of screening coefficients of length $p$.
 %
 \item  \code{control}, which is the control list passed by the user in
 \code{screen_*}. These controls are arguments which are needed in
@@ -608,9 +608,9 @@ screening coefficient and the marginal models.
 %
 \item \code{type} character -- either \code{"prob"} (indicating that
 probabilistic screening
- should be employed)  or \code{"fixed"} (indicating that a fixed set of
- \code{nscreen} variables should be employed across the ensemble); defaults to
- \code{type = "prob"}.
+should be employed)  or \code{"fixed"} (indicating that a fixed set of
+\code{nscreen} variables should be employed across the ensemble); defaults to
+\code{type = "prob"}.
 %
 \item \code{reuse_in_rp} logical -- indicates whether the screening
 coefficient should be reused at a later stage in the construction of the random
@@ -687,8 +687,8 @@ through the \code{...} argument and defaults to  \code{psi = 1}.
 %
 \item \code{rp_cw()} -- sparse embedding random projection in
 \cite{Clarkson2013LowRankApprox}. If specified as \code{rp_cw(data = TRUE)},
- the random elements on the diagonal are replaced by the ridge coefficients
- with a small penalty, as introduced in \cite{parzer2024glms}.
+the random elements on the diagonal are replaced by the ridge coefficients
+with a small penalty, as introduced in \cite{parzer2024glms}.
 \end{itemize}
 %
 The \code{rp_*()} functions return an object of class \class{randomprojection}
@@ -713,25 +713,25 @@ For the case where the random projection should incorporate some information
 related to the data, two more elements can be potentially relevant.
 \begin{itemize}
 \item Function \code{update_fun()} updates the \class{randomprojection}
- object with relevant information from the arguments of the \code{spar()}
- function call. If it is not provided, it defaults to updating the
- \class{randomprojection} object with a further attribute
- \code{family_string} which is character version of the \code{family} argument
- (e.g., in the default case it will be \code{"gaussian(identity)"}).
+object with relevant information from the arguments of the \code{spar()}
+function call. If it is not provided, it defaults to updating the
+\class{randomprojection} object with a further attribute
+\code{family_string} which is character version of the \code{family} argument
+(e.g., in the default case it will be \code{"gaussian(identity)"}).
 In certain constructions, such as the one
- in \cite{parzer2024glms}, certain data dependent quantities (in the case of
- \cite{parzer2024glms} these would be the ridge coefficients estimated on the
- whole data set) need to be computed only once and not every time
- a random projection is generated. Function \code{update_fun()} can also be
- employed to add data information as attributes of  the \class{randomprojection}
- object to be subsequently used in the \code{generate_fun()} function.
- If specified by the user, this function should take as argument only \code{...}.
- Internally in the \code{spar()} function, all
- arguments of \code{spar()} are passed to this function. It should return a \class{randomprojection} object.
+in \cite{parzer2024glms}, certain data dependent quantities (in the case of
+\cite{parzer2024glms} these would be the ridge coefficients estimated on the
+whole data set) need to be computed only once and not every time
+a random projection is generated. Function \code{update_fun()} can also be
+employed to add data information as attributes of  the \class{randomprojection}
+object to be subsequently used in the \code{generate_fun()} function.
+If specified by the user, this function should take as argument only \code{...}.
+Internally in the \code{spar()} function, all
+arguments of \code{spar()} are passed to this function. It should return a \class{randomprojection} object.
 %
 \item In the case where a list of predefined \code{RPMs} is provided in \code{spar()},
- for the data driven random projections we allow the user to
- specify whether some parts of the given \code{RPMs} should be updated with
+for the data driven random projections we allow the user to
+specify whether some parts of the given \code{RPMs} should be updated with
 the provided data. This is possible through another optional function
 \code{update_rpm_w_data()}.
 This is particularly relevant for the cross-validation procedure,
@@ -1015,10 +1015,10 @@ set $\psi=1/\sqrt{p}$, as proposed by \cite{LiHastie2006VerySparseRP}.
 <<screen_sirs>>=
 set.seed(123)
 spar_example <- spar(example_data$x, example_data$y,
-    screencoef = screen_sirs(type = "fixed",
-                             control=list(method = "SIRS")),
-    rp = rp_sparse(psi = 1/ncol(example_data$x)),
-    measure = "mse")
+                     screencoef = screen_sirs(type = "fixed",
+                                              control=list(method = "SIRS")),
+                     rp = rp_sparse(psi = 1/ncol(example_data$x)),
+                     measure = "mse")
 spar_example
 @
 %
@@ -1075,20 +1075,20 @@ update_rp_cannings <- function(...) {
     args$rp$control$family_string <- family_string
     family <- args$family
     fit_family <- switch(family$family,
-      "gaussian" = if (family$link == "identity") "gaussian" else family,
-      "binomial" = if (family$link == "logit") "binomial" else family,
-      "poisson"  = if (family$link == "log") "poisson" else family,
-       family
+                         "gaussian" = if (family$link == "identity") "gaussian" else family,
+                         "binomial" = if (family$link == "logit") "binomial" else family,
+                         "poisson"  = if (family$link == "log") "poisson" else family,
+                         family
     )
     args$rp$control$fit_family <- fit_family
   }
   if (is.null(args$rp$control$alpha)) args$rp$control$alpha <- 1
   if (is.null(args$rp$control$B2))  args$rp$control$B2 <- 50
   if (is.null(args$rp$control$xi)) {
-      args$rp$control$xi <- 0.25
+    args$rp$control$xi <- 0.25
   } else {
     stopifnot("xi must be between 0 and 1."=
-      args$rp$control$xi >= 0 &  args$rp$control$xi<= 1)
+                args$rp$control$xi >= 0 &  args$rp$control$xi<= 1)
   }
   args$rp
 }
@@ -1183,11 +1183,11 @@ if (file.exists(file)) {
 <<eval=FALSE>>=
 set.seed(12345)
 spar_example_1 <- spar(x = example_data$x, y = ystar,
-    family = binomial(),
-    rp = rp_cannings(control = list(lambda.min.ratio = 0.01)),
-    nus = 0, nummods = 50,
-    xval = example_data$xtest, yval = ystarval,
-    measure = "class")
+                       family = binomial(),
+                       rp = rp_cannings(control = list(lambda.min.ratio = 0.01)),
+                       nus = 0, nummods = 50,
+                       xval = example_data$xtest, yval = ystarval,
+                       measure = "class")
 @
 Using the data-driven \code{rp_cw()}:
 <<eval=FALSE>>=
@@ -1221,13 +1221,13 @@ model_glmrob <- function(y, z, object) {
   requireNamespace("robustbase")
   fam <- object$control$family
   if (fam$family == "gaussian" & fam$link == "identity") {
-     glmrob_res <- do.call(function(...)
-       robustbase::lmrob(y ~ as.matrix(z), ...),
-       object$control)
+    glmrob_res <- do.call(function(...)
+      robustbase::lmrob(y ~ as.matrix(z), ...),
+      object$control)
   } else {
-     glmrob_res <- do.call(function(...)
-       robustbase::glmrob(y ~ as.matrix(z), ...),
-       object$control)
+    glmrob_res <- do.call(function(...)
+      robustbase::glmrob(y ~ as.matrix(z), ...),
+      object$control)
   }
   intercept <- coef(glmrob_res)[1]
   gammas <- coef(glmrob_res)[-1]
@@ -1271,9 +1271,9 @@ spar_rob_res <- spar(x, ystar, family = binomial(),
                      measure = "mae")
 set.seed(1234)
 spar_res <- spar(x, ystar, family = binomial(),
-    model = spar_glm(),
-    rp = rp_gaussian(msup = 25),
-    measure="mae")
+                 model = spar_glm(),
+                 rp = rp_gaussian(msup = 25),
+                 measure="mae")
 @
 %
 <<>>=
@@ -1293,26 +1293,79 @@ containing $n = 698$
 black and white face images of size $p = 64 \times 64 = 4096$ together
 with the
 faces' horizontal looking direction angle as the response
-variable. The data set is publicly available for download:
-<<eval=FALSE>>=
+variable. The data set is publicly available for download
+at \url{https://web.archive.org/web/20150922051706/http://isomap.stanford.edu/face_data.mat.Z}.
+<<eval=FALSE,echo=FALSE>>=
 url1 <- "https://web.archive.org/web/20150922051706/"
 url2 <- "http://isomap.stanford.edu/face_data.mat.Z"
-download.file(paste0(url1, url2),
-              file.path("face_data.mat.Z"))
-system('uncompress face_data.mat.Z')
+download.file(paste0(url1, url2), "face_data.mat.Z")
+@
+<<echo=FALSE>>=
+uncompress_linux <- function(filename) {
+  system(sprintf('uncompress %s',filename))
+}
+
+# tries to find 7 zip exe
+ExecutableFileName7Zip <- function(){
+  executableName <- "C:\\Program Files\\7-Zip\\7z.exe"
+  if(file.exists(executableName)){
+    return(executableName)
+  }
+  #other executable file names and ideas go here ...
+  stop("failed to find 7zip")
+}
+
+# simple function to extract 7zip file
+# need to have 7zip installed
+Decompress7Zip <- function(zipFileName, outputDirectory, delete){
+  executableName <- ExecutableFileName7Zip()
+  arguments <- paste(sep="",
+                     "e ",
+                     "\"", zipFileName, "\" ",
+                     "\"-o", outputDirectory, "\" ",
+                     "")
+
+  print(arguments)
+  RunProcess(executableName, arguments)
+  if(delete){
+    unlink(zipFileName);
+  }
+}
+get_os <- function(){
+  sysinf <- Sys.info()
+  if (!is.null(sysinf)){
+    os <- sysinf['sysname']
+    if (os == 'Darwin')
+      os <- "osx"
+  } else { ## mystery machine
+    os <- .Platform$OS.type
+    if (grepl("^darwin", R.version$os))
+      os <- "osx"
+    if (grepl("linux-gnu", R.version$os))
+      os <- "linux"
+  }
+  tolower(os)
+}
 @
 <<echo=FALSE>>=
 if (!file.exists("face_data.mat")) {
+  os <- get_os()
   url <- "https://web.archive.org/web/20150922051706/http://isomap.stanford.edu/face_data.mat.Z"
+  download.file(url, "face_data.mat.Z")
+  if(os == "windows"){
+    Decompress7Zip(zipFileName =  "face_data.mat.Z", outputDirectory=getwd(), TRUE)
+  } else {
+    uncompress_linux(filename =  "face_data.mat.Z")
+  }
+  # system('uncompress face_data.mat.Z')
   library("R.matlab")
   download.file(url, file.path("face_data.mat.Z"))
   system(sprintf('uncompress %s', paste0("face_data.mat.Z")))
 }
 @
 %
-The \code{.mat} file format can be read using \pkg{R.matlab}
-\citep{pkg:rmatlab}:
-%
+After downloading and uncompressing the \code{.mat} file, we import it in \proglang{R}
+using package \pkg{R.matlab} \citep{pkg:rmatlab}:
 <<>>=
 library("R.matlab")
 facedata <- readMat("face_data.mat")
