@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+inst/.DS_Store
+man/.DS_Store
+tests/.DS_Store
+vignettes/.DS_Store
+vignettes/Figures/.DS_Store
+vignettes/*.rda
