@@ -970,7 +970,7 @@ spar_res_par <- spar(example_data$x, example_data$y,
                      screencoef = screen_cor(),
                      rp = rp_gaussian(),
                      parallel = TRUE)
-stopCluster()
+stopCluster(cl)
 @
 %
 \section{Extensibility} \label{sec-extensibility}
