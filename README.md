@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CRAN Status](https://www.r-pkg.org/badges/version/spareg)](https://CRAN.R-project.org/package=spareg)
-[![R-CMD-check](https://github.com/lauravana/spareg/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/lauravana/spareg/actions)
+[![R-CMD-check](https://github.com/lauravana/spareg/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/lauravana/spareg/actions/workflows/R-CMD-check.yaml)
 
 ---
 
