@@ -123,7 +123,13 @@ pred <- predict(spar_res, example_data$x)
 plot(spar_res)
 plot(spar_res, "Val_Meas", "nummod")
 plot(spar_res, "Val_numAct", "nu")
-plot(spar_res, "coefs", prange = c(1, 400))}
+plot(spar_res, "coefs", prange = c(1, 400))
+}
+\dontrun{
+spar_res <- spareg.cv(example_data$x, example_data$y,
+  nummods=c(5, 10, 15, 20, 25, 30))
+spar_res
+}
 }
 \seealso{
 \link{spar},\link{coef.spar.cv},\link{predict.spar.cv},\link{plot.spar.cv},\link{print.spar.cv}

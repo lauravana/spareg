@@ -4,7 +4,6 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CRAN Status](https://www.r-pkg.org/badges/version/spareg)](https://CRAN.R-project.org/package=spareg)
-[![R-CMD-check](https://github.com/lauravana/spareg/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/lauravana/spareg/actions/workflows/R-CMD-check.yaml)
 
 ---
 
@@ -24,7 +23,7 @@ You can install the development version of `spareg` from GitHub:
 
 ```r
 # install.packages("devtools")
-devtools::install_github("laura/spareg")
+devtools::install_github("lauravana/spareg")
 ```
 
 The CRAN version can be installed with 

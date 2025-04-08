@@ -103,7 +103,8 @@
 #' plot(spar_res)
 #' plot(spar_res, "Val_Meas", "nummod")
 #' plot(spar_res, "Val_numAct", "nu")
-#' plot(spar_res, "coefs", prange = c(1,400))}
+#' plot(spar_res, "coefs", prange = c(1,400))
+#' }
 #' @seealso [spar.cv],[coef.spar],[predict.spar],[plot.spar],[print.spar]
 #' @aliases spareg
 #' @export
@@ -155,6 +156,7 @@ spar <- function(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
 #' spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
 #'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
 #' spar_res
+#' }
 #' @aliases spar
 #' @export
 spareg <- spar
