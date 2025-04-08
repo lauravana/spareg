@@ -1301,62 +1301,12 @@ url2 <- "http://isomap.stanford.edu/face_data.mat.Z"
 download.file(paste0(url1, url2), "face_data.mat.Z")
 @
 <<echo=FALSE>>=
-uncompress_linux <- function(filename) {
-  system(sprintf('uncompress %s',filename))
-}
-
-# tries to find 7 zip exe
-ExecutableFileName7Zip <- function(){
-  executableName <- "C:\\Program Files\\7-Zip\\7z.exe"
-  if(file.exists(executableName)){
-    return(executableName)
-  }
-  #other executable file names and ideas go here ...
-  stop("failed to find 7zip")
-}
-
-# simple function to extract 7zip file
-# need to have 7zip installed
-Decompress7Zip <- function(zipFileName, outputDirectory, delete){
-  executableName <- ExecutableFileName7Zip()
-  arguments <- paste(sep="",
-                     "e ",
-                     "\"", zipFileName, "\" ",
-                     "\"-o", outputDirectory, "\" ",
-                     "")
-
-  print(arguments)
-  RunProcess(executableName, arguments)
-  if(delete){
-    unlink(zipFileName);
-  }
-}
-get_os <- function(){
-  sysinf <- Sys.info()
-  if (!is.null(sysinf)){
-    os <- sysinf['sysname']
-    if (os == 'Darwin')
-      os <- "osx"
-  } else { ## mystery machine
-    os <- .Platform$OS.type
-    if (grepl("^darwin", R.version$os))
-      os <- "osx"
-    if (grepl("linux-gnu", R.version$os))
-      os <- "linux"
-  }
-  tolower(os)
+if (!file.exists("face_data.mat")) {
+  unzip("data.zip")
 }
 @
 <<echo=FALSE>>=
 if (!file.exists("face_data.mat")) {
-  os <- get_os()
-  url <- "https://web.archive.org/web/20150922051706/http://isomap.stanford.edu/face_data.mat.Z"
-  download.file(url, "face_data.mat.Z")
-  if(os == "windows"){
-    Decompress7Zip(zipFileName =  "face_data.mat.Z", outputDirectory=getwd(), TRUE)
-  } else {
-    uncompress_linux(filename =  "face_data.mat.Z")
-  }
   # system('uncompress face_data.mat.Z')
   library("R.matlab")
   download.file(url, file.path("face_data.mat.Z"))
@@ -1563,14 +1513,15 @@ ggsave(filename = "Figures/faces_plot_predictions.pdf", plot4,
 \subsection{Darwin data set}
 %
 The Darwin data set \citep{CILIA2022darwin} contains a binary response for Alzheimer's disease (AD) together with extracted features from 25 handwriting tests (18 features per task) for 89 AD patients and 85 healthy people ($n=174$).\footnote{The data set can be downloaded from  https://archive.ics.uci.edu/dataset/732/darwin}
-<<readdarwin, eval=FALSE>>=
-download.file("https://archive.ics.uci.edu/static/public/732/darwin.zip",
-              "darwin.zip")
+<<readdarwin, eval=FALSE, echo=FALSE>>=
+# download.file("https://archive.ics.uci.edu/static/public/732/darwin.zip",
+#              "darwin.zip")
 @
 <<readdarwinreal, echo=FALSE>>=
-if (!file.exists("data.csv")) {
-  download.file("https://archive.ics.uci.edu/static/public/732/darwin.zip",
-                "darwin.zip")
+if (!file.exists("darwin.zip")) {
+  #download.file("https://archive.ics.uci.edu/static/public/732/darwin.zip",
+  #              "darwin.zip")
+  unzip("data.zip")
 }
 @
 <<readdarwinzip>>=
