@@ -161,7 +161,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
 #' }
 #' @aliases spar.cv
 #' @export
-spareg <- spar
+spareg.cv <- spar.cv
 
 #' coef.spar.cv
 #'
