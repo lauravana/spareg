@@ -105,7 +105,9 @@
 #' plot(spar_res, "Val_numAct", "nu")
 #' plot(spar_res, "coefs", prange = c(1,400))}
 #' @seealso [spar.cv],[coef.spar],[predict.spar],[plot.spar],[print.spar]
+#' @aliases spareg
 #' @export
+#'
 #' @importFrom stats reshape glm.fit coef fitted gaussian predict rnorm quantile
 #'  residuals sd var cor glm
 #' @importFrom Matrix Matrix solve crossprod tcrossprod rowMeans
@@ -115,6 +117,7 @@
 #' @importFrom ROCR prediction performance
 # #' @importFrom foreach foreach getDoParName getDoParWorkers getDoParRegistered %do% %dopar%
 #' @importFrom methods as
+#'
 spar <- function(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
                  screencoef = NULL, xval = NULL, yval = NULL, nnu = 20, nus = NULL,
                  nummods = c(20), measure = c("deviance","mse","mae","class","1-auc"),
@@ -145,6 +148,17 @@ spar <- function(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
   return(res)
 
 }
+
+#' @rdname spar
+#' @examples
+#' \dontrun{
+#' spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
+#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#' spar_res
+#' @aliases spar
+#' @export
+spareg <- spar
+
 
 spar_algorithm <- function(x, y,
                            family, model, rp, screencoef,
@@ -435,6 +449,8 @@ spar_algorithm <- function(x, y,
 
   return(res)
 }
+
+
 #' coef.spar
 #'
 #' Extract coefficients from spar object

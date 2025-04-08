@@ -2,6 +2,8 @@
 % Please edit documentation in R/sparegcv.R
 \name{spar.cv}
 \alias{spar.cv}
+\alias{spareg.cv}
+\alias{spareg}
 \title{Sparse Projected Averaged Regression}
 \usage{
 spar.cv(
@@ -17,6 +19,27 @@ spar.cv(
   nummods = c(20),
   measure = c("deviance", "mse", "mae", "class", "1-auc"),
   parallel = FALSE,
+  seed = NULL,
+  set.seed.iteration = FALSE,
+  ...
+)
+
+spareg(
+  x,
+  y,
+  family = gaussian("identity"),
+  model = NULL,
+  rp = NULL,
+  screencoef = NULL,
+  xval = NULL,
+  yval = NULL,
+  nnu = 20,
+  nus = NULL,
+  nummods = c(20),
+  measure = c("deviance", "mse", "mae", "class", "1-auc"),
+  parallel = FALSE,
+  inds = NULL,
+  RPMs = NULL,
   seed = NULL,
   set.seed.iteration = FALSE,
   ...

@@ -61,6 +61,7 @@
 #' plot(spar_res, "Val_numAct", "nu")
 #' plot(spar_res, "coefs", prange = c(1, 400))}
 #' @seealso [spar],[coef.spar.cv],[predict.spar.cv],[plot.spar.cv],[print.spar.cv]
+#' @aliases spareg.cv
 #' @export
 spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
   rp = NULL, screencoef = NULL, nfolds = 10, nnu = 20, nus = NULL,
@@ -149,6 +150,16 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
   attr(res,"class") <- "spar.cv"
   return(res)
 }
+
+#' @rdname spar.cv
+#' @examples
+#' \dontrun{
+#' spar_res <- spareg.cv(example_data$x, example_data$y,
+#'   nummods=c(5, 10, 15, 20, 25, 30))
+#' spar_res
+#' @aliases spar.cv
+#' @export
+spareg <- spar
 
 #' coef.spar.cv
 #'
