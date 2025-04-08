@@ -964,13 +964,13 @@ probabilistic screening and a Gaussian random projection matrix
 is provided below:
 <<parallel_example,message=FALSE>>=
 library(doParallel)
-cl <- makeCluster(2, type = "FORK")
+cl <- makeCluster(2, type = "PSOCK")
 registerDoParallel(cl)
 spar_res_par <- spar(example_data$x, example_data$y,
                      screencoef = screen_cor(),
                      rp = rp_gaussian(),
                      parallel = TRUE)
-stopImplicitCluster()
+stopCluster()
 @
 %
 \section{Extensibility} \label{sec-extensibility}
