@@ -13,7 +13,6 @@
 - Modular S3 architecture for screening and projection techniques
 - Competitive predictive performance with **low computational cost**
 - Extensible framework for custom screening and projection methods
-- Simple, user-friendly API for rapid experimentation
 
 ---
 
