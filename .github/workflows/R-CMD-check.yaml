@@ -30,8 +30,6 @@ jobs:
       R_KEEP_PKG_SOURCE: yes
 
     steps:
-      - uses: r-lib/actions/setup-tinytex@master
-    
       - uses: actions/checkout@v4
 
       - uses: r-lib/actions/setup-pandoc@v2
@@ -51,3 +49,5 @@ jobs:
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+
+      - uses: r-lib/actions/setup-tinytex@v2
