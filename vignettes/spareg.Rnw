@@ -447,9 +447,9 @@ cross-validation and returns an object of class \class{spar},
 and
 \begin{Code}
 spar.cv(x, y, family = gaussian("identity"), model = NULL,
-rp = NULL, screencoef = NULL, nfolds = 10, nnu = 20, nus = NULL,
-nummods = c(20), measure = c("deviance", "mse", "mae", "class", "1-auc"),
-parallel = FALSE, ...)
+  rp = NULL, screencoef = NULL, nfolds = 10, nnu = 20, nus = NULL,
+  nummods = c(20), measure = c("deviance", "mse", "mae", "class", "1-auc"),
+  parallel = FALSE, ...)
 \end{Code}
 which implements the cross-validated procedure and returns an object of
 class `\code{spar.cv}'.
@@ -1142,10 +1142,12 @@ rp_cannings <- constructor_randomprojection(
 %
 We can now estimate SPAR for a binomial model,
 where we transform the response to a binary
-variable.
+variable. We simulate again data from a linear
+model and then transform the response to a binary scale:
 <<>>=
-ystar <- (example_data$y > 0) + 0
-ystarval <- (example_data$ytest > 0) + 0
+example_data2 <- simulate_spareg_data(n = 100, p = 1000, ntest = 100)
+ystar <- (example_data2$y > 0) + 0
+ystarval <- (example_data2$ytest > 0) + 0
 @
 We use $50$ models  \citep[which is in line to recommendations
 in][]{cannings2017random}, and no screening procedure.
@@ -1158,8 +1160,8 @@ if (file.exists(file)) {
   set.seed(12345)
   Sys.time()
   spar_example_1 <- spar(
-    x = example_data$x, y = ystar,
-    xval = example_data$xtest, yval = ystarval,
+    x = example_data2$x, y = ystar,
+    xval = example_data2$xtest, yval = ystarval,
     family = binomial(),
     nus = 0,
     nummods = 50,
@@ -1169,8 +1171,8 @@ if (file.exists(file)) {
   Sys.time()
   set.seed(12345)
   spar_example_2 <- spar(
-    x = example_data$x, y = ystar,
-    xval = example_data$xtest, yval = ystarval,
+    x = example_data2$x, y = ystar,
+    xval = example_data2$xtest, yval = ystarval,
     family = binomial(),
     rp = rp_cw(data = TRUE),
     nus = 0, nummods = 50,
@@ -1182,21 +1184,21 @@ if (file.exists(file)) {
 @
 <<eval=FALSE>>=
 set.seed(12345)
-spar_example_1 <- spar(x = example_data$x, y = ystar,
+spar_example_1 <- spar(x = example_data2$x, y = ystar,
                        family = binomial(),
                        rp = rp_cannings(control = list(lambda.min.ratio = 0.01)),
                        nus = 0, nummods = 50,
-                       xval = example_data$xtest, yval = ystarval,
+                       xval = example_data2$xtest, yval = ystarval,
                        measure = "class")
 @
 Using the data-driven \code{rp_cw()}:
 <<eval=FALSE>>=
 set.seed(12345)
-spar_example_2 <- spar(x = example_data$x, y = ystar,
+spar_example_2 <- spar(x = example_data2$x, y = ystar,
                        family = binomial(),
                        rp = rp_cw(data = TRUE),
                        nus = 0, nummods = 50,
-                       xval = example_data$xtest, yval = ystarval,
+                       xval = example_data2$xtest, yval = ystarval,
                        measure = "class"
 )
 @
@@ -1249,11 +1251,11 @@ contaminate $25$\% of the \code{example\_data} with outliers in the predictors
 and consider a binary version of the response variable \code{y}.
 <<contaminate_x_y>>=
 perc_cont <- 0.25
-x <- example_data$x;
+x <- example_data2$x;
 set.seed(123)
 np <- ncol(x) * nrow(x)
 id_outliers_x <- sample(seq_len(np), perc_cont * np)
-x[id_outliers_x] <- x[id_outliers_x] + 20
+x[id_outliers_x] <- x[id_outliers_x] + 50
 @
 We can now estimate the SPAR algorithm with robust GLMs
 as marginal models and compare
@@ -1514,8 +1516,8 @@ ggsave(filename = "Figures/faces_plot_predictions.pdf", plot4,
 %
 The Darwin data set \citep{CILIA2022darwin} contains a binary response for Alzheimer's disease (AD) together with extracted features from 25 handwriting tests (18 features per task) for 89 AD patients and 85 healthy people ($n=174$).\footnote{The data set can be downloaded from  https://archive.ics.uci.edu/dataset/732/darwin}
 <<readdarwin, eval=FALSE, echo=FALSE>>=
-# download.file("https://archive.ics.uci.edu/static/public/732/darwin.zip",
-#              "darwin.zip")
+download.file("https://archive.ics.uci.edu/static/public/732/darwin.zip",
+              "darwin.zip")
 @
 <<readdarwinreal, echo=FALSE>>=
 if (!file.exists("darwin.zip")) {
