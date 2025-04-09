@@ -44,11 +44,13 @@ jobs:
         with:
           extra-packages: any::rcmdcheck
           needs: check
-          
-      - uses: r-lib/actions/setup-tinytex@v2
 
-      - uses: r-lib/actions/check-r-package@v2
-        with:
-          upload-snapshots: true
-          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+      - name: Install dependencies
+        run:  remotes::install_cran("rcmdcheck")
+
+      - name: Check
+        env:
+          _R_CHECK_CRAN_INCOMING_: false
+        run: rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran", "--ignore-vignettes"), build_args = c("--no-build-vignettes"), error_on = "warning")
+        shell: Rscript {0}
 

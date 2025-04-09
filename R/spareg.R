@@ -347,11 +347,6 @@ spar_algorithm <- function(x, y,
               getDoParWorkers(), ' workers')
       `%d%` <- `%dopar%`
     }
-
-    # Parallel computation example
-    result <- foreach(i = 1:10, .combine = c) %dopar% {
-      i^2
-    }
     if (!getDoParRegistered()) {
       message('Warning: No doPar backend. Executing SPAR algorithm sequentially.
                For using parallelization, please register backend and rerun.')
