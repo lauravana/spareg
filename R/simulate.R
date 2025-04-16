@@ -10,7 +10,7 @@
 #' @param snr Numeric. Signal-to-noise ratio. Default is 10.
 #' @param rho Numeric between 0 and 1. Correlation coefficient among predictors. Default is 0.5.
 #' @param mu Numeric. Intercept term (mean of response). Default is 1.
-#' @param seed Integer. Random seed for reproducibility. Default is 1234.
+#' @param seed Integer. Random seed for reproducibility. Default is NULL.
 #'
 #' @return A list with the following components:
 #' \describe{
@@ -30,9 +30,9 @@
 #' @export
 simulate_spareg_data <- function(n, p, ntest, a = min(100, p/4),
                                  snr = 10, rho = 0.5, mu = 1,
-                                 seed = 1234) {
+                                 seed = NULL) {
   beta <- numeric(p)
-  set.seed(seed)
+  if (!is.null(seed)) set.seed(seed)
   beta[1:a] <- sample(c(-3:3)[-4],a,replace = TRUE)
   x <- sqrt(rho)* matrix(rep(rnorm((n+ntest),0,1),p),
                         n+ntest,p) +

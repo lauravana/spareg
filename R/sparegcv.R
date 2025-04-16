@@ -23,10 +23,12 @@
 #'         \code{"class"} (misclassification error) and
 #'         \code{"1-auc"} (one minus area under the ROC curve) both just for
 #'         binomial family.
-#' @param parallel assuming a parallel backend is loaded and available, a logical indicating whether the function should use it. Defaults to FALSE.
+#' @param parallel assuming a parallel backend is loaded and available, a
+#'        logical indicating whether the function should use it in parallelizing the
+#'        estimation of the marginal models. Defaults to FALSE.
 #' @param seed integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.
 #' @param set.seed.iteration a boolean indicating whether a different seed should be set in each marginal model \code{i}.
-#'   This will be set to  \code{seed + i}.
+#'        This will be set to  \code{seed + i}.
 #' @param ... further arguments mainly to ensure back-compatibility
 #' @returns object of class \code{"spar.cv"} with elements
 #' \itemize{

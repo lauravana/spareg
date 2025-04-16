@@ -38,7 +38,9 @@
 #'         \code{"class"} (misclassification error) and
 #'         \code{"1-auc"} (one minus area under the ROC curve) both just for
 #'         binomial family.
-#' @param parallel assuming a parallel backend is loaded and available, a logical indicating whether the function should use it. Defaults to FALSE.
+#' @param parallel assuming a parallel backend is loaded and available, a
+#'        logical indicating whether the function should use it in parallelizing the
+#'        estimation of the marginal models. Defaults to FALSE.
 # #' @param type.rpm  type of random projection matrix to be employed;
 # #'        one of \code{"cwdatadriven"},
 # #'        \code{"cw"} \insertCite{Clarkson2013LowRankApprox}{spareg},
@@ -712,7 +714,7 @@ plot.spar <- function(x,
     tmp_df <- reshape(tmp_mat, idvar = "predictor",
                       varying = seq_len(nummod),
                       v.names = "value",
-                      timevar = "marginal model",
+                      timevar = "Index of marginal model",
                       direction = "long")
 
     tmp_df$`marginal model` <- as.numeric(tmp_df$`marginal model`)

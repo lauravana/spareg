@@ -12,7 +12,7 @@ simulate_spareg_data(
   snr = 10,
   rho = 0.5,
   mu = 1,
-  seed = 1234
+  seed = NULL
 )
 }
 \arguments{
@@ -30,7 +30,7 @@ simulate_spareg_data(
 
 \item{mu}{Numeric. Intercept term (mean of response). Default is 1.}
 
-\item{seed}{Integer. Random seed for reproducibility. Default is 1234.}
+\item{seed}{Integer. Random seed for reproducibility. Default is NULL.}
 }
 \value{
 A list with the following components:

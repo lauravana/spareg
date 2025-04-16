@@ -34,6 +34,8 @@ RdMacros: Rdpack
 Encoding: UTF-8
 RoxygenNote: 7.3.2
 Roxygen: list(markdown = TRUE)
+URL: https://github.com/lauravana/spareg
+BugReports: https://github.com/lauravana/spareg/issues
 Suggests: 
     testthat (>= 3.0.0),
     foreach,
@@ -43,4 +45,4 @@ Suggests:
     VariableScreening,
     R.matlab
 Config/testthat/edition: 3
-Depends: R (>= 3.5.0) 
+Depends: R (>= 4.0.0) 

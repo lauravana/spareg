@@ -1,4 +1,4 @@
-example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100, seed = 1234)
 
 test_that("Results has right class", {
   x <- data.frame(matrix(rnorm(300), ncol = 30))

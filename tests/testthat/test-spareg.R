@@ -23,7 +23,7 @@ test_that("Coef is more sparse for higher threshold", {
   expect_equal(all(which(sparcoef$beta==0) %in% which(sparcoef2$beta==0)),TRUE)
 })
 
-example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100, seed = 1234)
 
 test_that("Returned coef and preds are correct for fixed screening and projections", {
   x <- example_data$x

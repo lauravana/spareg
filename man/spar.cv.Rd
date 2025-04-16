@@ -74,7 +74,9 @@ available for all families. Other options are \code{"mse"} or \code{"mae"}
 \code{"1-auc"} (one minus area under the ROC curve) both just for
 binomial family.}
 
-\item{parallel}{assuming a parallel backend is loaded and available, a logical indicating whether the function should use it. Defaults to FALSE.}
+\item{parallel}{assuming a parallel backend is loaded and available, a
+logical indicating whether the function should use it in parallelizing the
+estimation of the marginal models. Defaults to FALSE.}
 
 \item{seed}{integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.}
 

@@ -19,8 +19,9 @@
 %% - \Plainauthor{} without affiliations
 %% - Separate authors by \And or \AND (in \author) or by comma (in \Plainauthor).
 %% - \AND starts a new line, \And does not.
-\author{Roman Parzer~\orcidlink{0000-0003-0893-3190}\\TU Wien
-\And Laura Vana-Gür~\orcidlink{0000-0002-9613-7604}\\TU Wien
+\author{
+Laura Vana-Gür~\orcidlink{0000-0002-9613-7604}\\TU Wien
+\And Roman Parzer~\orcidlink{0000-0003-0893-3190}\\TU Wien
 \And Peter Filzmoser~\orcidlink{0000-0002-8014-4682}\\TU Wien
 }
 \Plainauthor{Roman Parzer, Laura Vana Gür, Peter Filzmoser}
@@ -67,8 +68,17 @@ E-mail: \email{laura.vana.guer@tuwien.ac.at}
 options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
 library("ggplot2")
 library("spareg")
+is_paper <- FALSE
+clean_up <- TRUE
 @
-
+\newif\ifPositive
+<<condition_vignette, echo = FALSE, results = tex>>=
+if (is_paper) {
+  cat("\\Positivetrue")
+} else {
+  cat("\\Positivefalse")
+}
+@
 % \VignetteIndexEntry{spareg: Sparse Projected Averaged Regression in R}
 % \VignetteDepends{robustbase,cellWise,VariableScreening,R.matlab,doParallel}
 % \VignetteKeyword{random projection}
@@ -173,9 +183,13 @@ The rest of the paper is organized as follows:
 Section~\ref{sec-models} provides the
 methodological details of the implemented algorithm. The package is described
 in Section~\ref{sec-software} and Section~\ref{sec-extensibility} exemplifies how a new screening
-coefficient and a new random projection can be integrated in the package.
+coefficient, a new random projection and a new marginal model can be
+integrated in the package.
+\ifPositive
 Section~\ref{sec-illustrations} contains two examples of employing the package on real data
-sets. Section~\ref{sec-conclusion} concludes.
+sets.
+\fi
+Section~\ref{sec-conclusion} concludes.
 
 \section{Methods} \label{sec-models}
 %
@@ -450,12 +464,12 @@ predictors $\boldsymbol{x}_i$ can be obtained as: $\boldsymbol{\beta}=\Phi^\top\
 Estimates for $\gamma_0\in\mathbb{R}$ and $\boldsymbol{\gamma}\in\mathbb{R}^m$
 can be obtained by maximum likelihood if $m < n$. Even if $m < n$
 (we recommend using a dimension $m$ of at most $n/2$ -- see Section~\ref{sec-algo}),
-it might still be desirable to add a (e.g., small $L_2$) penalty to the
+it might still be desirable to add a (e.g.,~small $L_2$) penalty to the
 likelihood of the marginal models -- for the binomial family this can alleviate
 problems related to separation. Moreover, if outlier influence should be reduced,
 $M-$ or trimmed estimators could be employed for obtaining  robust
 estimates of the regression coefficients
-\citep[see e.g.][]{cantoni2001robust}.
+\citep[see e.g.,][]{cantoni2001robust}.
 
 %
 % <!-- Therefore, we propose to employ marginal models which are estimated by either  -->
@@ -510,7 +524,7 @@ models on the link level) or via the fitted values by taking a
 
 \section{Software} \label{sec-software}
 %
-The package can be installed from \proglang{GitHub}
+Package \pkg{spareg} \citep{spareg} is available from the Comprehensive \proglang{R} Archive Network (CRAN) at \url{https://CRAN.R-project.org/package=spareg}.
 <<eval=FALSE>>=
 install.packages("spareg")
 @
@@ -524,6 +538,7 @@ set which contains $n=200$ observations of a continuous response
 \code{y} and $p=2000$ predictors \code{x} which can be used as a training data set and
 $n=100$ observations to be used as a test set.
 <<>>=
+set.seed(1234)
 example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
 str(example_data)
 @
@@ -536,21 +551,25 @@ sampled from $\{-3,-2,-1,1,2,3\}$.
 \subsection{Main functions and their arguments}
 %
 The two main functions for fitting the SPAR algorithm are:
+%
 \begin{Code}
 spar(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
   screencoef = NULL, xval = NULL, yval = NULL, nnu = 20, nus = NULL,
   nummods = c(20), measure = c("deviance", "mse", "mae", "class", "1-auc"),
   parallel = FALSE, inds = NULL, RPMs = NULL, ...)
 \end{Code}
+%
 which implements the algorithm in Section~\ref{sec-algo} without
 cross-validation and returns an object of class \class{spar},
 and
+%
 \begin{Code}
 spar.cv(x, y, family = gaussian("identity"), model = NULL,
   rp = NULL, screencoef = NULL, nfolds = 10, nnu = 20, nus = NULL,
   nummods = c(20), measure = c("deviance", "mse", "mae", "class", "1-auc"),
   parallel = FALSE, ...)
 \end{Code}
+%
 which implements the cross-validated procedure and returns an object of
 class `\code{spar.cv}'.
 
@@ -782,7 +801,7 @@ The following random projections are implemented in \pkg{spareg}:
 \begin{itemize}
 \item \code{rp_gaussian()} -- random projection object where the generated
 matrix will have iid entries from a normal distribution (defaults to standard
-normal entries)
+normal entries).
 %
 \item \code{rp_sparse()} -- random projection object where the generated matrix
 will be the one in \citep{ACHLIOPTAS2003JL}. The value of $\psi$ can be passed
@@ -820,7 +839,7 @@ object with relevant information from the arguments of the \code{spar()}
 function call. If it is not provided, it defaults to updating the
 \class{randomprojection} object with a further attribute
 \code{family_string} which is character version of the \code{family} argument
-(e.g., in the default case it will be \code{"gaussian(identity)"}).
+(e.g.,~in the default case it will be \code{"gaussian(identity)"}).
 In certain constructions, such as the one
 in \cite{parzer2024glms}, certain data dependent quantities (in the case of
 \cite{parzer2024glms} these would be the ridge coefficients estimated on the
@@ -931,8 +950,7 @@ We estimate the SPAR algorithm with no screening and \code{rp_cw(data = TRUE)} (
 <<first_example>>=
 set.seed(12)
 spar_res <- spar(example_data$x, example_data$y,
-  xval = example_data$xtest,
-  yval = example_data$ytest,
+  xval = example_data$xtest, yval = example_data$ytest,
   nummods = c(5, 10, 15, 20, 25, 30))
 spar_cv <- spar.cv(example_data$x, example_data$y,
   nummods = c(5, 10, 15, 20, 25, 30))
@@ -1069,28 +1087,29 @@ $\beta$ having validation measure within one standard deviation from the minimum
 
 The \code{plot} methods return objects of class \class{ggplot} \citep{ggplotR}.
 %
-% \subsection{Parallelization}
-% %
-% The package supports parallelization in the estimation of the
-% marginal models in the ensemble via package \pkg{foreach} \citep{pkg:foreach}.
-% This is possible by setting the parameter \code{parallel = TRUE} in \code{spar()} or
-% \code{spar.cv()},
-% assuming that a parallel backend for \pkg{foreach} is registered
-% using the \code{registerDoParallel()}
-% function of package \pkg{doParallel} \citep{pkg:doParallel}.
-% A minimal example with a correlation-based
-% probabilistic screening and a Gaussian random projection matrix
-% is provided below:
-% <<parallel_example,message=FALSE>>=
-% library(doParallel)
-% cl <- makeCluster(2, type = "PSOCK")
-% registerDoParallel(cl)
-% spar_res_par <- spar(example_data$x, example_data$y,
-%                      screencoef = screen_cor(),
-%                      rp = rp_gaussian(),
-%                      parallel = TRUE)
-% stopCluster(cl)
-% @
+\subsection{Parallelization}
+%
+The package supports parallelization in the estimation of the
+marginal models in the ensemble via package \pkg{foreach} \citep{pkg:foreach}.
+This is possible by setting the parameter \code{parallel = TRUE} in \code{spar()} or
+\code{spar.cv()},
+assuming that a parallel backend for \pkg{foreach} is registered
+using the \code{registerDoParallel()}
+function of package \pkg{doParallel} \citep{pkg:doParallel}. In general, the parallelization seems to
+pay off especially for data sets with a larger number of observations $n$. A minimal example with a correlation-based
+probabilistic screening and a Gaussian random projection matrix
+is provided below:
+<<parallel_example,message=FALSE,eval=FALSE>>=
+set.seed(1234)
+example_data3 <- simulate_spareg_data(n = 1000, p = 2000, ntest = 1000)
+library(doParallel)
+cl <- makeCluster(2, type = "PSOCK")
+registerDoParallel(cl)
+spar_res_par <- spar(example_data3$x, example_data3$y,
+  screencoef = screen_cor(), rp = rp_gaussian(),
+  nummods = 50, parallel = TRUE)
+  stopCluster(cl)
+@
 %
 \section{Extensibility} \label{sec-extensibility}
 
@@ -1134,10 +1153,8 @@ set $\psi=1/\sqrt{p}$, as proposed by \cite{LiHastie2006VerySparseRP}.
 <<screen_sirs>>=
 set.seed(123)
 spar_example <- spar(example_data$x, example_data$y,
-  screencoef = screen_sirs(type = "fixed",
-    control = list(method = "SIRS")),
-  rp = rp_sparse(psi = 1/ncol(example_data$x)),
-  measure = "mse")
+  screencoef = screen_sirs(type = "fixed", control = list(method = "SIRS")),
+  rp = rp_sparse(psi = 1/ncol(example_data$x)), measure = "mse")
 spar_example
 @
 %
@@ -1197,7 +1214,7 @@ update_rp_cannings <- function(...) {
   args <- rlang::list2(...)
   if (is.null(args$rp$control$family)) {
     family_string <- paste0(args$family$family,
-      "(", args$family$link, ")")
+                            "(", args$family$link, ")")
     args$rp$control$family_string <- family_string
     family <- args$family
     fit_family <- switch(family$family,
@@ -1236,14 +1253,14 @@ generate_cannings <- function(rp, m, included_vector, x, y) {
     xrp <- tcrossprod(xtrain, RM)
     mod <- do.call(function(...)
       glmnet::glmnet(x = xrp, y = ytrain,
-                     family = rp$control$fit_family, ...),
+        family = rp$control$fit_family, ...),
       control_glmnet)
     coefs <- coef(mod, s = min(mod$lambda))
     eta_test <- (cbind(1, tcrossprod(xtest, RM)) %*% coefs)
     pred <- family$linkinv(as.vector(eta_test))
     out_perf <-  ifelse(family$family == "binomial",
-                        mean(((pred > 0.5) + 0) != ytest),
-                        mean((pred - ytest)^2))
+      mean(((pred > 0.5) + 0) != ytest),
+      mean((pred - ytest)^2))
     if (out_perf < best_val) {
       best_val <- out_perf; best_RM <- RM
     }
@@ -1257,7 +1274,7 @@ As we can see, values for \code{xi} and \code{B2} can be passed by the user thro
 In the cross-validation procedure, we do not generate new matrices for each step to keep computational costs low, so we do not specify a function \code{update_rpm_w_data()}.
 
 Putting it all together, we get:
-<<>>=
+<<define_rp_cannings>>=
 rp_cannings <- constructor_randomprojection(
   "rp_cannings",
   generate_fun = generate_cannings,
@@ -1269,7 +1286,8 @@ We can now estimate SPAR for a binomial model,
 where we transform the response to a binary
 variable. We simulate again data from a linear
 model and then transform the response to a binary scale:
-<<>>=
+<<data_cannings>>=
+set.seed(1234)
 example_data2 <- simulate_spareg_data(n = 100, p = 1000, ntest = 100)
 ystar <- (example_data2$y > 0) + 0
 ystarval <- (example_data2$ytest > 0) + 0
@@ -1277,7 +1295,7 @@ ystarval <- (example_data2$ytest > 0) + 0
 We use $50$ models  \citep[which is in line to recommendations
 in][]{cannings2017random}, and no screening procedure.
 Moreover, we do not perform any thresholding.
-<<echo=FALSE>>=
+<<run_cannings, echo=FALSE>>=
 file <- "cannings_example.rda"
 if (file.exists(file)) {
   load(file)
@@ -1320,10 +1338,8 @@ Using the data-driven \code{rp_cw()}:
 <<eval=FALSE>>=
 set.seed(12345)
 spar_example_2 <- spar(x = example_data2$x, y = ystar,
-  family = binomial(),
-  rp = rp_cw(data = TRUE),
-  nus = 0, nummods = 50,
-  xval = example_data2$xtest, yval = ystarval,
+  family = binomial(), rp = rp_cw(data = TRUE),
+  nus = 0, nummods = 50, xval = example_data2$xtest, yval = ystarval,
   measure = "class")
 @
 We can now compare the two approaches by looking at the minimum measure \code{Meas}
@@ -1365,8 +1381,7 @@ We then construct a \code{spar_glmrob()} function, which builds the `\code{sparm
 object.  We can do this easily by the available constructor function:
 %
 <<>>=
-spar_glmrob <- constructor_sparmodel(
-  name = "glmrob",
+spar_glmrob <- constructor_sparmodel(name = "glmrob",
   model_fun = model_glmrob)
 @
 %
@@ -1397,7 +1412,7 @@ spar_rob_res <- spar(x, ystar, family = binomial(),
 set.seed(1234)
 spar_res <- spar(x, ystar, family = binomial(),
   model = spar_glm(), rp = rp_gaussian(msup = 25),
-                 measure="mae")
+  measure = "mae")
 @
 %
 <<>>=
@@ -1407,7 +1422,10 @@ spar_res
 %
 We observe that the attained \code{mae} is indeed lower for the robust version.
 %
-%
+\ifPositive
+<<echo=FALSE>>=
+if (is_paper && !dir.exists("Figures")) dir.create("Figures")
+@
 \section{Illustrations} \label{sec-illustrations}
 %
 \subsection{Face image data}
@@ -1419,53 +1437,61 @@ with the
 faces' horizontal looking direction angle as the response
 variable. The data set is publicly available for download
 at \url{https://web.archive.org/web/20150922051706/http://isomap.stanford.edu/face_data.mat.Z}.
-<<eval=FALSE,echo=FALSE>>=
-url1 <- "https://web.archive.org/web/20150922051706/"
-url2 <- "http://isomap.stanford.edu/face_data.mat.Z"
-download.file(paste0(url1, url2), "face_data.mat.Z")
-@
-<<echo=FALSE>>=
-if (!file.exists("face_data.mat")) {
-  unzip("data.zip")
+<<urls, echo=FALSE>>=
+if (is_paper) {
+  if (file.exists("data.zip")) {
+    unzip("data.zip")
+  } else {
+    url1 <- "https://web.archive.org/web/20150922051706/"
+    url2 <- "http://isomap.stanford.edu/face_data.mat.Z"
+    ## On Ubuntu or MacOS use code below
+    ## On Windows, download locally and unzip
+    if (!file.exists("face_data.mat")) {
+      # system('uncompress face_data.mat.Z')
+      library("R.matlab")
+      download.file(paste0(url1, url2),
+                    file.path("face_data.mat.Z"))
+      system(sprintf('uncompress %s', paste0("face_data.mat.Z")))
+    }
+  }
 }
 @
-<<echo=FALSE,eval=FALSE>>=
-if (!file.exists("face_data.mat")) {
-  # system('uncompress face_data.mat.Z')
-  library("R.matlab")
-  download.file(url, file.path("face_data.mat.Z"))
-  system(sprintf('uncompress %s', paste0("face_data.mat.Z")))
+<<unzip_file,echo=FALSE,message=FALSE>>=
+if (is_paper) {
+    library("R.matlab")
+    facedata <- readMat("face_data.mat")
+    x <- t(facedata$images)
+    y <- facedata$poses[1,]
 }
 @
 %
-After downloading and uncompressing the \code{.mat} file, we import it in \proglang{R}
+After downloading and uncompressing the \code{.mat} file, we import it into \proglang{R}
 using package \pkg{R.matlab} \citep{pkg:rmatlab}:
-<<>>=
+<<read_matlab,eval=FALSE>>=
 library("R.matlab")
 facedata <- readMat("face_data.mat")
 x <- t(facedata$images)
 y <- facedata$poses[1,]
 @
 %
-<<echo=FALSE,message=FALSE,include=FALSE>>=
-invisible(file.remove("face_data.mat"))
-@
 We can visualize one observation in this data set in the left panel
 Figure~\ref{fig:faces_predictions} (code for reproducing the figure is provided
 in the supplementary materials).
 %
 <<include=FALSE, echo=FALSE>>=
-i <- 179
-p <- ggplot(data.frame(X = rep(1:64,each=64),
-                       Y = rep(64:1,64),
-                       Z = facedata$images[,i]),
-            aes(X, Y, fill = Z)) +
-  geom_tile() +
-  theme_void() +
-  ggtitle(paste0("y = ", round(facedata$poses[1, i],1))) +
-  theme(legend.position = "none",
-        plot.title = element_text(hjust = 0.5))
-ggsave(filename = "Figures/faces_obs_415.pdf", p, width = 8, height = 8)
+if (is_paper) {
+  i <- 179
+  p <- ggplot(data.frame(X = rep(1:64,each=64),
+                         Y = rep(64:1,64),
+                         Z = facedata$images[,i]),
+              aes(X, Y, fill = Z)) +
+    geom_tile() +
+    theme_void() +
+    ggtitle(paste0("y = ", round(facedata$poses[1, i],1))) +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5))
+  ggsave(filename = "Figures/faces_obs_415.pdf", p, width = 8, height = 8)
+}
 @
 %
 This data set has the issue of many columns being almost constant.
@@ -1473,12 +1499,24 @@ Functions \code{spar()} and \code{spar.cv()} ignore constant columns from the es
 but we can further alleviate the issue by setting
 all columns which have a low standard deviation to zero.
 %
-<<>>=
+<<std_x,echo=FALSE>>=
+if (is_paper) x[, apply(x, 2, sd) < 0.01] <- 0
+@
+<<std_x,eval=FALSE>>=
 x[, apply(x, 2, sd) < 0.01] <- 0
 @
 %
 We split the data into training vs test sample
-<<>>=
+<<std_x,echo=FALSE>>=
+if (is_paper) {
+  set.seed(123)
+  ntot <- length(y); ntest <- ntot * 0.25
+  testind <- sample(ntot, ntest, replace = FALSE)
+  xtrain <- as.matrix(x[-testind, ]); ytrain <- y[-testind]
+  xtest <- as.matrix(x[testind, ]); ytest <- y[testind]
+}
+@
+<<eval=FALSE>>=
 set.seed(123)
 ntot <- length(y); ntest <- ntot * 0.25
 testind <- sample(ntot, ntest, replace = FALSE)
@@ -1499,24 +1537,26 @@ $0.001$.
 Moreover, each marginal model is a linear regression with the regression
 coefficients estimated by maximum likelihood.
 <<echo=FALSE>>=
-file <- "faces_res.rda"
-if (!file.exists(file)) {
-  set.seed(123)
-  control_glmnet <- list(lambda.min.ratio = 0.001)
-  library("spareg")
-  Sys.time()
-  spar_faces <- spar.cv(
-    xtrain, ytrain,
-    model = spar_glm(),
-    screencoef = screen_glmnet(control = control_glmnet,
-                               reuse_in_rp = TRUE),
-    rp = rp_cw(data = TRUE, ),
-    nummods = c(5, 10, 20, 50),
-    measure = "mse")
-  Sys.time()
-  save(spar_faces, file = file)
-} else {
-  load(file)
+if (is_paper) {
+  file <- "faces_res.rda"
+  if (!file.exists(file)) {
+    set.seed(123)
+    control_glmnet <- list(lambda.min.ratio = 0.001)
+    library("spareg")
+    Sys.time()
+    spar_faces <- spar.cv(
+      xtrain, ytrain,
+      model = spar_glm(),
+      screencoef = screen_glmnet(control = control_glmnet,
+                                 reuse_in_rp = TRUE),
+      rp = rp_cw(data = TRUE, ),
+      nummods = c(5, 10, 20, 50),
+      measure = "mse")
+    Sys.time()
+    save(spar_faces, file = file)
+  } else {
+    load(file)
+  }
 }
 @
 <<eval=FALSE>>=
@@ -1530,30 +1570,37 @@ spar_faces <- spar.cv(xtrain, ytrain,
   nummods = c(5, 10, 20, 50), measure = "mse")
 @
 The \code{print} method returns:
-<<>>=
+%
+<<eval=FALSE>>=
 spar_faces
 @
+<<echo=FALSE>>=
+if (is_paper) spar_faces
+@
+%
 The \code{plot} method for `\code{spar.cv}' objects displays by default the
 measure employed in the cross-validation (in this case MSE)
 for a grid of thresholding values $\nu$, where the number of models is fixed to
 the value found to perform best in cross-validation
 exercise
 (see Figure~\ref{fig:facesplot_valmeasure}).
-<<plotfacesmeasure>>=
+<<plotfacesmeasure, eval=FALSE>>=
 plot(spar_faces)
 plot(spar_faces, nummod = 5)
 @
 <<plotfacesmeasurereal, echo=FALSE, include=FALSE>>=
-p <- plot(spar_faces, digits = 3L) +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1,
-                                   hjust = 1))
-p2 <- plot(spar_faces, nummod=5, digits = 3L) +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1,
-                                   hjust = 1))
-ggsave(filename = "Figures/faces_plot_valmeasure.pdf", p,
-       width = 10, height = 3)
-ggsave(filename = "Figures/faces_plot_valmeasure_1se.pdf", p2,
-       width = 10, height = 3)
+if (is_paper) {
+  p <- plot(spar_faces, digits = 3L) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1,
+                                     hjust = 1))
+  p2 <- plot(spar_faces, nummod=5, digits = 3L) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1,
+                                     hjust = 1))
+  ggsave(filename = "Figures/faces_plot_valmeasure.pdf", p,
+         width = 10, height = 3)
+  ggsave(filename = "Figures/faces_plot_valmeasure_1se.pdf", p2,
+         width = 10, height = 3)
+}
 @
 \begin{figure}[t!]
 \centering
@@ -1577,87 +1624,125 @@ The coefficients of the different variables (in this example pixels) obtained by
 averaging over the coefficients the marginal models (for optimal $\nu$ and
 number of models) are given by:
 %
-<<facecoef>>=
+<<facecoef,eval=FALSE>>=
 face_coef <- coef(spar_faces, opt_par = "best")
 str(face_coef)
+@
+<<facecoef,echo=FALSE>>=
+if (is_paper) {
+  face_coef <- coef(spar_faces, opt_par = "best")
+  str(face_coef)
+}
 @
 %
 For a sparser solution we can compute the coefficients using
 \code{opt_par = "1se"} which leads to more sparsity and a lower number of models.
-<<facecoef1se>>=
+%
+<<facecoef1se, eval=FALSE>>=
 face_coef_1se <- coef(spar_faces, opt_par = "1se")
 str(face_coef_1se)
+@
+<<facecoef1se,echo=FALSE>>=
+if (is_paper) {
+  face_coef_1se <- coef(spar_faces, opt_par = "1se")
+  str(face_coef_1se)
+}
 @
 %
 The \code{predict()} function can be applied to the `\code{spar.cv}' object.
 We will employ the sparser solution chosen by the \code{opt_par = "1se"} rule:
-<<predictfaces>>=
+<<predictfaces,echo=FALSE>>=
+if (is_paper) {
+  ynew <- predict(spar_faces, xnew = xtest, coef = face_coef_1se)
+}
+@
+<<predictfaces,eval=FALSE>>=
 ynew <- predict(spar_faces, xnew = xtest, coef = face_coef_1se)
 @
 We can easily compare the predictive performance of the estimated version of the SPAR algorithm
 with another version proposed in \cite{Dunson2020TargRandProj}, where the sparse
 random projection in \cite{ACHLIOPTAS2003JL} is combined with
 probabilistic marginal correlation screening.
-<<tarp_comparison>>=
+%
+<<tarp_comparison_true,eval=FALSE>>=
 tarp_faces <-  spar.cv(xtrain, ytrain,
   model = spar_glm(),
-  screencoef = screen_cor(), rp = rp_sparse(psi = 1/3),
+  screencoef = screen_cor(),
+  rp = rp_sparse(psi = 1/3),
   nummods = c(5, 10, 20, 50), measure = "mse")
 ynew_tarp <- predict(tarp_faces, xnew = xtest,
   coef = coef(tarp_faces, opt_par = "1se"))
-c("SPAR" = mean((ytest-ynew)^2),  "TARP" = mean((ytest-ynew_tarp)^2))
+c("SPAR" = mean((ytest-ynew)^2),
+  "TARP" = mean((ytest-ynew_tarp)^2))
 @
-
+<<tarp_comparison_true,echo=FALSE>>=
+if(is_paper) {
+  tarp_faces <-  spar.cv(xtrain, ytrain,
+                         model = spar_glm(),
+                         screencoef = screen_cor(), rp = rp_sparse(psi = 1/3),
+                         nummods = c(5, 10, 20, 50), measure = "mse")
+  ynew_tarp <- predict(tarp_faces, xnew = xtest,
+                       coef = coef(tarp_faces, opt_par = "1se"))
+  c("SPAR" = mean((ytest-ynew)^2),  "TARP" = mean((ytest-ynew_tarp)^2))
+}
+@
 For this data set, one can visualize $\hat\beta^\text{1se}_j x^\text{new}_{i,j}$, the effect of each pixel
 in predicting the face orientation in a given image. The contribution of each pixel in predicting the orientation of
 the face in the left panel of Figure~\ref{fig:faces_predictions} can be visualized in the right panel of Figure~\ref{fig:faces_predictions}. We observe that the face contour and the hairline are most informative for the prediction.
-<<plotobsvspred, echo=FALSE>>=
-i <- 3
-plot4 <- ggplot(data.frame(X = rep(1:64, each = 64),
-                           Y = rep(64:1, 64),
-                           effect = xtest[i,] * face_coef_1se$beta),
-                aes(X, Y, fill = effect)) +
-  geom_tile() +
-  theme_void() +
-  scale_fill_gradient2() +
-  ggtitle(bquote(hat(y) == .(round(ynew[i])))) +
-  theme(plot.title = element_text(hjust = 0.5))
-ggsave(filename = "Figures/faces_plot_predictions.pdf", plot4,
-       width = 8, height = 8)
+<<plotobsvspred, echo=FALSE, include=FALSE>>=
+if (is_paper) {
+  i <- 3
+  plot4 <- ggplot(data.frame(X = rep(1:64, each = 64),
+                             Y = rep(64:1, 64),
+                             effect = xtest[i,] * face_coef_1se$beta),
+                  aes(X, Y, fill = effect)) +
+    geom_tile() +
+    theme_void() +
+    scale_fill_gradient2() +
+    ggtitle(bquote(hat(y) == .(round(ynew[i])))) +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave(filename = "Figures/faces_plot_predictions.pdf", plot4,
+         width = 8, height = 8)
+}
 @
 \begin{figure}[t!]
 \centering
 \includegraphics[width=0.45\textwidth]{Figures/faces_obs_415.pdf}
 \includegraphics[width=0.45\textwidth]{Figures/faces_plot_predictions.pdf}
-\caption{Left: Image corresponding to one observation in the \emph{Isomap faces} data set. Right: The effect of each pixel $\hat\beta^\text{1se}_j x^\text{new}_{i,j}$ in predicting the face orientation in left panel. \label{fig:faces_predictions}}
+\caption{Left: Image corresponding to one observation in the
+\emph{Isomap faces} data set. Right: The effect of each pixel $\hat\beta^\text{1se}_j x^\text{new}_{i,j}$ in predicting the face
+orientation in left panel. \label{fig:faces_predictions}}
 \end{figure}
 %
 \subsection{Darwin data set}
 %
-The Darwin data set \citep{CILIA2022darwin} contains a binary response for Alzheimer's disease (AD) together with extracted features from 25 handwriting tests (18 features per task) for 89 AD patients and 85 healthy people ($n=174$).\footnote{The data set can be downloaded from  https://archive.ics.uci.edu/dataset/732/darwin}
+The Darwin data set \citep{CILIA2022darwin} contains a binary response for Alzheimer's disease (AD) together with extracted features from 25 handwriting tests (18 features per task) for 89 AD patients and 85 healthy people ($n=174$).\footnote{The data set can be downloaded from \url{https://archive.ics.uci.edu/dataset/732/darwin}.}
 <<readdarwin, eval=FALSE, echo=FALSE>>=
 download.file("https://archive.ics.uci.edu/static/public/732/darwin.zip",
               "darwin.zip")
 @
-<<readdarwinreal, echo=FALSE>>=
-if (!file.exists("darwin.zip")) {
-  #download.file("https://archive.ics.uci.edu/static/public/732/darwin.zip",
-  #              "darwin.zip")
-  unzip("data.zip")
+<<readdarwinreal, echo=FALSE,message=FALSE>>=
+if (is_paper) {
+  if (file.exists("data.zip")) {
+    unzip("data.zip")
+  } else {
+    if (!file.exists("darwin.zip")) {
+      download.file("https://archive.ics.uci.edu/static/public/732/darwin.zip",
+                    "darwin.zip")
+    }
+  }
+  darwin_tmp <- read.csv(unzip("darwin.zip",  "data.csv"),
+                       stringsAsFactors = TRUE)
 }
 @
-<<readdarwinzip>>=
+<<readdarwinzip,eval=FALSE>>=
 darwin_tmp <- read.csv(unzip("darwin.zip",  "data.csv"),
-                       stringsAsFactors = TRUE)
-@
-<<echo=FALSE,message=FALSE>>=
-invisible(file.remove("darwin.zip"))
-invisible(file.remove("data.csv"))
+  stringsAsFactors = TRUE)
 @
 Before proceeding with the analysis, the data is screened for
 multivariate outliers using the DDC algorithm in package \pkg{cellWise}
 \citep{rcellwise}.
-<<darwinimpute>>=
+<<darwinimpute,eval=FALSE>>=
 darwin_orig <- list(
   x = darwin_tmp[, !(colnames(darwin_tmp) %in% c("ID", "class"))],
   y = as.numeric(darwin_tmp$class) - 1)
@@ -1666,10 +1751,26 @@ tmp <- cellWise::DDC(
   list(returnBigXimp = TRUE, tolProb = 0.999, silent = TRUE))
 darwin <- list(x = tmp$Ximp, y = darwin_orig$y)
 @
-The structure of the data is:
-<<darwinstr>>=
+<<echo=FALSE,message=FALSE>>=
+if (is_paper) {
+darwin_orig <- list(
+    x = darwin_tmp[, !(colnames(darwin_tmp) %in% c("ID", "class"))],
+    y = as.numeric(darwin_tmp$class) - 1)
+  tmp <- cellWise::DDC(
+    as.matrix(darwin_orig$x),
+    list(returnBigXimp = TRUE, tolProb = 0.999, silent = TRUE))
+  darwin <- list(x = tmp$Ximp, y = darwin_orig$y)
+  str(darwin)
+}
+@
+<<darwinstr,eval=FALSE>>=
 str(darwin)
 @
+<<echo=FALSE,message=FALSE>>=
+if (is_paper) str(darwin)
+@
+
+%
 We estimate the SPAR algorithm with the screening and random projection
 introduced in \cite{parzer2024glms} for binomial family and logit link,
 using $1-$area under the ROC curve as the cross-validation measure:
@@ -1680,22 +1781,24 @@ spar_darwin <- spar.cv(darwin$x, darwin$y,
 spar_darwin
 @
 <<spardarwinreal, echo=FALSE>>=
-file <- "darwin_res.rda"
-if (!file.exists(file)) {
-  spar_darwin <- spar.cv(darwin$x, darwin$y,
-                         family = binomial(logit),
-                         screencoef = screen_glmnet(),
-                         nummods = c(5, 10, 20, 50),
-                         measure = "1-auc")
-  save(spar_darwin, file = file)
-} else {
-  load(file = file)
+if (is_paper) {
+  file <- "darwin_res.rda"
+  if (!file.exists(file)) {
+    spar_darwin <- spar.cv(darwin$x, darwin$y,
+                           family = binomial(logit),
+                           screencoef = screen_glmnet(),
+                           nummods = c(5, 10, 20, 50),
+                           measure = "1-auc")
+    save(spar_darwin, file = file)
+  } else {
+    load(file = file)
+  }
+  spar_darwin
 }
-spar_darwin
 @
 We can look at the average number of active variables for
-a grid of $\nu$  where the number of models is fixed to the value found to perform
-best in cross-validation exercise
+a grid of $\nu$  where the number of models is fixed to the value
+found to perform best in cross-validation exercise
 (see Figure~\ref{fig:darwin_activevars}).
 <<plotdarwinact, eval=FALSE>>=
 plot(spar_darwin, plot_type = "Val_numAct")
@@ -1706,9 +1809,11 @@ as they may never be screened).
 The 1-standard-error rule would however indicate that more sparsity can be
 introduced without too much increase in the cross-validation measure.
 <<plotdarwinactreal, echo=FALSE, include=FALSE>>=
+if (is_paper) {
 p <- plot(spar_darwin, plot_type = "Val_numAct", digits=3L)
 ggsave(filename = "Figures/darwin_plot_valnumAct.pdf", p,
        width = 10, height = 5)
+}
 @
 \begin{figure}[t!]
 \centering
@@ -1726,7 +1831,7 @@ In this data set, the predictors are ordered by task, where the first 18
 covariates represent different features measured for the first task.
 Given that there is clear grouping in the variables in this example, we can
 reorder the coefficients for plotting by grouping them by feature, rather than task.
-This allows to assess how the different features (e.g., time it takes to
+This allows to assess how the different features (e.g.,~time it takes to
 complete a certain task) relate to the likelihood of having AD and how stable
 the sign and magnitude of the coefficient is across the models in the ensemble.
 We can achieve this by using reordering argument \code{coef\_order} in method
@@ -1734,7 +1839,8 @@ We can achieve this by using reordering argument \code{coef\_order} in method
 (see Figure~\ref{fig:darwin_coefs} which can be reproduced with code
 in the
 supplementary materials).
-<<plotdarwincoefreal,echo=FALSE>>=
+<<plotdarwincoefreal,echo=FALSE, include=FALSE>>=
+if (is_paper) {
 ntasks <- 25
 nfeat <- 18
 reorder_ind <- c(outer(
@@ -1751,6 +1857,7 @@ p <- plot(spar_darwin,"coefs",coef_order = reorder_ind) +
            size = 3)
 ggsave(filename = "Figures/darwin_plot_coefs.pdf", p,
        width = 10, height = 5)
+}
 @
 \begin{figure}[t!]
 \centering
@@ -1762,6 +1869,22 @@ standardized, before thresholding. \label{fig:darwin_coefs}}
 In general we observe that the different features measures across different
 tasks have the same impact on the probability of AD (observable by the blocks
 of blue or red lines).
+
+<<clean_up, include=FALSE, echo=FALSE>>=
+# clean up
+if (clean_up) {
+  if (file.exists("darwin.zip")) invisible(file.remove("darwin.zip"))
+  if (file.exists("data.csv")) invisible(file.remove("data.csv"))
+  if (file.exists("face_data.mat")) invisible(file.remove("face_data.mat"))
+  if (file.exists("cannings_example.rda")) invisible(file.remove("cannings_example.rda"))
+  if (file.exists("faces_res.rda")) invisible(file.remove("faces_res.rda"))
+  if (file.exists("darwin_res.rda")) invisible(file.remove("darwin_res.rda"))
+  if (dir.exists("Figures")) {
+    invisible(file.remove("Figures/*"))
+  }
+}
+@
+\fi
 
 \section{Conclusion} \label{sec-conclusion}
 
