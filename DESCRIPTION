@@ -19,8 +19,8 @@ Authors@R:
              email = "peter.filzmoser@tuwien.ac.at",
              comment = c(ORCID = "0000-0002-8014-4682")))
 Description: Apply Sparse Projected Averaged Regression to
-    High-dimensional Data.
-License: GPL-3 + file LICENSE
+    High-Dimensional Data.
+License: GPL-3
 Imports: 
     dplyr,
     Matrix,
