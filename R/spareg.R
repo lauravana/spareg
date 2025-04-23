@@ -567,7 +567,7 @@ predict.spar <- function(object,
 #' @param plot_along one of \code{c("nu","nummod")}; ignored when  \code{plot_type = "res-vs-fitted"}.
 #' @param nummod fixed value for number of models when  \code{plot_along = "nu"}
 #'               for  \code{plot_type = "Val_Measure"} or  \code{"Val_numAct"};
-#'              same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.
+#'               same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.
 #' @param nu fixed value for \eqn{\nu} when  \code{plot_along="nummod"} for
 #'  \code{plot_type = "Val_Measure"} or  \code{"Val_numAct"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.
 #' @param xfit data used for predictions in  \code{"res-vs-fitted"}.
@@ -708,7 +708,7 @@ plot.spar <- function(x,
     tmp_df <- reshape(tmp_mat, idvar = "predictor",
                       varying = seq_len(nummod),
                       v.names = "value",
-                      timevar = "Index of marginal model",
+                      timevar = "marginal model",
                       direction = "long")
 
     tmp_df$`marginal model` <- as.numeric(tmp_df$`marginal model`)
@@ -721,6 +721,7 @@ plot.spar <- function(x,
       ggplot2::scale_fill_gradient2() +
       ggplot2::coord_cartesian(xlim=prange,ylim=c(1,mrange)) +
       ggplot2::theme_bw() +
+      ggplot2::ylab("Index of marginal model") +
       ggplot2::theme(panel.border = ggplot2::element_blank())
 
   } else {

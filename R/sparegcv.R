@@ -527,6 +527,7 @@ plot.spar.cv <- function(x,
       ggplot2::scale_fill_gradient2() +
       ggplot2::coord_cartesian(xlim=prange,ylim=c(1,mrange)) +
       ggplot2::theme_bw() +
+      ggplot2::ylab("Index of marginal model") +
       ggplot2::theme(panel.border = ggplot2::element_blank())
 
   } else {
