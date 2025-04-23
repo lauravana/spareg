@@ -73,8 +73,8 @@ E-mail: \email{laura.vana.guer@tuwien.ac.at}
 options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
 library("ggplot2")
 library("spareg")
-is_paper <- FALSE
-clean_up <- TRUE
+is_paper <- TRUE
+clean_up <- FALSE
 @
 \newif\ifPositive
 <<condition_vignette, echo = FALSE, results = tex>>=
@@ -999,9 +999,6 @@ spar_res <- spar(example_data$x, example_data$y,
   nummods = c(5, 10, 15, 20, 25, 30))
 spar_cv <- spar.cv(example_data$x, example_data$y,
   nummods = c(5, 10, 15, 20, 25, 30))
-@
-%
-<<>>=
 spar_res
 @
 %
@@ -1089,7 +1086,7 @@ For each predictor, the values of the coefficients are sorted from largest to
 smallest across the marginal models and then represented in the plot using a color scale.
 \end{itemize}
 \item \code{plot_along} -- one of \code{c("nu","nummod")}; for
-\code{plot_type = "Val_Measure"} or for
+\code{plot_type = "Val_Measure"} as well as for
 \code{plot_type = "Val_numAct"} it indicates whether the
 values of the cross-validation measure or number of active variables,
 respectively, should be shown for a grid of $\nu$ values while keeping the
@@ -1166,7 +1163,7 @@ We exemplify how screening coefficients implemented in package
 \pkg{spareg}.
 
 We start by defining the function for generating the screening coefficients
-using the \code{screenIID()} function in \pkg{VariableScreening}.
+using function the \code{screenIID()} in \pkg{VariableScreening}.
 <<>>=
 generate_scr_sirs <- function(y, x, object) {
   res_screen <- do.call(function(...)
@@ -1199,7 +1196,8 @@ set $\psi=1/\sqrt{p}$, as proposed by \cite{LiHastie2006VerySparseRP}.
 <<screen_sirs>>=
 set.seed(123)
 spar_example <- spar(example_data$x, example_data$y,
-  screencoef = screen_sirs(type = "fixed", control = list(method = "SIRS")),
+  screencoef = screen_sirs(type = "fixed",
+    control = list(method = "SIRS")),
   rp = rp_sparse(psi = 1/sqrt(ncol(example_data$x))), measure = "mse")
 spar_example
 @
