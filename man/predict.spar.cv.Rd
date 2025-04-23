@@ -17,7 +17,7 @@
 )
 }
 \arguments{
-\item{object}{result of spar function of class "spar".}
+\item{object}{result of spar function of class \code{'spar.cv'}.}
 
 \item{xnew}{matrix of new predictor variables; must have same number of columns as  \code{x}.}
 
@@ -36,8 +36,7 @@ minimal validation  \code{Meas} is used if not provided.}
 \item{nu}{threshold level used to form coefficients; value with minimal
 validation  \code{Meas} is used if not provided.}
 
-\item{coef}{optional; result of \code{\link{coef.spar.cv}}, can be used if
-\code{\link{coef.spar.cv}} has already been called.}
+\item{coef}{optional; result of \code{\link{coef.spar.cv}} can be used.}
 
 \item{...}{further arguments passed to or from other methods}
 }
@@ -45,5 +44,5 @@ validation  \code{Meas} is used if not provided.}
 Vector of predictions
 }
 \description{
-Predict responses for new predictors from spar object
+Predict responses for new predictors from \code{'spar.cv'} object
 }

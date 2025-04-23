@@ -1,18 +1,18 @@
-#' Constructor function for building sparmodel objects
+#' Constructor function for building \code{'sparmodel'} objects
 #'
-#' Creates an object of class "\code{sparmodel}" using arguments passed by user.
+#' Creates an object of class \code{'sparmodel'} using arguments passed by user.
 #' @param name character
 #' @param model_fun function for estimating the marginal models which returns the
 #     intercept and the vector of coefficients. This
 #'    function should have arguments  and   \code{y} (vector of responses -- standardized
 #'    for Gaussian family), \code{z} (the matrix of projected predictors) and a
-#'    "\code{sparmodel}" \code{object}.
-#' @param update_fun optional function for updating the "\code{sparmodel}" object. before the
+#'    \code{'sparmodel'} \code{object}.
+#' @param update_fun optional function for updating the \code{'sparmodel'} object. before the
 #' start of the algorithm.
-#' @return a function which in turn creates a function which in turn creates an
-#'    object of class "\code{sparmodel}".
+#' @return a function which in turn creates an
+#'    object of class \code{'sparmodel'}.
 #' @description
-#' The created function will return a object of class "\code{sparmodel}" which
+#' The created function will return a object of class \code{'sparmodel'} which
 #' constitutes of a list.
 #' @export
 constructor_sparmodel <- function(name, model_fun, update_fun = NULL) {
@@ -40,19 +40,19 @@ constructor_sparmodel <- function(name, model_fun, update_fun = NULL) {
 
 #' Model object for estimating penalized glms in marginal models in the ensemble
 #'
-#' Creates an object class "\code{sparmodel}" using arguments passed by user.
+#' Creates an object class \code{'sparmodel'} using arguments passed by user.
 #' @param ... includes arguments which can be passed as attributes to the
-#' "\code{sparmodel}" object
+#' \code{'sparmodel'} object
 #' @param control list of controls to be passed to the model function
-#' @return object of class "\code{sparmodel}" which is a list with elements
+#' @return object of class \code{'sparmodel'} which is a list with elements
 #'
 #' \itemize{
 #'  \item \code{name} (character)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{model_fun}  for generating the screening coefficient.
 #'   This function should have arguments \code{y}, vector of standardized responses,
-#'   \code{z}, a matrix of projected predictors in each marginal model, and \code{object}, which is a "\code{sparmodel}" object. Returns a list with two elements: \code{gammas} which is the vector of regression coefficients for the projected predictors and \code{intercept} which is the intercept of the model.
-#'  \item \code{update_fun}  optional function for updating the sparmodel object. before the
+#'   \code{z}, a matrix of projected predictors in each marginal model, and \code{object}, which is a \code{'sparmodel'} object. Returns a list with two elements: \code{gammas} which is the vector of regression coefficients for the projected predictors and \code{intercept} which is the intercept of the model.
+#'  \item \code{update_fun}  optional function for updating the \code{'sparmodel'} object. before the
 #' start of the algorithm.
 #' }
 #' @description
@@ -114,18 +114,18 @@ model_glmnet <- function(y, z, object) {
 
 #' Model object for estimating penalized glms in marginal models in the ensemble models in the ensemble
 #'
-#' Creates an object class "\code{sparmodel}" using arguments passed by user.
+#' Creates an object class \code{'sparmodel'} using arguments passed by user.
 #' @param ... includes arguments which can be passed as attributes to the
-#' "\code{sparmodel}" object
+#' \code{'sparmodel'} object
 #' @param control list of controls to be passed to the model function
-#' @return object of class "\code{sparmodel}" which is a list with elements
+#' @return object of class \code{'sparmodel'} which is a list with elements
 #'
 #' \itemize{
 #'  \item \code{name} (character)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{model_fun}  for generating the screening coefficient.
 #'   This function should have arguments \code{y}, vector of standardized responses,
-#'   \code{z}, a matrix of projected predictors in each marginal model, and \code{object}, which is a "\code{sparmodel}" object. Returns a list with two elements: \code{gammas} which is the vector of regression coefficients for the projected predictors and \code{intercept} which is the intercept of the model
+#'   \code{z}, a matrix of projected predictors in each marginal model, and \code{object}, which is a \code{'sparmodel'} object. Returns a list with two elements: \code{gammas} which is the vector of regression coefficients for the projected predictors and \code{intercept} which is the intercept of the model
 #' }
 #' @description
 #' Relies on \link[stats]{glm.fit}.

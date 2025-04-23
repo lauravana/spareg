@@ -8,24 +8,23 @@ screen_cor(..., control = list())
 }
 \arguments{
 \item{...}{includes arguments which can be passed as attributes to the
-"\code{screencoef}" object}
+\code{'screencoef'} object}
 
 \item{control}{list of controls to be passed to the screening function}
 }
 \value{
-object of class "\code{screencoef}" which is a list with elements
-
+object of class \code{'screencoef'} which is a list with elements
 \itemize{
 \item \code{name} (character)
 \item \code{control} (list of controls passed as an argument)
 \item \code{generate_fun}  for generating the screening coefficient.
 This function should have arguments  and   \code{y} (vector of (standardized for Gaussian) responses),
-\code{x} (the matrix of standardized predictors) and a "\code{screencoef}" \code{object}.
+\code{x} (the matrix of standardized predictors) and a \code{'screencoef'} object.
 }
 }
 \description{
 Relies on \link[stats]{cor}.
 }
 \details{
-Creates an object class "\code{screencoef}" using arguments passed by user.
+Creates an object class \code{'screencoef'} using arguments passed by user.
 }

@@ -7,18 +7,18 @@
 #' building an ensemble of generalized linear models, where the high-dimensional
 #' predictors can be screened using a screening coefficient and then projected
 #' using data-agnostic or data-informed random projection matrices.
-#' This function performs the procedure for given thresholds nu and a grid of
-#' the number of marginal models, and acts as a help-function for the full
-#' cross-validated procedure [spar.cv].
+#' This function performs the procedure for a given grid of thresholds \eqn{\nu}
+#' and a grid of the number of marginal models to be employed in the ensemble.
+#' This function is also used in the cross-validated procedure [spar.cv].
 #'
 #' @param x n x p numeric matrix of predictor variables.
 #' @param y quantitative response vector of length n.
 #' @param family  a \link[stats]{family}  object used for the marginal generalized linear model,
 #'        default \code{gaussian("identity")}.
-#' @param model function creating a "\code{sparmodel}" object; defaults to \code{spar_glmnet()}.
-#' @param rp function creating a "\code{randomprojection}" object. Defaults to NULL.
+#' @param model function creating a \code{'sparmodel'} object; defaults to \code{spar_glmnet()}.
+#' @param rp function creating a \code{'randomprojection'} object. Defaults to NULL.
 #' In this case \code{rp_cw(data = TRUE)} is used.
-#' @param screencoef function creating a "\code{screeningcoef}" object. Defaults to NULL.
+#' @param screencoef function creating a \code{'screeningcoef'} object. Defaults to NULL.
 #' In this case no screening is used is used.
 #' @param xval optional matrix of predictor variables observations used for
 #'        validation of threshold nu and number of models; \code{x} is used
@@ -41,14 +41,6 @@
 #' @param parallel assuming a parallel backend is loaded and available, a
 #'        logical indicating whether the function should use it in parallelizing the
 #'        estimation of the marginal models. Defaults to FALSE.
-# #' @param type.rpm  type of random projection matrix to be employed;
-# #'        one of \code{"cwdatadriven"},
-# #'        \code{"cw"} \insertCite{Clarkson2013LowRankApprox}{spareg},
-# #'        \code{"gaussian"}, \code{"sparse"} \insertCite{ACHLIOPTAS2003JL}{spareg};
-# #'        defaults to \code{"cwdatadriven"}.
-# #' @param type.screening  type of screening coefficients; one of \code{"ridge"},
-# #'        \code{"marglik"}, \code{"corr"}; defaults to \code{"ridge"} which is
-# #'        based on the ridge coefficients where the penalty converges to zero.
 #' @param inds optional list of index-vectors corresponding to variables kept
 #'  after screening in each marginal model of length \code{max(nummods)};
 #'  dimensions need to fit those of RPMs.
@@ -57,15 +49,15 @@
 #'  overwritten with a coefficient only depending on the given \code{x} and \code{y}.
 #' @param seed integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.
 #' @param set.seed.iteration a boolean indicating whether a different seed should be set in each marginal model \code{i}.
-#'   This will be set to  \code{seed + i}.
+#'        Defaults to \code{FALSE}. If \code{TRUE}, seed will be set to  \code{seed + i} in each marginal model i.
 #' @param ... further arguments mainly to ensure back-compatibility
-#' @returns object of class \code{"spar"} with elements
+#' @returns object of class \code{'spar'} with elements
 #' \itemize{
 #'  \item \code{betas} p x \code{max(nummods)} sparse matrix of class
-#'  \code{"\link[=dgCMatrix-class]{dgCMatrix}"} containing the
+#'  \code{'\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}'} containing the
 #'   standardized coefficients from each marginal model
 #'  \item \code{intercepts} used in each marginal model
-#'  \item \code{scr_coef} p-vector of coefficients used for screening for standardized predictors
+#'  \item \code{scr_coef} vector of length p with coefficients used for screening the standardized predictors
 #'  \item \code{inds} list of index-vectors corresponding to variables kept after screening in each marginal model of length max(nummods)
 #'  \item \code{RPMs} list of projection matrices used in each marginal model of length \code{max(nummods)}
 #'  \item \code{val_res} \code{data.frame} with validation results (validation measure
@@ -78,8 +70,8 @@
 #'  \item \code{yscale} empirical standard deviation of initial response vector
 #'  \item \code{xcenter} p-vector of empirical means of initial predictor variables
 #'  \item \code{xscale} p-vector of empirical standard deviations of initial predictor variables
-#'  \item \code{rp} an object of class "\code{randomprojection}"
-#'  \item \code{screencoef} an object of class "\code{screeningcoef}"
+#'  \item \code{rp} an object of class \code{"randomprojection"}
+#'  \item \code{screencoef} an object of class \code{"screeningcoef"}
 #' }
 #' If a parallel backend is registered and \code{parallel = TRUE},
 #' the \link[foreach]{foreach} function
@@ -111,6 +103,7 @@
 #' @aliases spareg
 #' @export
 #'
+#' @import methods
 #' @importFrom stats reshape glm.fit coef fitted gaussian predict rnorm quantile
 #'  residuals sd var cor glm
 #' @importFrom Matrix Matrix solve crossprod tcrossprod rowMeans
@@ -118,8 +111,6 @@
 #' @importFrom rlang list2
 #' @importFrom glmnet glmnet
 #' @importFrom ROCR prediction performance
-# #' @importFrom foreach foreach getDoParName getDoParWorkers getDoParRegistered %do% %dopar%
-#' @importFrom methods as
 #'
 spar <- function(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
                  screencoef = NULL, xval = NULL, yval = NULL, nnu = 20, nus = NULL,
@@ -452,17 +443,19 @@ spar_algorithm <- function(x, y,
 
 #' coef.spar
 #'
-#' Extract coefficients from spar object
-#' @param object result of spar function of class "spar".
-#' @param nummod number of models used to form coefficients; value with minimal validation Meas is used if not provided.
-#' @param nu threshold level used to form coefficients; value with minimal validation Meas is used if not provided.
+#' Extract coefficients from \code{'spar'} object
+#' @param object result of [spar] function of class \code{'spar'}.
+#' @param nummod number of models used to form coefficients; value with minimal
+#'        validation \code{Meas} is used if not provided.
+#' @param nu threshold level used to form coefficients; value with minimal
+#'        validation \code{Meas} is used if not provided.
 #' @param ... further arguments passed to or from other methods
-#' @return List of coefficients with elements
+#' @return List with elements
 #' \itemize{
-#'  \item intercept
-#'  \item beta
-#'  \item nummod
-#'  \item nu
+#'  \item \code{intercept} intercept value
+#'  \item \code{beta} vector of length p of averaged coefficients
+#'  \item \code{nummod} number of models based on which the coefficient is computed
+#'  \item \code{nu}  threshold based on which the coefficient is computed
 #' }
 #' @export
 
@@ -509,14 +502,14 @@ coef.spar <- function(object,
 
 #' predict.spar
 #'
-#' Predict responses for new predictors from spar object
-#' @param object result of spar function of class  \code{"spar"}.
+#' Predict responses for new predictors from \code{'spar'} object
+#' @param object result of spar function of class  \code{'spar'}.
 #' @param xnew matrix of new predictor variables; must have same number of columns as  \code{x}.
 #' @param type the type of required predictions; either on response level (default) or on link level
 #' @param avg_type type of averaging the marginal models; either on link (default) or on response level
 #' @param nummod number of models used to form coefficients; value with minimal validation Meas is used if not provided.
 #' @param nu threshold level used to form coefficients; value with minimal validation Meas is used if not provided.
-#' @param coef optional; result of  \code{coef.spar}, can be used if  \code{coef.spar()} has already been called.
+#' @param coef optional; result of [coef.spar] can be used.
 #' @param ... further arguments passed to or from other methods
 #' @return Vector of predictions
 #' @export
@@ -568,23 +561,24 @@ predict.spar <- function(object,
 
 #' plot.spar
 #'
-#' Plot errors or number of active variables over different thresholds or number of models of spar result, or residuals vs fitted
-#' @param x result of spar function of class  \code{"spar"}.
-#' @param plot_type one of  \code{c("Val_Measure","Val_numAct","res-vs-fitted","coefs")}.
-#' @param plot_along one of \code{c("nu","nummod")}; ignored when  \code{plot_type="res-vs-fitted"}.
-#' @param nummod fixed value for number of models when  \code{plot_along="nu"}
-#'  for  \code{plot_type="Val_Measure"} or  \code{"Val_numAct"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.
+#' Plot values of validation measure or number of active variables over different thresholds or number of models for \code{'spar'} object, or residuals vs fitted
+#' @param x result of spar function of class  \code{'spar'}.
+#' @param plot_type one of  \code{c("Val_Measure", "Val_numAct", "res-vs-fitted", "coefs")}.
+#' @param plot_along one of \code{c("nu","nummod")}; ignored when  \code{plot_type = "res-vs-fitted"}.
+#' @param nummod fixed value for number of models when  \code{plot_along = "nu"}
+#'               for  \code{plot_type = "Val_Measure"} or  \code{"Val_numAct"};
+#'               same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.
 #' @param nu fixed value for \eqn{\nu} when  \code{plot_along="nummod"} for
-#'  \code{plot_type="Val_Measure"} or  \code{"Val_numAct"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.
+#'  \code{plot_type = "Val_Measure"} or  \code{"Val_numAct"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.
 #' @param xfit data used for predictions in  \code{"res-vs-fitted"}.
 #' @param yfit data used for predictions in  \code{"res-vs-fitted"}.
 #' @param prange optional vector of length 2 for  \code{"coefs"}-plot to give
 #'  the limits of the predictors' plot range; defaults to  \code{c(1, p)}.
-#' @param coef_order optional index vector of length p for "coefs"-plot to give
-#'  the order of the predictors; defaults to  \code{1 : p}.
+#' @param coef_order optional index vector of length p for \code{plot_type = "coefs"} to give
+#'  the order of the predictors; defaults to \code{1 : p}.
 #' @param digits number of significant digits to be displayed in the axis; defaults to 2L.
 #' @param ... further arguments passed to or from other methods
-#' @return ggplot2 object
+#' @return \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
 #' @import ggplot2
 #' @export
 plot.spar <- function(x,
@@ -714,7 +708,7 @@ plot.spar <- function(x,
     tmp_df <- reshape(tmp_mat, idvar = "predictor",
                       varying = seq_len(nummod),
                       v.names = "value",
-                      timevar = "Index of marginal model",
+                      timevar = "marginal model",
                       direction = "long")
 
     tmp_df$`marginal model` <- as.numeric(tmp_df$`marginal model`)
@@ -727,6 +721,7 @@ plot.spar <- function(x,
       ggplot2::scale_fill_gradient2() +
       ggplot2::coord_cartesian(xlim=prange,ylim=c(1,mrange)) +
       ggplot2::theme_bw() +
+      ggplot2::ylab("Index of marginal model") +
       ggplot2::theme(panel.border = ggplot2::element_blank())
 
   } else {
@@ -737,8 +732,8 @@ plot.spar <- function(x,
 
 #' print.spar
 #'
-#' Print summary of spar result
-#' @param x result of  \code{spar()} function of class  \code{"spar"}.
+#' Print summary of \code{'spar'} object
+#' @param x result of [spar] function of class  \code{'spar'}.
 #' @param ... further arguments passed to or from other methods
 #' @return text summary
 #' @export

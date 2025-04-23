@@ -14,13 +14,13 @@ projection matrix}
 \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}}
 }
 \value{
-object of class randomprojection
+object of class \code{'randomprojection'}
 }
 \description{
 The entries of the matrix are generated based on \insertCite{Clarkson2013LowRankApprox}{spareg}.
 }
 \details{
-Creates an object class randomprojection using arguments passed by user.
+Creates an object class \code{'randomprojection'} using arguments passed by user.
 }
 \references{
 {

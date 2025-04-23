@@ -8,7 +8,9 @@
 #' @param ntest Integer. Number of test samples.
 #' @param a Integer. Number of non-zero coefficients in the true beta vector. Default is min(100, p/4).
 #' @param snr Numeric. Signal-to-noise ratio. Default is 10.
-#' @param rho Numeric between 0 and 1. Correlation coefficient among predictors. Default is 0.5.
+#' @param rho Numeric between 0 and 1. Pairwise correlation coefficient among predictors.
+#'            Default is 0.5. A compound symmetry correlation matrix is used. The variance of
+#'            the predictors is fixed to 1.
 #' @param mu Numeric. Intercept term (mean of response). Default is 1.
 #' @param seed Integer. Random seed for reproducibility. Default is NULL.
 #'
@@ -20,7 +22,7 @@
 #'   \item{ytest}{Test response vector (length ntest).}
 #'   \item{mu}{Intercept used in data generation.}
 #'   \item{beta}{True coefficient vector (length p).}
-#'   \item{sigma2}{Noise variance used in data generation. Equals }
+#'   \item{sigma2}{Noise variance used in data generation. Equals beta' Sigma beta / snr.}
 #' }
 #'
 #' @examples

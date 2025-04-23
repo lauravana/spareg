@@ -9,20 +9,20 @@ update_rp <- function(...) {
 }
 
 
-#' Constructor function for building randomprojection objects
+#' Constructor function for building \code{'randomprojection'} objects
 #'
-#' Creates an object class randomprojection using arguments passed by user.
+#' Creates an object class \code{'randomprojection'} using arguments passed by user.
 #' @param name character
 #' @param generate_fun function for generating the random projection matrix. This
-#' function should have with arguments \code{rp}, which is a randomprojection
+#' function should have with arguments \code{rp}, which is a \code{'randomprojection'}
 #' object, \code{m}, the target dimension and a vector of indexes
 #' \code{included_vector}, \code{x} matrix of predictors and \code{y} matrix of predictors.
 #' Vector \code{included_vector} shows the column index of the original variables in the
 #' \code{x} matrix to be projected using the random projection. This is needed
 #' due to the fact that screening is employed pre-projection.
-#' @param update_fun function for updating the randomprojection object with
+#' @param update_fun function for updating the \code{'randomprojection'} object with
 #' information from the data. This
-#' function should have arguments \code{rp}, which is a randomprojection
+#' function should have arguments \code{rp}, which is a \code{'randomprojection'}
 #' object and `x` (the matrix of predictors)
 #' and `y` (the vector of responses).
 #' @param update_rpm_w_data function for updating the random projection matrix with data.
@@ -33,7 +33,7 @@ update_rp <- function(...) {
 #' @param control list of controls for random projection. Can include minimum and
 #' maximum dimension for the projection defaults to
 #' \code{list(mslow = NULL, msup = NULL)}
-#' @return a function which in turn creates an object of class randomprojection
+#' @return a function which in turn creates an object of class \code{'randomprojection'}
 #'
 #' @export
 constructor_randomprojection <- function(name,
@@ -71,7 +71,7 @@ constructor_randomprojection <- function(name,
 #'
 #' Gaussian random projection matrix
 #'
-#' @param rp object of class  "\code{randomprojection}"
+#' @param rp object of class  \code{'randomprojection'}
 #' @param m goal dimension, which will be randomly sampled in the SPAR algorithm
 #' @param included_vector integer vector of column indices for the variables to be
 #' included in the random projection. These indices are produced in the
@@ -97,13 +97,13 @@ generate_gaussian <- function(rp, m, included_vector, x = NULL, y = NULL) {
 #'
 
 #'
-#' Creates an object class "\code{randomprojection}" using arguments passed by user.
+#' Creates an object class \code{'randomprojection'} using arguments passed by user.
 #' @param ... includes arguments which can be passed as attributes to the random
 #' projection matrix
 #' @param control list of arguments to be used in functions
 #' \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}
-#' @return object of class "\code{randomprojection}" with is a list with elements name,
-#' generate_fun, update_fun, control
+#' @return object of class \code{'randomprojection'} with is a list with elements name,
+#' \code{generate_fun},  \code{update_fun},  \code{control}
 #' @description
 #' The entries of the matrix will be generated from
 #' a normal distribution (mean 0 and standard deviation 1 by default).
@@ -118,7 +118,7 @@ rp_gaussian <- constructor_randomprojection(
 #'
 #' Sparse random projection matrix
 #'
-#' @param rp object of class  "\code{randomprojection}"
+#' @param rp object of class  \code{'randomprojection'}
 #' @param m goal dimension, which will be randomly sampled in the SPAR algorithm
 #' @param included_vector integer vector of column indices for the variables to be
 #' included in the random projection. These indices are produced in the
@@ -145,13 +145,13 @@ generate_sparse <- function(rp, m, included_vector, x = NULL, y = NULL) {
 #'
 #' Sparse random projection matrix
 #'
-#' Creates an object class "\code{randomprojection}" using arguments passed by user.
+#' Creates an object class \code{'randomprojection'} using arguments passed by user.
 #' @param ... includes arguments which can be passed as attributes to the random
 #' projection matrix. The possible argument is \code{psi} in (0,1] which determines
 #' the level of sparsity in the matrix.
 #' @param control list of arguments to be used in functions
 #' \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}
-#' @return object of class "\code{randomprojection}"
+#' @return object of class \code{'randomprojection'}
 #' @description
 #' The sparse matrix used in \insertCite{ACHLIOPTAS2003JL}{spareg} with entries equal to
 #' \eqn{\Psi_{ij} = \pm 1/\sqrt{\psi}} with probability \eqn{\psi/2} and zero otherwise
@@ -275,12 +275,12 @@ update_rpm_w_data_cw <- function(rpm, rp, included_vector) {
 #'
 #' Sparse embedding matrix
 #'
-#' Creates an object class randomprojection using arguments passed by user.
+#' Creates an object class \code{'randomprojection'} using arguments passed by user.
 #' @param ... includes arguments which can be passed as attributes to the random
 #' projection matrix
 #' @param control list of arguments to be used in functions
 #' \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}
-#' @return object of class randomprojection
+#' @return object of class \code{'randomprojection'}
 #' @description
 #' The entries of the matrix are generated based on \insertCite{Clarkson2013LowRankApprox}{spareg}.
 #' @references{
@@ -296,8 +296,8 @@ rp_cw <- constructor_randomprojection(
 
 #' print.randomprojection
 #'
-#' Print method for a "\code{randomprojection}" object
-#' @param x object of class randomprojection
+#' Print method for a \code{'randomprojection'} object
+#' @param x object of class \code{'randomprojection'}
 #' @param ... further arguments passed to or from other methods
 #' @return text summary
 #'

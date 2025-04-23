@@ -7,23 +7,25 @@
 \method{coef}{spar}(object, nummod = NULL, nu = NULL, ...)
 }
 \arguments{
-\item{object}{result of spar function of class "spar".}
+\item{object}{result of \link{spar} function of class \code{'spar'}.}
 
-\item{nummod}{number of models used to form coefficients; value with minimal validation Meas is used if not provided.}
+\item{nummod}{number of models used to form coefficients; value with minimal
+validation \code{Meas} is used if not provided.}
 
-\item{nu}{threshold level used to form coefficients; value with minimal validation Meas is used if not provided.}
+\item{nu}{threshold level used to form coefficients; value with minimal
+validation \code{Meas} is used if not provided.}
 
 \item{...}{further arguments passed to or from other methods}
 }
 \value{
-List of coefficients with elements
+List with elements
 \itemize{
-\item intercept
-\item beta
-\item nummod
-\item nu
+\item \code{intercept} intercept value
+\item \code{beta} vector of length p of averaged coefficients
+\item \code{nummod} number of models based on which the coefficient is computed
+\item \code{nu}  threshold based on which the coefficient is computed
 }
 }
 \description{
-Extract coefficients from spar object
+Extract coefficients from \code{'spar'} object
 }

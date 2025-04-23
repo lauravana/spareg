@@ -2,7 +2,7 @@
 % Please edit documentation in R/rp_classes.R
 \name{rp_gaussian}
 \alias{rp_gaussian}
-\title{Creates an object class "\code{randomprojection}" using arguments passed by user.}
+\title{Creates an object class \code{'randomprojection'} using arguments passed by user.}
 \usage{
 rp_gaussian(..., control = list())
 }
@@ -14,8 +14,8 @@ projection matrix}
 \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}}
 }
 \value{
-object of class "\code{randomprojection}" with is a list with elements name,
-generate_fun, update_fun, control
+object of class \code{'randomprojection'} with is a list with elements name,
+\code{generate_fun},  \code{update_fun},  \code{control}
 }
 \description{
 The entries of the matrix will be generated from

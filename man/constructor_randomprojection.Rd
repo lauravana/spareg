@@ -2,7 +2,7 @@
 % Please edit documentation in R/rp_classes.R
 \name{constructor_randomprojection}
 \alias{constructor_randomprojection}
-\title{Constructor function for building randomprojection objects}
+\title{Constructor function for building \code{'randomprojection'} objects}
 \usage{
 constructor_randomprojection(
   name,
@@ -16,16 +16,16 @@ constructor_randomprojection(
 \item{name}{character}
 
 \item{generate_fun}{function for generating the random projection matrix. This
-function should have with arguments \code{rp}, which is a randomprojection
+function should have with arguments \code{rp}, which is a \code{'randomprojection'}
 object, \code{m}, the target dimension and a vector of indexes
 \code{included_vector}, \code{x} matrix of predictors and \code{y} matrix of predictors.
 Vector \code{included_vector} shows the column index of the original variables in the
 \code{x} matrix to be projected using the random projection. This is needed
 due to the fact that screening is employed pre-projection.}
 
-\item{update_fun}{function for updating the randomprojection object with
+\item{update_fun}{function for updating the \code{'randomprojection'} object with
 information from the data. This
-function should have arguments \code{rp}, which is a randomprojection
+function should have arguments \code{rp}, which is a \code{'randomprojection'}
 object and \code{x} (the matrix of predictors)
 and \code{y} (the vector of responses).}
 
@@ -40,8 +40,8 @@ maximum dimension for the projection defaults to
 \code{list(mslow = NULL, msup = NULL)}}
 }
 \value{
-a function which in turn creates an object of class randomprojection
+a function which in turn creates an object of class \code{'randomprojection'}
 }
 \description{
-Creates an object class randomprojection using arguments passed by user.
+Creates an object class \code{'randomprojection'} using arguments passed by user.
 }

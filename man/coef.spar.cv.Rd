@@ -7,12 +7,12 @@
 \method{coef}{spar.cv}(object, opt_par = c("best", "1se"), nummod = NULL, nu = NULL, ...)
 }
 \arguments{
-\item{object}{result of spar.cv function of class "spar.cv".}
+\item{object}{result of \link{spar.cv} function of class \code{'spar.cv'}.}
 
-\item{opt_par}{one of c("1se","best"), chooses whether to select the best
-pair of nus and nummods according to CV-Meas, or the sparsest solution within
-one sd of that optimal CV-Meas;
-ignored when nummod and nu are given}
+\item{opt_par}{one of \code{c("1se","best")}, chooses whether to select the
+best pair of \code{nus} and \code{nummods} according to CV-Meas, or
+the sparsest solution within one sd of that optimal CV-Meas;
+ignored when \code{nummod} and \code{nu} are given}
 
 \item{nummod}{optional number of models used to form coefficients}
 
@@ -21,14 +21,14 @@ ignored when nummod and nu are given}
 \item{...}{further arguments passed to or from other methods}
 }
 \value{
-List of coefficients with elements
+List with elements
 \itemize{
-\item intercept
-\item beta
-\item nummod
-\item nu
+\item \code{intercept} intercept value
+\item \code{beta} vector of length p of averaged coefficients
+\item \code{nummod} number of models based on which the coefficient is computed
+\item \code{nu}  threshold based on which the coefficient is computed
 }
 }
 \description{
-Extract coefficients from spar object
+Extract coefficients from \code{'spar.cv'} object
 }

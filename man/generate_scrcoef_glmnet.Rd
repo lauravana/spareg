@@ -11,7 +11,7 @@ generate_scrcoef_glmnet(y, x, object)
 
 \item{x}{matrix of predictors}
 
-\item{object}{"\code{screencoef}" object}
+\item{object}{\code{'screencoef'} object}
 }
 \value{
 vector of screening coefficients of length p
