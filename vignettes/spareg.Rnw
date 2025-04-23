@@ -73,8 +73,8 @@ E-mail: \email{laura.vana.guer@tuwien.ac.at}
 options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
 library("ggplot2")
 library("spareg")
-is_paper <- TRUE
-clean_up <- FALSE
+is_paper <- FALSE
+clean_up <- TRUE
 @
 \newif\ifPositive
 <<condition_vignette, echo = FALSE, results = tex>>=
