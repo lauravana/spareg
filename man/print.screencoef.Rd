@@ -15,5 +15,5 @@
 text summary
 }
 \description{
-Print method for a "\code{screencoef}" object
+Print method for a \code{'screencoef'} object
 }

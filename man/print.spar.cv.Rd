@@ -7,7 +7,7 @@
 \method{print}{spar.cv}(x, ...)
 }
 \arguments{
-\item{x}{result of  \code{spar.cv()} function of class  \code{"spar.cv"}.}
+\item{x}{result of  \link{spar.cv} function of class  \code{'spar.cv'}.}
 
 \item{...}{further arguments passed to or from other methods}
 }
@@ -15,5 +15,5 @@
 text summary
 }
 \description{
-Print summary of spar.cv result
+Print summary of \code{'spar.cv'} object
 }

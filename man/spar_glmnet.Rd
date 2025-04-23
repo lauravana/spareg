@@ -8,20 +8,20 @@ spar_glmnet(..., control = list())
 }
 \arguments{
 \item{...}{includes arguments which can be passed as attributes to the
-"\code{sparmodel}" object}
+\code{'sparmodel'} object}
 
 \item{control}{list of controls to be passed to the model function}
 }
 \value{
-object of class "\code{sparmodel}" which is a list with elements
+object of class \code{'sparmodel'} which is a list with elements
 
 \itemize{
 \item \code{name} (character)
 \item \code{control} (list of controls passed as an argument)
 \item \code{model_fun}  for generating the screening coefficient.
 This function should have arguments \code{y}, vector of standardized responses,
-\code{z}, a matrix of projected predictors in each marginal model, and \code{object}, which is a "\code{sparmodel}" object. Returns a list with two elements: \code{gammas} which is the vector of regression coefficients for the projected predictors and \code{intercept} which is the intercept of the model.
-\item \code{update_fun}  optional function for updating the sparmodel object. before the
+\code{z}, a matrix of projected predictors in each marginal model, and \code{object}, which is a \code{'sparmodel'} object. Returns a list with two elements: \code{gammas} which is the vector of regression coefficients for the projected predictors and \code{intercept} which is the intercept of the model.
+\item \code{update_fun}  optional function for updating the \code{'sparmodel'} object. before the
 start of the algorithm.
 }
 }
@@ -29,5 +29,5 @@ start of the algorithm.
 Relies on \link[glmnet]{glmnet}.
 }
 \details{
-Creates an object class "\code{sparmodel}" using arguments passed by user.
+Creates an object class \code{'sparmodel'} using arguments passed by user.
 }

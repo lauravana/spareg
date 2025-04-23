@@ -7,7 +7,7 @@
 \method{print}{spar}(x, ...)
 }
 \arguments{
-\item{x}{result of  \code{spar()} function of class  \code{"spar"}.}
+\item{x}{result of \link{spar} function of class  \code{'spar'}.}
 
 \item{...}{further arguments passed to or from other methods}
 }
@@ -15,5 +15,5 @@
 text summary
 }
 \description{
-Print summary of spar result
+Print summary of \code{'spar'} object
 }

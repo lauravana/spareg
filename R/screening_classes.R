@@ -1,15 +1,14 @@
-#' Constructor function for building screencoef objects
+#' Constructor function for building \code{'screencoef'} objects
 #'
-#' Creates an object class screencoef using arguments passed by user.
+#' Creates an object class \code{'screencoef'} using arguments passed by user.
 #' @param name character
 #' @param generate_fun function for generating the screening coefficient. This
 #'    function should have arguments  and   \code{y} (vector of responses -- standardized
 #'    for Gaussian family), \code{x} (the matrix of standardized predictors) and a
-#'    "\code{screencoef}" \code{object}.
-#' @return a function which in turn creates a function which in turn creates an
-# ' object of class \code{"screencoef"}
+#'    \code{'screencoef'} object.
+#' @return a function which in turn creates an object of class \code{'screencoef'}
 #' @description
-#' The created function will return a object of class "\code{screencoef}" which
+#' The created function will return a object of class \code{'screencoef'} which
 #' constitutes of a list. The attributes of the generating object will include by
 #' default \code{type}, which can take one of two values \code{"prob"} (indicating
 #' probabilistic screening should be employed) or
@@ -50,7 +49,7 @@ constructor_screencoef <- function(name, generate_fun) {
 #' Generate screening coefficient based  on marginal likelihood in univariate GLMs
 #' @param y vector of responses
 #' @param x matrix of predictors
-#' @param object  "\code{screencoef}" object
+#' @param object  \code{'screencoef'} object
 #' @return vector of screening coefficients of length p
 #' @keywords internal
 generate_scrcoef_marglik <- function(y, x, object) {
@@ -67,18 +66,18 @@ generate_scrcoef_marglik <- function(y, x, object) {
 }
 #' Screening coefficient based on marginal GLMs
 #'
-#' Creates an object class "\code{screencoef}" using arguments passed by user.
+#' Creates an object class \code{'screencoef'} using arguments passed by user.
 #' @param ... includes arguments which can be passed as attributes to the
-#' "\code{screencoef}" object
+#' \code{'screencoef'} object
 #' @param control list of controls to be passed to the screening function
-#' @return object of class "\code{screencoef}" which is a list with elements:
+#' @return object of class \code{'screencoef'} which is a list with elements:
 #'
 #' \itemize{
 #'  \item \code{name} (character)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{generate_fun}  for generating the screening coefficient.
 #'  This function should have arguments  and   \code{y} (vector of (standardized for Gaussian) responses),
-#'  \code{x} (the matrix of standardized predictors) and a "\code{screencoef}" \code{object}.
+#'  \code{x} (the matrix of standardized predictors) and a \code{'screencoef'} object.
 #'
 #' }
 #'
@@ -97,7 +96,7 @@ screen_marglik <- constructor_screencoef(
 #'
 #' @param y vector of responses
 #' @param x matrix of predictors
-#' @param object  "\code{screencoef}" object
+#' @param object  \code{'screencoef'} object
 #' @return vector of screening coefficients of length p
 #' @keywords internal
 generate_scrcoef_cor <- function(y, x, object) {
@@ -109,18 +108,17 @@ generate_scrcoef_cor <- function(y, x, object) {
 }
 #' Screening coefficient based  on correlation
 #'
-#' Creates an object class "\code{screencoef}" using arguments passed by user.
+#' Creates an object class \code{'screencoef'} using arguments passed by user.
 #' @param ... includes arguments which can be passed as attributes to the
-#' "\code{screencoef}" object
+#' \code{'screencoef'} object
 #' @param control list of controls to be passed to the screening function
-#' @return object of class "\code{screencoef}" which is a list with elements
-#'
+#' @return object of class \code{'screencoef'} which is a list with elements
 #' \itemize{
 #'  \item \code{name} (character)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{generate_fun}  for generating the screening coefficient.
 #'  This function should have arguments  and   \code{y} (vector of (standardized for Gaussian) responses),
-#'  \code{x} (the matrix of standardized predictors) and a "\code{screencoef}" \code{object}.
+#'  \code{x} (the matrix of standardized predictors) and a \code{'screencoef'} object.
 #' }
 #'
 #' @description
@@ -136,7 +134,7 @@ screen_cor <- constructor_screencoef(
 #' Screening coefficient based  on glmnet coefficients
 #' @param y vector of responses
 #' @param x matrix of predictors
-#' @param object  "\code{screencoef}" object
+#' @param object  \code{'screencoef'} object
 #' @return vector of screening coefficients of length p
 #' @keywords internal
 generate_scrcoef_glmnet <- function(y, x, object) {
@@ -177,18 +175,18 @@ generate_scrcoef_glmnet <- function(y, x, object) {
 
 #' Screening coefficient based  on glmnet coefficients
 #'
-#' Creates an object class "\code{screencoef}" using arguments passed by user.
+#' Creates an object class \code{'screencoef'} using arguments passed by user.
 #' @param ... includes arguments which can be passed as attributes to the
-#' "\code{screencoef}" object
+#' \code{'screencoef'} object
 #' @param control list of controls to be passed to the screening function
-#' @return object of class "\code{screencoef}" which is a list with elements
+#' @return object of class \code{'screencoef'} which is a list with elements
 #'
 #' \itemize{
 #'  \item \code{name} (character)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{generate_fun}  for generating the screening coefficient.
 #'  This function should have arguments  and   \code{y} (vector of (standardized for Gaussian) responses),
-#'  \code{x} (the matrix of standardized predictors) and a "\code{screencoef}" \code{object}.
+#'  \code{x} (the matrix of standardized predictors) and a \code{'screencoef'} object.
 #' }
 #'
 #' @description
@@ -203,7 +201,7 @@ screen_glmnet <- constructor_screencoef(
 
 #' print.screencoef
 #'
-#' Print method for a "\code{screencoef}" object
+#' Print method for a \code{'screencoef'} object
 #' @param x description
 #' @param ... further arguments passed to or from other methods
 #' @return text summary

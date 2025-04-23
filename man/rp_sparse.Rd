@@ -15,7 +15,7 @@ the level of sparsity in the matrix.}
 \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}}
 }
 \value{
-object of class "\code{randomprojection}"
+object of class \code{'randomprojection'}
 }
 \description{
 The sparse matrix used in \insertCite{ACHLIOPTAS2003JL}{spareg} with entries equal to
@@ -23,7 +23,7 @@ The sparse matrix used in \insertCite{ACHLIOPTAS2003JL}{spareg} with entries equ
 for \eqn{\psi\in (0,1]}. Default is \code{psi = 1}.
 }
 \details{
-Creates an object class "\code{randomprojection}" using arguments passed by user.
+Creates an object class \code{'randomprojection'} using arguments passed by user.
 }
 \references{
 {

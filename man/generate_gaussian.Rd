@@ -7,7 +7,7 @@
 generate_gaussian(rp, m, included_vector, x = NULL, y = NULL)
 }
 \arguments{
-\item{rp}{object of class  "\code{randomprojection}"}
+\item{rp}{object of class  \code{'randomprojection'}}
 
 \item{m}{goal dimension, which will be randomly sampled in the SPAR algorithm}
 

@@ -19,17 +19,18 @@
 )
 }
 \arguments{
-\item{x}{result of spar function of class  \code{"spar"}.}
+\item{x}{result of spar function of class  \code{'spar'}.}
 
-\item{plot_type}{one of  \code{c("Val_Measure","Val_numAct","res-vs-fitted","coefs")}.}
+\item{plot_type}{one of  \code{c("Val_Measure", "Val_numAct", "res-vs-fitted", "coefs")}.}
 
-\item{plot_along}{one of \code{c("nu","nummod")}; ignored when  \code{plot_type="res-vs-fitted"}.}
+\item{plot_along}{one of \code{c("nu","nummod")}; ignored when  \code{plot_type = "res-vs-fitted"}.}
 
-\item{nummod}{fixed value for number of models when  \code{plot_along="nu"}
-for  \code{plot_type="Val_Measure"} or  \code{"Val_numAct"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.}
+\item{nummod}{fixed value for number of models when  \code{plot_along = "nu"}
+for  \code{plot_type = "Val_Measure"} or  \code{"Val_numAct"};
+same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.}
 
 \item{nu}{fixed value for \eqn{\nu} when  \code{plot_along="nummod"} for
-\code{plot_type="Val_Measure"} or  \code{"Val_numAct"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.}
+\code{plot_type = "Val_Measure"} or  \code{"Val_numAct"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.}
 
 \item{xfit}{data used for predictions in  \code{"res-vs-fitted"}.}
 
@@ -38,16 +39,16 @@ for  \code{plot_type="Val_Measure"} or  \code{"Val_numAct"}; same as for \code{\
 \item{prange}{optional vector of length 2 for  \code{"coefs"}-plot to give
 the limits of the predictors' plot range; defaults to  \code{c(1, p)}.}
 
-\item{coef_order}{optional index vector of length p for "coefs"-plot to give
-the order of the predictors; defaults to  \code{1 : p}.}
+\item{coef_order}{optional index vector of length p for \code{plot_type = "coefs"} to give
+the order of the predictors; defaults to \code{1 : p}.}
 
 \item{digits}{number of significant digits to be displayed in the axis; defaults to 2L.}
 
 \item{...}{further arguments passed to or from other methods}
 }
 \value{
-ggplot2 object
+\code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
 }
 \description{
-Plot errors or number of active variables over different thresholds or number of models of spar result, or residuals vs fitted
+Plot values of validation measure or number of active variables over different thresholds or number of models for \code{'spar'} object, or residuals vs fitted
 }

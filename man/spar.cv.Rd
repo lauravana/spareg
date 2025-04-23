@@ -46,14 +46,14 @@ spareg.cv(
 
 \item{y}{quantitative response vector of length n.}
 
-\item{family}{a "\code{\link[stats]{family}}" object used for the marginal generalized linear model,
-default \code{gaussian("identity")}.}
+\item{family}{a \code{'\link[stats]{family}'} object used for the marginal
+generalized linear model; defaults to \code{gaussian("identity")}.}
 
-\item{model}{function creating a "\code{sparmodel}" object; defaults to \code{spar_glmnet()}.}
+\item{model}{function creating a \code{'sparmodel'} object; defaults to \code{spar_glmnet()}.}
 
-\item{rp}{function creating a "\code{randomprojection}" object.}
+\item{rp}{function creating a \code{'randomprojection'} object.}
 
-\item{screencoef}{function creating a "\code{screeningcoef}" object}
+\item{screencoef}{function creating a \code{'screeningcoef'} object}
 
 \item{nfolds}{number of folds to use for cross-validation; should be at least 2, defaults to 10.}
 
@@ -81,34 +81,36 @@ estimation of the marginal models. Defaults to FALSE.}
 \item{seed}{integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.}
 
 \item{set.seed.iteration}{a boolean indicating whether a different seed should be set in each marginal model \code{i}.
-This will be set to  \code{seed + i}.}
+Defaults to \code{FALSE}. If \code{TRUE}, seed will be set to  \code{seed + i} in each marginal model i.}
 
 \item{...}{further arguments mainly to ensure back-compatibility}
 }
 \value{
-object of class \code{"spar.cv"} with elements
+object of class \code{'spar.cv'} with elements
 \itemize{
 \item \code{betas} p x  \code{max(nummods)} sparse matrix of class
-\code{"\link[=dgCMatrix-class]{dgCMatrix}"} containing the
+\code{'\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}'} containing the
 standardized coefficients from each marginal model
 \item \code{intercepts} used in each marginal model, vector of length \code{max(nummods)}
 \item \code{scr_coef} p-vector of coefficients used for screening for standardized predictors
 \item \code{inds} list of index-vectors corresponding to variables kept after
 screening in each marginal model of length  \code{max(nummods)}
 \item \code{RPMs} list of projection matrices used in each marginal model of length \code{max(nummods)}
-\item \code{val_sum} \code{data.frame} with CV results (mean and sd validation measure and mean number of active variables) for each element of nus and nummods
+\item \code{val_sum} a \code{data.frame} with CV results (mean and sd validation measure and mean number of active variables) for each element of nus and nummods
 \item \code{nus} vector of \eqn{\nu}'s considered for thresholding
 \item \code{nummods} vector of numbers of marginal models considered for validation
 \item \code{ycenter} empirical mean of initial response vector
 \item \code{yscale} empirical standard deviation of initial response vector
 . \item \code{xcenter} p-vector of empirical means of initial predictor variables
 \item \code{xscale} p-vector of empirical standard deviations of initial predictor variables
-\item \code{rp} an object of class "\code{randomprojection}"
-\item \code{screencoef} an object of class "\code{screeningcoef}"
+\item \code{rp} an object of class \code{'randomprojection'}
+\item \code{screencoef} an object of class \code{'screeningcoef'}
 }
 }
 \description{
-Apply Sparse Projected Averaged Regression to High-dimensional Data (see Parzer, Vana-Guer and Filzmoser 2023).
+Apply Sparse Projected Averaged Regression to High-Dimensional Data, where the
+number of models and the threshold parameter is chosen using a cross-validation
+procedure.
 }
 \examples{
 \dontrun{

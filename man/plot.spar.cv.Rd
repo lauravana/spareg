@@ -20,7 +20,7 @@
 )
 }
 \arguments{
-\item{x}{result of spar.cv function of class  \code{"spar.cv"}.}
+\item{x}{result of \link{spar.cv} function of class  \code{'spar.cv'}.}
 
 \item{plot_type}{one of  \code{c("Val_Measure","Val_numAct","res-vs-fitted","coefs")}.}
 
@@ -49,8 +49,9 @@ for  \code{plot_type="Val_Measure"} or  \code{"Val_numAct"}; same as for \code{\
 \item{...}{further arguments passed to or from other methods}
 }
 \value{
-ggplot2 object
+\code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
 }
 \description{
-Plot errors or number of active variables over different thresholds or number of models of spar.cv result, or residuals vs fitted
+Plot errors or number of active variables over different thresholds or number
+of models of \code{'spar.cv'} object, or residuals vs fitted
 }

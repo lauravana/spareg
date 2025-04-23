@@ -55,12 +55,12 @@ spareg(
 \item{family}{a \link[stats]{family}  object used for the marginal generalized linear model,
 default \code{gaussian("identity")}.}
 
-\item{model}{function creating a "\code{sparmodel}" object; defaults to \code{spar_glmnet()}.}
+\item{model}{function creating a \code{'sparmodel'} object; defaults to \code{spar_glmnet()}.}
 
-\item{rp}{function creating a "\code{randomprojection}" object. Defaults to NULL.
+\item{rp}{function creating a \code{'randomprojection'} object. Defaults to NULL.
 In this case \code{rp_cw(data = TRUE)} is used.}
 
-\item{screencoef}{function creating a "\code{screeningcoef}" object. Defaults to NULL.
+\item{screencoef}{function creating a \code{'screeningcoef'} object. Defaults to NULL.
 In this case no screening is used is used.}
 
 \item{xval}{optional matrix of predictor variables observations used for
@@ -102,18 +102,18 @@ overwritten with a coefficient only depending on the given \code{x} and \code{y}
 \item{seed}{integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.}
 
 \item{set.seed.iteration}{a boolean indicating whether a different seed should be set in each marginal model \code{i}.
-This will be set to  \code{seed + i}.}
+Defaults to \code{FALSE}. If \code{TRUE}, seed will be set to  \code{seed + i} in each marginal model i.}
 
 \item{...}{further arguments mainly to ensure back-compatibility}
 }
 \value{
-object of class \code{"spar"} with elements
+object of class \code{'spar'} with elements
 \itemize{
 \item \code{betas} p x \code{max(nummods)} sparse matrix of class
-\code{"\link[=dgCMatrix-class]{dgCMatrix}"} containing the
+\code{'\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}'} containing the
 standardized coefficients from each marginal model
 \item \code{intercepts} used in each marginal model
-\item \code{scr_coef} p-vector of coefficients used for screening for standardized predictors
+\item \code{scr_coef} vector of length p with coefficients used for screening the standardized predictors
 \item \code{inds} list of index-vectors corresponding to variables kept after screening in each marginal model of length max(nummods)
 \item \code{RPMs} list of projection matrices used in each marginal model of length \code{max(nummods)}
 \item \code{val_res} \code{data.frame} with validation results (validation measure
@@ -126,8 +126,8 @@ if \code{FALSE}, training data were used for validation
 \item \code{yscale} empirical standard deviation of initial response vector
 \item \code{xcenter} p-vector of empirical means of initial predictor variables
 \item \code{xscale} p-vector of empirical standard deviations of initial predictor variables
-\item \code{rp} an object of class "\code{randomprojection}"
-\item \code{screencoef} an object of class "\code{screeningcoef}"
+\item \code{rp} an object of class \code{"randomprojection"}
+\item \code{screencoef} an object of class \code{"screeningcoef"}
 }
 If a parallel backend is registered and \code{parallel = TRUE},
 the \link[foreach]{foreach} function
@@ -138,9 +138,9 @@ Apply Sparse Projected Averaged Regression to high-dimensional data by
 building an ensemble of generalized linear models, where the high-dimensional
 predictors can be screened using a screening coefficient and then projected
 using data-agnostic or data-informed random projection matrices.
-This function performs the procedure for given thresholds nu and a grid of
-the number of marginal models, and acts as a help-function for the full
-cross-validated procedure \link{spar.cv}.
+This function performs the procedure for a given grid of thresholds \eqn{\nu}
+and a grid of the number of marginal models to be employed in the ensemble.
+This function is also used in the cross-validated procedure \link{spar.cv}.
 }
 \examples{
 \dontrun{

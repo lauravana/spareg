@@ -1,14 +1,16 @@
 #' Sparse Projected Averaged Regression
 #'
-#' Apply Sparse Projected Averaged Regression to High-dimensional Data (see Parzer, Vana-Guer and Filzmoser 2023).
+#' Apply Sparse Projected Averaged Regression to High-Dimensional Data, where the
+#' number of models and the threshold parameter is chosen using a cross-validation
+#' procedure.
 #'
 #' @param x n x p numeric matrix of predictor variables.
 #' @param y quantitative response vector of length n.
-#' @param family  a "\code{\link[stats]{family}}" object used for the marginal generalized linear model,
-#'        default \code{gaussian("identity")}.
-#' @param model function creating a "\code{sparmodel}" object; defaults to \code{spar_glmnet()}.
-#' @param rp function creating a "\code{randomprojection}" object.
-#' @param screencoef function creating a "\code{screeningcoef}" object
+#' @param family  a \code{'\link[stats]{family}'} object used for the marginal
+#'        generalized linear model; defaults to \code{gaussian("identity")}.
+#' @param model function creating a \code{'sparmodel'} object; defaults to \code{spar_glmnet()}.
+#' @param rp function creating a \code{'randomprojection'} object.
+#' @param screencoef function creating a \code{'screeningcoef'} object
 #' @param nfolds number of folds to use for cross-validation; should be at least 2, defaults to 10.
 #' @param nnu number of different threshold values \eqn{\nu} to consider for thresholding;
 #'        ignored when \code{nus} is provided; defaults to 20.
@@ -28,27 +30,27 @@
 #'        estimation of the marginal models. Defaults to FALSE.
 #' @param seed integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.
 #' @param set.seed.iteration a boolean indicating whether a different seed should be set in each marginal model \code{i}.
-#'        This will be set to  \code{seed + i}.
+#'        Defaults to \code{FALSE}. If \code{TRUE}, seed will be set to  \code{seed + i} in each marginal model i.
 #' @param ... further arguments mainly to ensure back-compatibility
-#' @returns object of class \code{"spar.cv"} with elements
+#' @returns object of class \code{'spar.cv'} with elements
 #' \itemize{
 #'  \item \code{betas} p x  \code{max(nummods)} sparse matrix of class
-#'  \code{"\link[=dgCMatrix-class]{dgCMatrix}"} containing the
+#'   \code{'\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}'} containing the
 #'   standardized coefficients from each marginal model
 #'  \item \code{intercepts} used in each marginal model, vector of length \code{max(nummods)}
 #'  \item \code{scr_coef} p-vector of coefficients used for screening for standardized predictors
 #'  \item \code{inds} list of index-vectors corresponding to variables kept after
 #'  screening in each marginal model of length  \code{max(nummods)}
 #'  \item \code{RPMs} list of projection matrices used in each marginal model of length \code{max(nummods)}
-#'  \item \code{val_sum} \code{data.frame} with CV results (mean and sd validation measure and mean number of active variables) for each element of nus and nummods
+#'  \item \code{val_sum} a \code{data.frame} with CV results (mean and sd validation measure and mean number of active variables) for each element of nus and nummods
 #'  \item \code{nus} vector of \eqn{\nu}'s considered for thresholding
 #'  \item \code{nummods} vector of numbers of marginal models considered for validation
 #'  \item \code{ycenter} empirical mean of initial response vector
 #'  \item \code{yscale} empirical standard deviation of initial response vector
 #'. \item \code{xcenter} p-vector of empirical means of initial predictor variables
 #'  \item \code{xscale} p-vector of empirical standard deviations of initial predictor variables
-#'  \item \code{rp} an object of class "\code{randomprojection}"
-#'  \item \code{screencoef} an object of class "\code{screeningcoef}"
+#'  \item \code{rp} an object of class \code{'randomprojection'}
+#'  \item \code{screencoef} an object of class \code{'screeningcoef'}
 #' }
 #' @examples
 #' \dontrun{
@@ -167,21 +169,21 @@ spareg.cv <- spar.cv
 
 #' coef.spar.cv
 #'
-#' Extract coefficients from spar object
-#' @param object result of spar.cv function of class "spar.cv".
-#' @param opt_par one of c("1se","best"), chooses whether to select the best
-#' pair of nus and nummods according to CV-Meas, or the sparsest solution within
-#' one sd of that optimal CV-Meas;
-#' ignored when nummod and nu are given
+#' Extract coefficients from \code{'spar.cv'} object
+#' @param object result of [spar.cv] function of class \code{'spar.cv'}.
+#' @param opt_par one of \code{c("1se","best")}, chooses whether to select the
+#'        best pair of \code{nus} and \code{nummods} according to CV-Meas, or
+#'        the sparsest solution within one sd of that optimal CV-Meas;
+#'        ignored when \code{nummod} and \code{nu} are given
 #' @param nummod optional number of models used to form coefficients
 #' @param nu optional threshold level used to form coefficients
 #' @param ... further arguments passed to or from other methods
-#' @return List of coefficients with elements
+#' @return List with elements
 #' \itemize{
-#'  \item intercept
-#'  \item beta
-#'  \item nummod
-#'  \item nu
+#'  \item \code{intercept} intercept value
+#'  \item \code{beta} vector of length p of averaged coefficients
+#'  \item \code{nummod} number of models based on which the coefficient is computed
+#'  \item \code{nu}  threshold based on which the coefficient is computed
 #' }
 #' @export
 
@@ -251,8 +253,8 @@ coef.spar.cv <- function(object,
 
 #' predict.spar.cv
 #'
-#' Predict responses for new predictors from spar object
-#' @param object result of spar function of class "spar".
+#' Predict responses for new predictors from \code{'spar.cv'} object
+#' @param object result of spar function of class \code{'spar.cv'}.
 #' @param xnew matrix of new predictor variables; must have same number of columns as  \code{x}.
 #' @param type the type of required predictions; either on response level (default) or on link level
 #' @param avg_type type of averaging the marginal models; either on link (default) or on response level
@@ -264,8 +266,7 @@ coef.spar.cv <- function(object,
 #' minimal validation  \code{Meas} is used if not provided.
 #' @param nu threshold level used to form coefficients; value with minimal
 #'  validation  \code{Meas} is used if not provided.
-#' @param coef optional; result of \code{\link{coef.spar.cv}}, can be used if
-#'  \code{\link{coef.spar.cv}} has already been called.
+#' @param coef optional; result of \code{\link{coef.spar.cv}} can be used.
 #' @param ... further arguments passed to or from other methods
 #' @return Vector of predictions
 #' @export
@@ -316,8 +317,9 @@ predict.spar.cv <- function(object,
 
 #' plot.spar.cv
 #'
-#' Plot errors or number of active variables over different thresholds or number of models of spar.cv result, or residuals vs fitted
-#' @param x result of spar.cv function of class  \code{"spar.cv"}.
+#' Plot errors or number of active variables over different thresholds or number
+#' of models of \code{'spar.cv'} object, or residuals vs fitted
+#' @param x result of [spar.cv] function of class  \code{'spar.cv'}.
 #' @param plot_type one of  \code{c("Val_Measure","Val_numAct","res-vs-fitted","coefs")}.
 #' @param plot_along one of  \code{c("nu","nummod")}; ignored when  \code{plot_type="res-vs-fitted"}.
 #' @param opt_par one of  \code{c("1se","best")}, chooses whether to select the
@@ -337,7 +339,7 @@ predict.spar.cv <- function(object,
 #' @param coef_order optional index vector of length p for \code{"coefs"}-plot to give the order of the predictors; defaults to  \code{1 : p}.
 #' @param digits number of significant digits to be displayed in the axis; defaults to 2L.
 #' @param ... further arguments passed to or from other methods
-#' @return ggplot2 object
+#' @return \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
 #' @import ggplot2
 #' @export
 plot.spar.cv <- function(x,
@@ -536,8 +538,8 @@ plot.spar.cv <- function(x,
 
 #' print.spar.cv
 #'
-#' Print summary of spar.cv result
-#' @param x result of  \code{spar.cv()} function of class  \code{"spar.cv"}.
+#' Print summary of \code{'spar.cv'} object
+#' @param x result of  [spar.cv] function of class  \code{'spar.cv'}.
 #' @param ... further arguments passed to or from other methods
 #' @return text summary
 #' @export

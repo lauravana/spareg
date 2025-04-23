@@ -26,7 +26,9 @@ simulate_spareg_data(
 
 \item{snr}{Numeric. Signal-to-noise ratio. Default is 10.}
 
-\item{rho}{Numeric between 0 and 1. Correlation coefficient among predictors. Default is 0.5.}
+\item{rho}{Numeric between 0 and 1. Pairwise correlation coefficient among predictors.
+Default is 0.5. A compound symmetry correlation matrix is used. The variance of
+the predictors is fixed to 1.}
 
 \item{mu}{Numeric. Intercept term (mean of response). Default is 1.}
 
@@ -41,7 +43,7 @@ A list with the following components:
 \item{ytest}{Test response vector (length ntest).}
 \item{mu}{Intercept used in data generation.}
 \item{beta}{True coefficient vector (length p).}
-\item{sigma2}{Noise variance used in data generation. Equals }
+\item{sigma2}{Noise variance used in data generation. Equals beta' Sigma beta / snr.}
 }
 }
 \description{

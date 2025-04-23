@@ -7,7 +7,7 @@
 \method{print}{randomprojection}(x, ...)
 }
 \arguments{
-\item{x}{object of class randomprojection}
+\item{x}{object of class \code{'randomprojection'}}
 
 \item{...}{further arguments passed to or from other methods}
 }
@@ -15,5 +15,5 @@
 text summary
 }
 \description{
-Print method for a "\code{randomprojection}" object
+Print method for a \code{'randomprojection'} object
 }

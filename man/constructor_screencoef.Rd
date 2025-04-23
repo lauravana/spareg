@@ -2,7 +2,7 @@
 % Please edit documentation in R/screening_classes.R
 \name{constructor_screencoef}
 \alias{constructor_screencoef}
-\title{Constructor function for building screencoef objects}
+\title{Constructor function for building \code{'screencoef'} objects}
 \usage{
 constructor_screencoef(name, generate_fun)
 }
@@ -12,18 +12,18 @@ constructor_screencoef(name, generate_fun)
 \item{generate_fun}{function for generating the screening coefficient. This
 function should have arguments  and   \code{y} (vector of responses -- standardized
 for Gaussian family), \code{x} (the matrix of standardized predictors) and a
-"\code{screencoef}" \code{object}.}
+\code{'screencoef'} object.}
 }
 \value{
-a function which in turn creates a function which in turn creates an
+a function which in turn creates an object of class \code{'screencoef'}
 }
 \description{
-The created function will return a object of class "\code{screencoef}" which
+The created function will return a object of class \code{'screencoef'} which
 constitutes of a list. The attributes of the generating object will include by
 default \code{type}, which can take one of two values \code{"prob"} (indicating
 probabilistic screening should be employed) or
 \code{"fixed"} (indicating that the top \code{nscreen} variables should be employed).
 }
 \details{
-Creates an object class screencoef using arguments passed by user.
+Creates an object class \code{'screencoef'} using arguments passed by user.
 }
