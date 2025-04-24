@@ -2,7 +2,6 @@
 
 **spareg** is an R package for building ensembles of predictive generalized linear models tailored for high-dimensional data. It leverages a powerful combination of **variable screening** and **random projection** techniques to efficiently tackle large-scale modeling problems.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CRAN Status](https://www.r-pkg.org/badges/version/spareg)](https://CRAN.R-project.org/package=spareg)
 
 ---
