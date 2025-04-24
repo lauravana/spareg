@@ -1,6 +1,6 @@
 Type: Package
 Package: spareg
-Title: "Sparse Projected Averaged Regression in R"
+Title: Sparse Projected Averaged Regression in R
 Version: 1.0.0
 Authors@R:
     c(person(given = "Laura",
