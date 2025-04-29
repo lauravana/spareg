@@ -311,7 +311,8 @@ different strategies, ensuring that the most effective approach is chosen for
 the specific application at hand. Moreover, it incorporates probabilistic
 screening strategies, which can be
 particularly useful in ensembles, as they enhance the diversity of predictors
-across ensemble models. Instead of relying on a fixed threshold $\delta$, predictors are sampled with probabilities
+across ensemble models. Instead of relying on a fixed threshold $\delta$,
+predictors are sampled with probabilities
 proportional to their screening coefficient
 \citep[see][]{Dunson2020TargRandProj,parzer2024glms}.
 Note that this is different than the random subspace sampling employed
@@ -2019,13 +2020,14 @@ for linear
 regression and extended to GLMs in \cite{parzer2024glms}.  This data-driven approach, where information about the relationship among the responses and the predictors is incorporated in the random projection through a ridge coefficients, has the
 advantage of ensuring that the true
 regression coefficients can be recovered approximately after the projection.
-Methodologically, the SPAR algorithm, particularly when paired with the
-data-driven random projection in \cite{parzer2024glms}, has been demonstrated
-to perform effectively across different degrees of sparsity of the coefficient
-vector and to offer
-competitive predictions and variable ranking in both sparse and dense settings.
+Methodologically, the SPAR algorithm with ridge screening coefficients and
+the data-driven random projection (as proposed in \cite{parzer2024glms}) has been demonstrated
+to perform effectively in terms of predictive power and variable ranking in settings with correlated predictors and across different degrees of sparsity of the coefficient
+vector, making it a suitable method to high-dimensional settings with correlated predictors where the sparsity of the problem is unknown.
 
-Moreover, the flexibility and adaptability of the \pkg{spareg} package in dealing with different types of screening, random projection and types of GLMs, make it an
+Moreover, the flexibility and adaptability of the \pkg{spareg} package in
+dealing with different types of screening, random projection and types of
+GLMs, make it an
 attractive choice for practitioners and researchers in a
 wide variety of data settings.
 It encourages exploration
@@ -2040,6 +2042,12 @@ The results in this paper were obtained using \proglang{R}
 \proglang{R} itself and all packages used are available from CRAN
 at \url{https://CRAN.R-project.org/}.
 
+\ifPositive
+\else
+<<session_info>>=
+sessionInfo()
+@
+\fi
 
 \section*{Acknowledgments}
 
