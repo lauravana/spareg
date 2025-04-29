@@ -85,7 +85,7 @@ if (is_paper) {
 }
 @
 % \VignetteIndexEntry{spareg: Sparse Projected Averaged Regression in R}
-% \VignetteDepends{robustbase,cellWise,VariableScreening,R.matlab,doParallel}
+% \VignetteDepends{robustbase,cellWise,VariableScreening,R.matlab,doParallel,ggpubr}
 % \VignetteKeyword{random projection}
 % \VignetteKeyword{screening}
 % \VignetteKeyword{ensemble learning}
@@ -1152,13 +1152,11 @@ defaults to \code{c(1, p)}.
 The four plots for the `\code{spar}' object are produced with the code below and
 shown in Figure~\ref{fig:plot_example}.
 <<eval=FALSE>>=
-op <- par(mfrow = c(1, 4))
 plot(spar_res)
 plot(spar_res, plot_type = "Val_numAct")
 plot(spar_res,  plot_type = "coefs")
 plot(spar_res, plot_type = "res-vs-fitted", xfit = example_data$xtest,
      yfit = example_data$ytest)
-par(op)
 @
 <<echo=FALSE,include=FALSE>>=
 library(ggplot2)
