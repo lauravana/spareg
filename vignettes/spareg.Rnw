@@ -993,7 +993,8 @@ and the value of the \code{intercept}.
 %
 \item \code{update_fun()} -- an optional function which can add further
 attributes to the `\code{sparmodel}' object which is called at the beginning
-of the SPAR algorithm. This function returns the `\code{sparmodel}' object after modifying it.  In the case of function \code{spar_glmnet()} this
+of the SPAR algorithm. This function returns the `\code{sparmodel}' object after
+modifying it.  In the case of function \code{spar_glmnet()} this
 function manipulates the \class{family} object in a way which is convenient
 for function \code{glmnet::glmnet()}.\footnote{In the case of families Gaussian,
 binomial and Poisson with  canonical link, the family object is replaced by a
@@ -1024,7 +1025,8 @@ spar_res <- spar(example_data$x, example_data$y,
 spar_res
 @
 %
-For `\code{spar.cv}' it also provides the same information for the $(\nu, M)$ combination chosen by the one-standard error rule.
+For `\code{spar.cv}' it also provides the same information for the $(\nu, M)$
+combination chosen by the one-standard error rule.
 <<>>=
 spar_cv <- spar.cv(example_data$x, example_data$y,
   nummods = c(5, 10, 15, 20, 25, 30))
@@ -1032,7 +1034,8 @@ spar_cv
 @
 %
 \subsubsection[coef]{\code{coef}}
-Method \code{coef} takes as inputs a `\code{spar}' or `\code{spar.cv}' object, together with further arguments:
+Method \code{coef} takes as inputs a `\code{spar}' or `\code{spar.cv}' object,
+together with further arguments:
 \begin{itemize}
 \item \code{nummod} -- number of models used to compute the averaged
 coefficients; value of \code{nummod} with minimal  \code{measure} is used if
@@ -1175,12 +1178,15 @@ ggsave(filename = "Figures/plot_example.pdf", p,
 \begin{figure}[t!]
 \centering
 \includegraphics[width=1\textwidth]{Figures/plot_example.pdf}
-\caption{\code{plot} methods for \class{spar} object. The red dots in the first two figures show the best $\nu$ chosen on the validation set for the optimal number of models $M=5$.
+\caption{\code{plot} methods for \class{spar} object. The red dots in the first
+two figures show the best $\nu$ chosen on the validation set for the optimal number
+of models $M=5$.
 \label{fig:plot_example}}
 \end{figure}
 %
 For class `\code{spar.cv}' there is the extra argument
-\code{opt_par = c("best", "1se")} which is only used for \code{plot_type = "res-vs-fitted"} and indicates whether the predictions
+\code{opt_par = c("best", "1se")} which is only used for
+\code{plot_type = "res-vs-fitted"} and indicates whether the predictions
 should be based on coefficients using the best $(\nu, M)$ combination or
 using the combination which delivers the sparsest
 $\beta$ having validation measure within one standard deviation from the minimum.
