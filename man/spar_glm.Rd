@@ -2,7 +2,7 @@
 % Please edit documentation in R/sparmodel_classes.R
 \name{spar_glm}
 \alias{spar_glm}
-\title{Model object for estimating penalized glms in marginal models in the ensemble models in the ensemble}
+\title{GLM marginal models}
 \usage{
 spar_glm(..., control = list())
 }
@@ -14,18 +14,20 @@ spar_glm(..., control = list())
 }
 \value{
 object of class \code{'sparmodel'} which is a list with elements
-
 \itemize{
 \item \code{name} (character)
 \item \code{control} (list of controls passed as an argument)
-\item \code{model_fun}  for generating the screening coefficient.
+\item \code{model_fun} function for estimating the model coefficients and the intercept.
 This function should have arguments \code{y}, vector of standardized responses,
-\code{z}, a matrix of projected predictors in each marginal model, and \code{object}, which is a \code{'sparmodel'} object. Returns a list with two elements: \code{gammas} which is the vector of regression coefficients for the projected predictors and \code{intercept} which is the intercept of the model
+\code{z}, a matrix of projected predictors in each marginal model, and
+\code{object}, which is a \code{'sparmodel'} object. Returns a list with
+two elements: \code{gammas} which is the vector of regression coefficients
+for the projected predictors and \code{intercept} which is the intercept of the model
 }
 }
 \description{
-Relies on \link[stats]{glm.fit}.
+Creates an object class \code{'sparmodel'} using arguments passed by user.
 }
 \details{
-Creates an object class \code{'sparmodel'} using arguments passed by user.
+Relies on \link[stats]{glm}.
 }

@@ -14,16 +14,37 @@ projection matrix}
 \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}}
 }
 \value{
-object of class \code{'randomprojection'}
+object of class \code{'randomprojection'} which is a list with
+elements name,
+\code{generate_fun},  \code{update_fun},  \code{control}
 }
 \description{
-The entries of the matrix are generated based on \insertCite{Clarkson2013LowRankApprox}{spareg}.
+Creates an object class \code{'randomprojection'} using arguments passed by
+user which in turn can be employed to generate a sparse embedding matrix as
+in  \insertCite{Clarkson2013LowRankApprox}{spareg}.
 }
 \details{
-Creates an object class \code{'randomprojection'} using arguments passed by user.
+The entries of the matrix are generated based on \insertCite{Clarkson2013LowRankApprox}{spareg}.
+This matrix is constructed as \eqn{\Phi=BD\in \mathbb{R}^{m\times p}}, where
+\eqn{B} is a \eqn{(p\times p)} binary matrix, where for each column \eqn{j}
+an index is uniformly sampled from \eqn{\{1,\ldots,m\}} and the corresponding
+entry is set to one, and \eqn{D} is a \eqn{(p\times p)} diagonal matrix,
+with entries \eqn{d_j \sim \text{Unif}(\{-1, 1\})}.
+If specified as \code{rp_cw(data = TRUE)}, the random elements on the diagonal
+are replaced by the ridge coefficients with a small penalty, as introduced in
+\insertCite{parzer2024glms}{spareg}.
+}
+\examples{
+example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+  yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30),
+  rp = rp_cw(data = TRUE))
+
 }
 \references{
 {
 \insertRef{Clarkson2013LowRankApprox}{spareg}
+
+\insertRef{parzer2024glms}{spareg}.
 }
 }

@@ -26,6 +26,7 @@
 #' }
 #'
 #' @examples
+#' set.seed(123)
 #' data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
 #' str(data)
 #'

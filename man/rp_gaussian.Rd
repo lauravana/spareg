@@ -2,7 +2,7 @@
 % Please edit documentation in R/rp_classes.R
 \name{rp_gaussian}
 \alias{rp_gaussian}
-\title{Creates an object class \code{'randomprojection'} using arguments passed by user.}
+\title{Gaussian random projection matrix}
 \usage{
 rp_gaussian(..., control = list())
 }
@@ -14,10 +14,31 @@ projection matrix}
 \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}}
 }
 \value{
-object of class \code{'randomprojection'} with is a list with elements name,
+object of class \code{'randomprojection'} which is a list with
+elements name,
 \code{generate_fun},  \code{update_fun},  \code{control}
 }
 \description{
-The entries of the matrix will be generated from
-a normal distribution (mean 0 and standard deviation 1 by default).
+Creates an object class \code{'randomprojection'} using arguments passed by
+user which in turn can be employed to generate a random matrix with normally
+distributed entries (mean 0 and standard deviation 1 by default).
+}
+\details{
+Arguments related to the random projection procedure can
+be passed to the \code{rp_gaussian()} function through \code{...}, and
+will be saved as attributes of the \code{'randomprojection'} object.
+The following attributes are relevant for \link{spar} and \link{spar.cv}:
+\itemize{
+\item \code{mslow}: integer giving the minimum dimension to which the predictors
+should be projected; defaults to \eqn{\log(p)}.
+\item \code{msup}: integer giving the maximum dimension to which the predictors
+should be projected; defaults to \eqn{n/2}.
+}
+}
+\examples{
+example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+  yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30),
+  rp = rp_gaussian(control = list(sd = 1/sqrt(ncol(example_data$x)))))
+
 }

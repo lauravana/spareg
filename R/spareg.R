@@ -15,7 +15,9 @@
 #' @param y quantitative response vector of length n.
 #' @param family  a \link[stats]{family}  object used for the marginal generalized linear model,
 #'        default \code{gaussian("identity")}.
-#' @param model function creating a \code{'sparmodel'} object; defaults to \code{spar_glmnet()}.
+#' @param model function creating a \code{'sparmodel'} object;
+#'   defaults to \code{spar_glm()} for gaussian family with identity link and to
+#'   \code{spar_glmnet()} for all other family-link combinations.
 #' @param rp function creating a \code{'randomprojection'} object. Defaults to NULL.
 #' In this case \code{rp_cw(data = TRUE)} is used.
 #' @param screencoef function creating a \code{'screeningcoef'} object. Defaults to NULL.
@@ -87,18 +89,16 @@
 #'   \insertRef{ACHLIOPTAS2003JL}{spareg}
 #' }
 #' @examples
-#' \dontrun{
 #' example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
 #'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
-#' spar_res
 #' coefs <- coef(spar_res)
 #' pred <- predict(spar_res, xnew = example_data$x)
 #' plot(spar_res)
 #' plot(spar_res, "Val_Meas", "nummod")
 #' plot(spar_res, "Val_numAct", "nu")
 #' plot(spar_res, "coefs", prange = c(1,400))
-#' }
+#'
 #' @seealso [spar.cv],[coef.spar],[predict.spar],[plot.spar],[print.spar]
 #' @aliases spareg
 #' @export
@@ -145,11 +145,8 @@ spar <- function(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
 
 #' @rdname spar
 #' @examples
-#' \dontrun{
 #' spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
 #'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
-#' spar_res
-#' }
 #' @aliases spar
 #' @export
 spareg <- spar
@@ -182,7 +179,7 @@ spar_algorithm <- function(x, y,
   }
 
   # Scaling the y vector ----
-  if (family$family=="gaussian" & family$link=="identity") {
+  if (family$family == "gaussian" & family$link=="identity") {
     ycenter <- mean(y)
     yscale <- sd(y)
   } else {
@@ -237,7 +234,13 @@ spar_algorithm <- function(x, y,
     max_inc_probs <- max(inc_probs)
     inc_probs <- inc_probs/max_inc_probs
     attr(screencoef, "inc_prob") <- inc_probs
-  } else {
+    if (attr(screencoef, "type") == "prob" && sum(inc_probs > 0) < nscreen) {
+      warning(
+        sprintf("The number of variables with non-zero screening coefficients (%i) is less than the number of variables to screen (%i). Probabilistic screening with nscreen variables is performed anyway, but some of some of the variables with a zero inclusion probability will be randomly added to the set of screened variables. Alternatively, nscreen can be lowered in screen_*().",
+                sum(inc_probs > 0), nscreen))
+
+    }
+    } else {
     scr_coef <- NULL
     # message("No screening performed.")
   }
@@ -276,7 +279,11 @@ spar_algorithm <- function(x, y,
       if (nscreen < p) {
         ind_use <- switch(attr(screencoef, "type"),
                           "fixed" =  order(inc_probs, decreasing = TRUE)[seq_len(nscreen)],
-                          "prob"  =  sample(actual_p, nscreen, prob=inc_probs),
+                          "prob"  =  c(sample(seq_len(actual_p)[inc_probs > 0],
+                                              min(sum(inc_probs > 0), nscreen),
+                                              prob = inc_probs[inc_probs>0]),
+                                       sample(seq_len(actual_p)[inc_probs == 0],
+                                              nscreen - min(sum(inc_probs > 0), nscreen))),
                           stop("Type of screening coef should be fixed or prob.")
         )
       } else {
@@ -558,10 +565,12 @@ predict.spar <- function(object,
   }
   return(res)
 }
-
+#'
 #' plot.spar
 #'
+#' @description
 #' Plot values of validation measure or number of active variables over different thresholds or number of models for \code{'spar'} object, or residuals vs fitted
+#'
 #' @param x result of spar function of class  \code{'spar'}.
 #' @param plot_type one of  \code{c("Val_Measure", "Val_numAct", "res-vs-fitted", "coefs")}.
 #' @param plot_along one of \code{c("nu","nummod")}; ignored when  \code{plot_type = "res-vs-fitted"}.
@@ -578,9 +587,13 @@ predict.spar <- function(object,
 #'  the order of the predictors; defaults to \code{1 : p}.
 #' @param digits number of significant digits to be displayed in the axis; defaults to 2L.
 #' @param ... further arguments passed to or from other methods
+#'
 #' @return \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
+#'
 #' @import ggplot2
+#'
 #' @export
+#'
 plot.spar <- function(x,
                       plot_type = c("Val_Measure","Val_numAct","res-vs-fitted","coefs"),
                       plot_along = c("nu","nummod"),
@@ -600,8 +613,8 @@ plot.spar <- function(x,
       stop("xfit and yfit need to be provided for res-vs-fitted plot!")
     }
     pred <- predict(spar_res, xfit, nummod, nu, type = "response")
-    res <- ggplot2::ggplot(data = data.frame(fitted=.data$pred,
-                                             residuals=.data$yfit-.data$pred),
+    res <- ggplot2::ggplot(data = data.frame(fitted=pred,
+                                             residuals=yfit-pred),
                            ggplot2::aes(x=.data$fitted,y=.data$residuals)) +
       ggplot2::geom_point() +
       ggplot2::geom_hline(yintercept = 0,linetype=2,linewidth=0.5)
@@ -621,7 +634,6 @@ plot.spar <- function(x,
                              ggplot2::aes(x=.data$nnu,y=.data$Meas)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
-        # ggplot2::scale_x_continuous(breaks=seq(1,nrow(spar_res$val_res),1),labels=round(spar_res$val_res$nu,3)) +
         ggplot2::scale_x_continuous(breaks=seq(1,nrow(tmp_df)),
                                     labels=formatC(tmp_df$nu,
                                                    format = "e", digits = digits)) +
@@ -664,8 +676,8 @@ plot.spar <- function(x,
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         # ggplot2::scale_x_continuous(breaks=seq(1,nrow(spar_res$val_res),1),labels=round(spar_res$val_res$nu,3)) +
-        ggplot2::scale_x_continuous(breaks=seq(1,nrow(spar_res$val_res),2),
-                                    labels=formatC(spar_res$val_res$nu[seq(1,nrow(spar_res$val_res),2)],
+        ggplot2::scale_x_continuous(breaks=seq(1,nrow(spar_res$val_res),1),
+                                    labels=formatC(spar_res$val_res$nu[seq(1,nrow(spar_res$val_res),1)],
                                                    format = "e", digits = digits)) +
         ggplot2::labs(x=expression(nu)) +
         ggplot2::geom_point(data=data.frame(x=tmp_df$nnu[ind_min],y=tmp_df$numAct[ind_min]),

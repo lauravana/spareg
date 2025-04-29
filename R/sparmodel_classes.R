@@ -7,7 +7,8 @@
 #'    function should have arguments  and   \code{y} (vector of responses -- standardized
 #'    for Gaussian family), \code{z} (the matrix of projected predictors) and a
 #'    \code{'sparmodel'} \code{object}.
-#' @param update_fun optional function for updating the \code{'sparmodel'} object. before the
+#' @param update_fun optional function for updating the \code{'sparmodel'} object
+#'  before the
 #' start of the algorithm.
 #' @return a function which in turn creates an
 #'    object of class \code{'sparmodel'}.
@@ -37,25 +38,29 @@ constructor_sparmodel <- function(name, model_fun, update_fun = NULL) {
     return(out)
   }
 }
-
-#' Model object for estimating penalized glms in marginal models in the ensemble
 #'
+#' Penalized GLM marginal models
+#'
+#' @description
 #' Creates an object class \code{'sparmodel'} using arguments passed by user.
 #' @param ... includes arguments which can be passed as attributes to the
 #' \code{'sparmodel'} object
 #' @param control list of controls to be passed to the model function
 #' @return object of class \code{'sparmodel'} which is a list with elements
-#'
 #' \itemize{
 #'  \item \code{name} (character)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{model_fun}  for generating the screening coefficient.
 #'   This function should have arguments \code{y}, vector of standardized responses,
-#'   \code{z}, a matrix of projected predictors in each marginal model, and \code{object}, which is a \code{'sparmodel'} object. Returns a list with two elements: \code{gammas} which is the vector of regression coefficients for the projected predictors and \code{intercept} which is the intercept of the model.
-#'  \item \code{update_fun}  optional function for updating the \code{'sparmodel'} object. before the
-#' start of the algorithm.
+#'   \code{z}, a matrix of projected predictors in each marginal model, and
+#'   \code{object}, which is a \code{'sparmodel'} object. Returns a list with
+#'   two elements: \code{gammas} which is the vector of regression coefficients
+#'    for the projected predictors and \code{intercept} which is the intercept
+#'    of the model.
+#'  \item \code{update_fun}  optional function for updating the \code{'sparmodel'}
+#'   object before the start of the algorithm.
 #' }
-#' @description
+#' @details
 #' Relies on \link[glmnet]{glmnet}.
 #'
 #' @export
@@ -112,23 +117,26 @@ model_glmnet <- function(y, z, object) {
   list(gammas = gammas, intercept = intercept)
 }
 
-#' Model object for estimating penalized glms in marginal models in the ensemble models in the ensemble
+#' GLM marginal models
 #'
+#' @description
 #' Creates an object class \code{'sparmodel'} using arguments passed by user.
 #' @param ... includes arguments which can be passed as attributes to the
 #' \code{'sparmodel'} object
 #' @param control list of controls to be passed to the model function
 #' @return object of class \code{'sparmodel'} which is a list with elements
-#'
 #' \itemize{
 #'  \item \code{name} (character)
 #'  \item \code{control} (list of controls passed as an argument)
-#'  \item \code{model_fun}  for generating the screening coefficient.
+#'  \item \code{model_fun} function for estimating the model coefficients and the intercept.
 #'   This function should have arguments \code{y}, vector of standardized responses,
-#'   \code{z}, a matrix of projected predictors in each marginal model, and \code{object}, which is a \code{'sparmodel'} object. Returns a list with two elements: \code{gammas} which is the vector of regression coefficients for the projected predictors and \code{intercept} which is the intercept of the model
+#'   \code{z}, a matrix of projected predictors in each marginal model, and
+#'   \code{object}, which is a \code{'sparmodel'} object. Returns a list with
+#'    two elements: \code{gammas} which is the vector of regression coefficients
+#'    for the projected predictors and \code{intercept} which is the intercept of the model
 #' }
-#' @description
-#' Relies on \link[stats]{glm.fit}.
+#' @details
+#' Relies on \link[stats]{glm}.
 #'
 #' @export
 #'

@@ -21,7 +21,7 @@ a function which in turn creates an object of class \code{'screencoef'}
 The created function will return a object of class \code{'screencoef'} which
 constitutes of a list. The attributes of the generating object will include by
 default \code{type}, which can take one of two values \code{"prob"} (indicating
-probabilistic screening should be employed) or
+probabilistic screening should be employed),
 \code{"fixed"} (indicating that the top \code{nscreen} variables should be employed).
 }
 \details{

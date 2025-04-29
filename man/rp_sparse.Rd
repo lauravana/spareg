@@ -8,22 +8,43 @@ rp_sparse(..., control = list())
 }
 \arguments{
 \item{...}{includes arguments which can be passed as attributes to the random
-projection matrix. The possible argument is \code{psi} in (0,1] which determines
-the level of sparsity in the matrix.}
+projection matrix.}
 
 \item{control}{list of arguments to be used in functions
 \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}}
 }
 \value{
-object of class \code{'randomprojection'}
+object of class \code{'randomprojection'} which is a list with
+elements name,
+\code{generate_fun},  \code{update_fun},  \code{control}
 }
 \description{
+Creates an object class \code{'randomprojection'} using arguments passed by
+user which in turn can be employed to generate a sparse embedding matrix as
+in  \insertCite{ACHLIOPTAS2003JL}{spareg}.
+}
+\details{
 The sparse matrix used in \insertCite{ACHLIOPTAS2003JL}{spareg} with entries equal to
 \eqn{\Psi_{ij} = \pm 1/\sqrt{\psi}} with probability \eqn{\psi/2} and zero otherwise
 for \eqn{\psi\in (0,1]}. Default is \code{psi = 1}.
+
+Arguments related to the random projection procedure can
+be passed to the \code{rp_gaussian()} function through \code{...}, and
+will be saved as attributes of the \code{'randomprojection'} object.
+The following attributes are relevant for \link{spar} and \link{spar.cv}:
+\itemize{
+\item \code{mslow}: integer giving the minimum dimension to which the predictors
+should be projected; defaults to \eqn{\log(p)}.
+\item \code{msup}: integer giving the maximum dimension to which the predictors
+should be projected; defaults to \eqn{n/2}.
 }
-\details{
-Creates an object class \code{'randomprojection'} using arguments passed by user.
+}
+\examples{
+example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+  yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30),
+  rp = rp_sparse(control = list(psi = 1/3)))
+
 }
 \references{
 {
