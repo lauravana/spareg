@@ -49,7 +49,9 @@ spareg.cv(
 \item{family}{a \code{'\link[stats]{family}'} object used for the marginal
 generalized linear model; defaults to \code{gaussian("identity")}.}
 
-\item{model}{function creating a \code{'sparmodel'} object; defaults to \code{spar_glmnet()}.}
+\item{model}{function creating a \code{'sparmodel'} object;
+defaults to \code{spar_glm()} for gaussian family with identity link and to
+\code{spar_glmnet()} for all other family-link combinations.}
 
 \item{rp}{function creating a \code{'randomprojection'} object.}
 
@@ -113,7 +115,7 @@ number of models and the threshold parameter is chosen using a cross-validation
 procedure.
 }
 \examples{
-\dontrun{
+\donttest{
 example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
 spar_res <- spar.cv(example_data$x, example_data$y,
   nummods = c(5, 10, 15, 20, 25, 30))
@@ -125,10 +127,9 @@ plot(spar_res, "Val_Meas", "nummod")
 plot(spar_res, "Val_numAct", "nu")
 plot(spar_res, "coefs", prange = c(1, 400))
 }
-\dontrun{
+\donttest{
 spar_res <- spareg.cv(example_data$x, example_data$y,
   nummods=c(5, 10, 15, 20, 25, 30))
-spar_res
 }
 }
 \seealso{

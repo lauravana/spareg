@@ -8,7 +8,9 @@
 #' @param y quantitative response vector of length n.
 #' @param family  a \code{'\link[stats]{family}'} object used for the marginal
 #'        generalized linear model; defaults to \code{gaussian("identity")}.
-#' @param model function creating a \code{'sparmodel'} object; defaults to \code{spar_glmnet()}.
+#' @param model function creating a \code{'sparmodel'} object;
+#'   defaults to \code{spar_glm()} for gaussian family with identity link and to
+#'   \code{spar_glmnet()} for all other family-link combinations.
 #' @param rp function creating a \code{'randomprojection'} object.
 #' @param screencoef function creating a \code{'screeningcoef'} object
 #' @param nfolds number of folds to use for cross-validation; should be at least 2, defaults to 10.
@@ -53,7 +55,7 @@
 #'  \item \code{screencoef} an object of class \code{'screeningcoef'}
 #' }
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
 #' spar_res <- spar.cv(example_data$x, example_data$y,
 #'   nummods = c(5, 10, 15, 20, 25, 30))
@@ -104,12 +106,6 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
                         parallel = parallel,
                         seed = seed,
                         set.seed.iteration = set.seed.iteration)
-  # SPARres <- spar(x, y, family = family, model = model,
-  #                 rp = rp,
-  #                 screencoef = screencoef,
-  #                 nnu = nnu,
-  #                 nummods = nummods,
-  #                 measure = measure, ...)
 
   val_res <- SPARres$val_res
   folds <- sample(cut(seq_len(n), breaks = nfolds, labels=FALSE))
@@ -158,10 +154,9 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
 
 #' @rdname spar.cv
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' spar_res <- spareg.cv(example_data$x, example_data$y,
 #'   nummods=c(5, 10, 15, 20, 25, 30))
-#' spar_res
 #' }
 #' @aliases spar.cv
 #' @export

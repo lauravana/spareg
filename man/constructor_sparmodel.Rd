@@ -14,7 +14,8 @@ function should have arguments  and   \code{y} (vector of responses -- standardi
 for Gaussian family), \code{z} (the matrix of projected predictors) and a
 \code{'sparmodel'} \code{object}.}
 
-\item{update_fun}{optional function for updating the \code{'sparmodel'} object. before the
+\item{update_fun}{optional function for updating the \code{'sparmodel'} object
+before the
 start of the algorithm.}
 }
 \value{

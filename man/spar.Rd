@@ -55,7 +55,9 @@ spareg(
 \item{family}{a \link[stats]{family}  object used for the marginal generalized linear model,
 default \code{gaussian("identity")}.}
 
-\item{model}{function creating a \code{'sparmodel'} object; defaults to \code{spar_glmnet()}.}
+\item{model}{function creating a \code{'sparmodel'} object;
+defaults to \code{spar_glm()} for gaussian family with identity link and to
+\code{spar_glmnet()} for all other family-link combinations.}
 
 \item{rp}{function creating a \code{'randomprojection'} object. Defaults to NULL.
 In this case \code{rp_cw(data = TRUE)} is used.}
@@ -143,23 +145,18 @@ and a grid of the number of marginal models to be employed in the ensemble.
 This function is also used in the cross-validated procedure \link{spar.cv}.
 }
 \examples{
-\dontrun{
 example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
 spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
-spar_res
 coefs <- coef(spar_res)
 pred <- predict(spar_res, xnew = example_data$x)
 plot(spar_res)
 plot(spar_res, "Val_Meas", "nummod")
 plot(spar_res, "Val_numAct", "nu")
 plot(spar_res, "coefs", prange = c(1,400))
-}
-\dontrun{
+
 spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
-spar_res
-}
 }
 \references{
 {

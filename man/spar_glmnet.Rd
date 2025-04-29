@@ -2,7 +2,7 @@
 % Please edit documentation in R/sparmodel_classes.R
 \name{spar_glmnet}
 \alias{spar_glmnet}
-\title{Model object for estimating penalized glms in marginal models in the ensemble}
+\title{Penalized GLM marginal models}
 \usage{
 spar_glmnet(..., control = list())
 }
@@ -14,20 +14,23 @@ spar_glmnet(..., control = list())
 }
 \value{
 object of class \code{'sparmodel'} which is a list with elements
-
 \itemize{
 \item \code{name} (character)
 \item \code{control} (list of controls passed as an argument)
 \item \code{model_fun}  for generating the screening coefficient.
 This function should have arguments \code{y}, vector of standardized responses,
-\code{z}, a matrix of projected predictors in each marginal model, and \code{object}, which is a \code{'sparmodel'} object. Returns a list with two elements: \code{gammas} which is the vector of regression coefficients for the projected predictors and \code{intercept} which is the intercept of the model.
-\item \code{update_fun}  optional function for updating the \code{'sparmodel'} object. before the
-start of the algorithm.
+\code{z}, a matrix of projected predictors in each marginal model, and
+\code{object}, which is a \code{'sparmodel'} object. Returns a list with
+two elements: \code{gammas} which is the vector of regression coefficients
+for the projected predictors and \code{intercept} which is the intercept
+of the model.
+\item \code{update_fun}  optional function for updating the \code{'sparmodel'}
+object before the start of the algorithm.
 }
 }
 \description{
-Relies on \link[glmnet]{glmnet}.
+Creates an object class \code{'sparmodel'} using arguments passed by user.
 }
 \details{
-Creates an object class \code{'sparmodel'} using arguments passed by user.
+Relies on \link[glmnet]{glmnet}.
 }
