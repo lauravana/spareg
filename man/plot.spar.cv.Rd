@@ -52,6 +52,7 @@ for  \code{plot_type="Val_Measure"} or  \code{"Val_numAct"}; same as for \code{\
 \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
 }
 \description{
-Plot errors or number of active variables over different thresholds or number
-of models of \code{'spar.cv'} object, or residuals vs fitted
+Plot cross-validation measure or number of active variables over different thresholds or number
+of models of \code{'spar.cv'} object, produce a residuals vs fitted plot,
+or a plot of the estimated coefficients in each marginal model, sorted by their absolute value.
 }
