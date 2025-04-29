@@ -2023,7 +2023,7 @@ regression coefficients can be recovered approximately after the projection.
 Methodologically, the SPAR algorithm with ridge screening coefficients and
 the data-driven random projection (as proposed in \cite{parzer2024glms}) has been demonstrated
 to perform effectively in terms of predictive power and variable ranking in settings with correlated predictors and across different degrees of sparsity of the coefficient
-vector, making it a suitable method to high-dimensional settings with correlated predictors where the sparsity of the problem is unknown.
+vector, making it a suitable method for high-dimensional settings with correlated predictors where the sparsity of the problem is unknown.
 
 Moreover, the flexibility and adaptability of the \pkg{spareg} package in
 dealing with different types of screening, random projection and types of
