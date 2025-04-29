@@ -311,9 +311,11 @@ predict.spar.cv <- function(object,
 }
 
 #' plot.spar.cv
+#' @description
+#' Plot cross-validation measure or number of active variables over different thresholds or number
+#' of models of \code{'spar.cv'} object, produce a residuals vs fitted plot,
+#' or a plot of the estimated coefficients in each marginal model, sorted by their absolute value.
 #'
-#' Plot errors or number of active variables over different thresholds or number
-#' of models of \code{'spar.cv'} object, or residuals vs fitted
 #' @param x result of [spar.cv] function of class  \code{'spar.cv'}.
 #' @param plot_type one of  \code{c("Val_Measure","Val_numAct","res-vs-fitted","coefs")}.
 #' @param plot_along one of  \code{c("nu","nummod")}; ignored when  \code{plot_type="res-vs-fitted"}.
