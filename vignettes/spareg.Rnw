@@ -500,7 +500,7 @@ implemented in package \pkg{spareg}.
 %%
 \item  Standardize the $(n\times p)$ matrix of predictors $X$ for all families
 and the vector of responses $\boldsymbol y$ for the Gaussian family by subtracting the
-sample column mean and dividing by the sample standard deviation.
+sample mean and dividing by the sample standard deviation of each variable.
 %%
 \item  Calculate screening coefficients $\hat{\boldsymbol \omega}$.
 %%
@@ -563,7 +563,7 @@ and loaded by
 library("spareg")
 @
 %
-In this section we rely for illustration purposes on the simulated example data
+In this section we rely for illustration purposes on a simulated example data
 set which contains $n=200$ observations of a continuous response
 \code{y} and $p=2000$ predictors \code{x} which can be used as a training data set and
 $n=100$ observations to be used as a test set.
@@ -613,7 +613,11 @@ $n < p$,
 \item  \code{family} object from \fct{stats::family}; defaults to \fct{gaussian};
 %
 \item \code{model} an object of class `\code{sparmodel}' which specifies the
-model employed for each element of the ensemble.
+model employed for each element of the ensemble. Defaults to \code{spar_glm()} for
+Gaussian family with identity link and to \code{spar_glmnet()} for all other
+family-link combinations. The latter uses the \pkg{glmnet} package to
+penalize the marginal models with a small ridge penalty in order to increase
+stability in the coefficients.
 %
 \item \code{rp} an object of class \class{randomprojection}. Defaults to
 \code{NULL}, in which case \code{rp_cw(data = TRUE)} is used.
@@ -646,7 +650,7 @@ mean squared error \code{"mse"} or mean absolute error \code{"mae"}
 under the ROC curve) both just for binomial family.
 %
 \item \code{parallel} assuming a parallel backend is loaded and available,
-a logical indicating whether the function should use it.
+a logical indicating whether the function should use it for parallelizing the estimation of the marginal models.
 Defaults to \code{FALSE}.
 \end{itemize}
 %
@@ -669,12 +673,10 @@ number of folds to be used for cross-validation. It relies on a lightweight
 version of \code{spar()}
 as a workhorse, which is called for each fold. The random projections
 for each model are held fixed throughout the cross-validation  to reduce the
-computational burden.
-However, it is possible to specify whether the data associated with the random
-projection (relevant for data-driven random projections) should be updated in
-each fold iteration with the corresponding training data. This is achieved by
-modifying elements of the \class{randomprojection} object, which we will
-exemplify in Section~\ref{sec-extensibility}.
+computational burden. If data-driven random projections are employed, only the
+data to be used in the random projection will be updated in
+each fold iteration with the corresponding training data. More details will
+be provided in Section~\ref{sec-extensibility}.
 %
 %
 %
@@ -682,13 +684,19 @@ exemplify in Section~\ref{sec-extensibility}.
 %
 The objects for creating screening coefficients are implemented as
 \proglang{S}3 classes \class{screencoef}. These objects are created by
-several implemented \code{screen_*()} functions, which take as arguments
-\code{...} (to be saved as attributes) and  \code{control} (a list of
-controls to be used  in the main function for computing the screening
-coefficient):
+several implemented \code{screen_*()} functions,
+%
 \begin{Code}
 screen_*(..., control = list())
 \end{Code}
+%
+which take as arguments
+\code{...} (to be saved as attributes of the object) and
+\code{control} (a list of
+controls to be used in the main function for computing the screening
+coefficients).
+%
+
 The following screening coefficients are implemented in \pkg{spareg}:
 \begin{itemize}
 \item \code{screen_marglik()} -- computes the screening coefficients by the
@@ -699,12 +707,15 @@ $$
 \in\mathbb{R}}\sum_{i=1}^n -\ell(\beta_0,\beta_j;y_i,x_{ij})
 $$
 It allows to pass a list of controls through the \code{control} argument to
-\fct{stats::glm} (e.g.,~such as \code{weights}, \code{family}, \code{offset}).
+\fct{stats::glm} (such as \code{weights}, \code{family}, \code{offset} --
+e.g.,~\code{screen_marglik(control = list(family = binomial(probit)))}).
+Note that if \code{family} is not provided in \code{control},
+the \code{family} used in \fct{spar} will be used.
 %
 \item  \code{screen_cor()} -- computes the screening coefficients by the
 correlation between $\boldsymbol y$ and $X_j$ using the function \fct{stats::cor}. It
 allows to pass a list of controls through the \code{control} argument to
-\fct{stats::cor}.
+\fct{stats::cor} -- e.g.,~\code{screen_cor(control = list(method = "spearman"))}.
 %
 \item  \code{screen_glmnet()} -- computes by default the ridge coefficient
 where the penalty $\lambda$ is very small
@@ -715,31 +726,19 @@ $$
 \sum_{j=1}^p{\beta}_j^2, \, \varepsilon > 0
 $$
 The function
-relies on \code{glmnet::glmnet()} and, while it assumes by default
-$\alpha = 0$ and a small penalty, it allows to pass a list of
-controls through the \code{control} argument to \code{glmnet::glmnet()} (e.g.,~such
-as \code{alpha = 1}).
+relies on \code{glmnet::glmnet()}. It uses by default
+$\alpha = 0$ and a small \code{lambda.min.ratio}.
+The optimal penalty is chosen using the recommendations in
+\cite{parzer2024glms}, namely choosing the smallest penalty for which the
+deviance ratio (the fraction of null deviance explained) is less than 0.99 for
+the Gaussian family and 0.8 for other families.
+It, however, allows to pass a list of
+controls through the \code{control} argument to \code{glmnet::glmnet()} --
+e.g.,~\code{screen_glmnet(control = list(alpha = 0.5))}.
 % This screening coefficient is used as a default if
 % \code{screencoef = NULL} in function call of \code{spar()} or \code{spar.cv()}.
 \end{itemize}
 %
-All implemented \code{screen_*()} functions return an object of class
-\class{screencoef}
-which in turn is a list with three elements:
-\begin{itemize}
-\item a character \code{name},
-%
-\item \code{generate_fun()} -- an \proglang{R} function for generating the
-screening coefficient. This function should have the  following arguments:
-\code{x} -- the matrix of standardized predictors --  and \code{y} -- the
-vector of (standardized in the Gaussian case) responses, and the argument
-\code{object}, which is a \class{screencoef} object itself.
-It returns a vector of screening coefficients of length $p$.
-%
-\item  \code{control}, which is the control list passed by the user in
-\code{screen_*}. These controls are arguments which are needed in
-\code{generate_fun()} in order to generate the desired screening coefficients.
-\end{itemize}
 As mentioned above, arguments related to the screening procedure can
 be passed to the \code{screen_*()} function through \code{...}, and will be
 saved as attributes of the \class{screencoef} object.
@@ -767,6 +766,24 @@ coefficient should be reused at a later stage in the construction of the random
 projection. Defaults to \code{FALSE}.
 \end{itemize}
 %
+All implemented \code{screen_*()} functions return an object of class
+\class{screencoef}
+which in turn is a list with three elements:
+\begin{itemize}
+\item a character \code{name},
+%
+\item \code{generate_fun()} -- an \proglang{R} function for generating the
+screening coefficient. This function should have the  following arguments:
+\code{x} -- the matrix of standardized predictors --  and \code{y} -- the
+vector of (standardized in the Gaussian case) responses, and the argument
+\code{object}, which is a \class{screencoef} object itself.
+It returns a vector of screening coefficients of length $p$.
+%
+\item  \code{control}, which is the control list passed by the user in
+\code{screen_*}. These controls are arguments which are needed in
+\code{generate_fun()} in order to generate the desired screening coefficients.
+\end{itemize}
+
 For illustration purposes, consider the object created by calling
 \code{screen_marglik()}:
 <<>>=
@@ -805,6 +822,30 @@ which take \code{...} and a list of controls \code{control} as arguments:
 rp_*(..., control = list())
 \end{Code}
 %
+The following random projections are implemented in \pkg{spareg}:
+\begin{itemize}
+\item \code{rp_gaussian()} -- random projection object where the generated
+matrix will have iid entries from a normal distribution (defaults to standard
+normal entries).
+%
+\item \code{rp_sparse()} -- random projection object where the generated matrix
+will be the one in \cite{ACHLIOPTAS2003JL}.
+The value of $\psi$ can be passed
+through the \code{control} argument and defaults to  \code{psi = 1}
+e.g.,~\code{rp_sparse(control = list(psi = 1/3))}.
+%
+\item \code{rp_cw()} -- sparse embedding random projection in
+\cite{Clarkson2013LowRankApprox}. This matrix is
+constructed as $\Phi=BD\in \mathbb{R}^{m\times p}$, where $B$ is a
+$(p\times p)$  binary matrix, where for each column $j$ an index is uniformly
+sampled from $\{1,\ldots,m\}$ and the corresponding entry is set to one, and
+$D$ is a $(p\times p)$ diagonal matrix,
+with entries $d_j \sim \text{Unif}(\{-1, 1\})$.
+If specified as \code{rp_cw(data = TRUE)},
+the random elements on the diagonal are replaced by the ridge coefficients
+with a small penalty, as introduced in \cite{parzer2024glms}.
+\end{itemize}
+%
 Arguments related to the random projection
 can be passed through \code{...}, which will
 then be saved as attributes of the \class{randomprojection} object.
@@ -829,26 +870,7 @@ $m_0 = \log n(4 + 2\tau)/(\epsilon^2/2 - \epsilon^3/3)$ for probability
 $1 - n^{-\tau}$.
 %
 
-The following random projections are implemented in \pkg{spareg}:
-\begin{itemize}
-\item \code{rp_gaussian()} -- random projection object where the generated
-matrix will have iid entries from a normal distribution (defaults to standard
-normal entries).
-%
-\item \code{rp_sparse()} -- random projection object where the generated matrix
-will be the one in \cite{ACHLIOPTAS2003JL}.
-The value of $\psi$ can be passed
-through the \code{...} argument and defaults to  \code{psi = 1}.
-%
-\item \code{rp_cw()} -- sparse embedding random projection in
-\cite{Clarkson2013LowRankApprox}. This matrix is
-constructed as $\Phi=BD\in \mathbb{R}^{m\times p}$, where $B$ is a $(p\times p)$  binary matrix, where for each column $j$ an index is uniformly sampled from $\{1,\ldots,m\}$ and the corresponding entry is set to one, and $D$ is a $(p\times p)$ diagonal matrix,
-with entries $d_j \sim \text{Unif}(\{-1, 1\})$.
-If specified as \code{rp_cw(data = TRUE)},
-the random elements on the diagonal are replaced by the ridge coefficients
-with a small penalty, as introduced in \cite{parzer2024glms}.
-\end{itemize}
-%
+
 The \code{rp_*()} functions return an object of class \class{randomprojection}
 which is a list of five  elements. The most important three elements are:
 \begin{itemize}
@@ -906,7 +928,7 @@ This is particularly relevant for the cross-validation procedure,
 which employs the random projection matrices
 generated by calling the \code{spar()} function on the whole data set
 before starting the cross-validation exercise. For example, in our
-implementation of the data-driven \code{rp_cw()},
+implementation of the data-driven \code{rp_cw(data = TRUE)},
 in each fold, we only update the list of \code{RPMs} by adjusting the
 diagonal elements to the vector of screening coefficients computed on
 the training data for the current fold, but do not modify the
@@ -932,19 +954,20 @@ The \code{generate_fun()} function returns a matrix with
 \code{m} rows and \code{length(included_vector)} columns.
 Note that \code{included_vector} gives the indices of the
 variables which have been selected by the screening
-procedure. In this case, where the random projection does
-not use any data information, we are only interested in the
+procedure. In this case, the random projection does
+not use any data information and we are only interested in the
 length of this vector.
 
-The function \code{update_fun()} only converts the \class{family} object to a string and adds it as an attribute. Function \code{update_rpm_w_data()} is
+The function \code{update_fun()} only converts the \class{family} object to a
+string and adds it as an attribute. Function \code{update_rpm_w_data()} is
 \code{NULL} as this random projection is data-agnostic.
 %
 \subsection{Marginal models}
 %
 The package provides a class `\code{sparmodel}'
 for the marginal model to be fitted for
-each element of the ensemble. The framework currently
-assumes that the linear predictor is a linear combination of
+each element of the ensemble. The framework
+assumes that model employs a linear predictor, i.e.,~a linear combination of
 the projected variables.
 
 Similar to the objects for random projection and screening
@@ -965,7 +988,8 @@ An object of class `\code{sparmodel}' is a list with elements:
 %
 \item  \code{model_fun()} -- a function which takes \code{y} (the vector of
 standardized responses), \code{z} (the matrix of reduced predictors) and a
-further argument which is the object of class `\code{sparmodel}' itself. It returns a list of two elements \code{list(gammas = , intercept = )}, which contains the vector of coefficients (\code{gammas}) and the value of the \code{intercept}.
+further argument which is the object of class `\code{sparmodel}' itself. It returns a list of two elements \code{gammas} which contains the vector of coefficients
+and the value of the \code{intercept}.
 %
 \item \code{update_fun()} -- an optional function which can add further
 attributes to the `\code{sparmodel}' object which is called at the beginning
@@ -990,20 +1014,20 @@ and `\code{spar.cv}' classes.
 The \code{print} method returns information on $\nu_\text{best}$
 $M_\text{best}$, the number of active predictors
 (i.e.,~predictors which have at least a nonzero coefficient across the marginal models)
-and a five-point summary of the non-zero coefficients.
+and a summary of the non-zero coefficients.
 We estimate the SPAR algorithm with no screening and \code{rp_cw(data = TRUE)} (default).
 <<first_example>>=
 set.seed(12)
 spar_res <- spar(example_data$x, example_data$y,
   xval = example_data$xtest, yval = example_data$ytest,
   nummods = c(5, 10, 15, 20, 25, 30))
-spar_cv <- spar.cv(example_data$x, example_data$y,
-  nummods = c(5, 10, 15, 20, 25, 30))
 spar_res
 @
 %
 For `\code{spar.cv}' it also provides the same information for the $(\nu, M)$ combination chosen by the one-standard error rule.
 <<>>=
+spar_cv <- spar.cv(example_data$x, example_data$y,
+  nummods = c(5, 10, 15, 20, 25, 30))
 spar_cv
 @
 %
@@ -1031,6 +1055,10 @@ and \code{nummods} according to cross-validation
 within one standard deviation
 of that optimal cross-validation
 \code{measure}. This argument is ignored when \code{nummod} and \code{nu} are given.
+<<>>=
+str(coef(spar_cv))
+@
+%
 %
 \subsubsection[predict]{\code{predict}}
 Functionality for computing predictions is provided through the method
@@ -1103,7 +1131,6 @@ for \code{plot_type = "Val_Measure"} or \code{"Val_numAct"}; if
 \code{plot_type = "res-vs-fitted"}, it is used in the \code{predict} method,
 as described above.
 
-
 \item \code{xfit} -- if \code{plot_type = "res-vs-fitted"}, it is the matrix of
 predictors used in computing the fitted values. This argument must be
 provided for the plot of residuals and fitted values, as the `\code{spar}' or
@@ -1122,10 +1149,42 @@ defaults to \code{c(1, p)}.
 \code{plot_type = "coefs"} to give the order of the predictors; defaults to \code{seq_len(p)}.
 \end{itemize}
 %
+The four plots for the `\code{spar}' object are produced with the code below and
+shown in Figure~\ref{fig:plot_example}.
+<<eval=FALSE>>=
+op <- par(mfrow = c(1, 4))
+plot(spar_res)
+plot(spar_res, plot_type = "Val_numAct")
+plot(spar_res,  plot_type = "coefs")
+plot(spar_res, plot_type = "res-vs-fitted", xfit = example_data$xtest,
+     yfit = example_data$ytest)
+par(op)
+@
+<<echo=FALSE,include=FALSE>>=
+library(ggplot2)
+p1 <- plot(spar_res)+
+  theme(axis.text.x = element_text(angle = 45,vjust = 0.5))
+p2 <- plot(spar_res, plot_type = "Val_numAct") +
+  theme(axis.text.x = element_text(angle = 45,vjust = 0.5))
+p4 <- plot(spar_res, plot_type = "res-vs-fitted", xfit = example_data$x,
+     yfit = example_data$y)
+p3 <- plot(spar_res,  plot_type = "coefs")
+p <- ggpubr::ggarrange(p1, p2, p3, p4,
+       ncol = 4, nrow = 1)
+ggsave(filename = "Figures/plot_example.pdf", p,
+       width = 14, height = 4.5)
+@
+\begin{figure}[t!]
+\centering
+\includegraphics[width=1\textwidth]{Figures/plot_example.pdf}
+\caption{\code{plot} methods for \class{spar} object. The red dots in the first two figures show the best $\nu$ chosen on the validation set for the optimal number of models $M=5$.
+\label{fig:plot_example}}
+\end{figure}
+%
 For class `\code{spar.cv}' there is the extra argument
-\code{opt_par = c("best", "1se")} which, for \code{plot_type = "res-vs-fitted"} indicates whether the predictions
+\code{opt_par = c("best", "1se")} which is only used for \code{plot_type = "res-vs-fitted"} and indicates whether the predictions
 should be based on coefficients using the best $(\nu, M)$ combination or
-on the combination which delivers the sparsest
+using the combination which delivers the sparsest
 $\beta$ having validation measure within one standard deviation from the minimum.
 
 The \code{plot} methods return objects of class \class{ggplot} \citep{ggplotR}.
@@ -1224,14 +1283,14 @@ simulate_haar <- function(m, p) {
 }
 @
 %
-Moreover, they suggest using ``good'' random projections, in the sense that they
+Moreover, \cite{cannings2017random} suggest using ``good'' random projections, in the sense that they
 deliver the best out-of-sample prediction. The
 proposed approach employs $B_1$ models in an ensemble of classifiers.
 For each model $k$, $B_2$ Haar
 random projections are generated and the one with the lowest
 error on a test set is the one chosen to project the variables
-in model $k$. Note that, while the $B_2$ random projections are data-agnostic,
-the whole data is needed in finding the best random projection.
+in model $k$. (Note that, while the $B_2$ random projections are data-agnostic,
+the whole data is needed in finding the best random projection.)
 We will generate the random projections in the following way. For each model $k$,  we use a proportion $\xi$ of the data as a test set
 and for $b=\{1,\ldots,B_2\}$ we generate a Haar random projection. We
 then estimate a ridge regression on the training data and compute the misclassification error
