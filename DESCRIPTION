@@ -1,6 +1,6 @@
 Type: Package
 Package: spareg
-Title: Sparse Projected Averaged Regression in R
+Title: Sparse Projected Averaged Regression
 Version: 1.0.0
 Authors@R:
     c(person(given = "Laura",
@@ -18,8 +18,15 @@ Authors@R:
              role = c("aut"),
              email = "peter.filzmoser@tuwien.ac.at",
              comment = c(ORCID = "0000-0002-8014-4682")))
-Description: Apply Sparse Projected Averaged Regression to
-    High-Dimensional Data.
+Description: A flexible framework combining 
+  variable screening and random projection techniques for fitting ensembles of 
+  predictive generalized linear models to high-dimensional data.
+  Designed for extensibility, the package implements
+  key techniques as S3 classes with user-friendly constructors,
+  enabling easy integration and development of new procedures for 
+  high-dimensional applications. For more details see 
+  Parzer et al (2024a) <doi:10.48550/arXiv.2312.00130> and
+  Parzer et al (2024b) <doi:10.48550/arXiv.2410.00971>.
 License: GPL-3
 Imports: 
     dplyr,
@@ -42,7 +49,6 @@ Suggests:
     doParallel,
     robustbase,
     cellWise,
-    VariableScreening,
-    R.matlab
+    VariableScreening
 Config/testthat/edition: 3
 Depends: R (>= 4.0.0) 
