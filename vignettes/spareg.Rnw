@@ -1166,7 +1166,7 @@ plot(spar_res, plot_type = "res-vs-fitted", xfit = example_data$xtest,
 \begin{figure}[t!]
 \centering
 \setkeys{Gin}{width=\textwidth}
-<<plotmethod, echo=FALSE, fig=TRUE, width=14, height=4.5,prefix.string=Figures/spareg>>=
+<<plotmethod, echo=FALSE, fig=TRUE, width=14, height=4.5,prefix.string=spareg>>=
 library(ggplot2)
 p1 <- plot(spar_res)+
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))
@@ -1677,7 +1677,7 @@ plot(spar_faces, nummod = 5)
 \begin{figure}[t!]
 \centering
 \setkeys{Gin}{width=0.95\textwidth}
-<<plotfacesmeasurereal_best, echo=FALSE, fig=TRUE, width=10, height=3,prefix.string=Figures/spareg>>=
+<<plotfacesmeasurereal_best, echo=FALSE, fig=TRUE, width=10, height=3,prefix.string=spareg>>=
 if (is_paper) {
   p <- plot(spar_faces, digits = 3L) +
     theme(axis.text.x = element_text(angle = 45, vjust = 1,
@@ -1685,7 +1685,7 @@ if (is_paper) {
   p
 }
 @
-<<plotfacesmeasurereal_1se, echo=FALSE, fig=TRUE, width=10, height=3,prefix.string=Figures/spareg>>=
+<<plotfacesmeasurereal_1se, echo=FALSE, fig=TRUE, width=10, height=3,prefix.string=spareg>>=
 if (is_paper) {
   p2 <- plot(spar_faces, nummod=5, digits = 3L) +
     theme(axis.text.x = element_text(angle = 45, vjust = 1,
@@ -1780,7 +1780,7 @@ the face in the left panel of Figure~\ref{fig:faces_predictions} can be visualiz
 \begin{figure}[t!]
 \centering
 \setkeys{Gin}{width=0.45\textwidth}
-<<plotfacesobs179, fig=TRUE,echo=FALSE,width=4.5,height=4.5,prefix.string=Figures/spareg>>=
+<<plotfacesobs179, fig=TRUE,echo=FALSE,width=4.5,height=4.5,prefix.string=spareg>>=
 if (is_paper) {
   i <- 179
   p <- ggplot(data.frame(X = rep(1:64,each=64),
@@ -1795,7 +1795,7 @@ if (is_paper) {
   p
 }
 @
-<<plotobsvspred179,fig=TRUE,echo=FALSE,width=4.5,height=4.5,prefix.string=Figures/spareg>>=
+<<plotobsvspred179,fig=TRUE,echo=FALSE,width=4.5,height=4.5,prefix.string=spareg>>=
 if (is_paper) {
   id <- 3
   p4 <- ggplot(data.frame(X = rep(1:64, each = 64),
@@ -1920,7 +1920,7 @@ introduced without too much increase in the cross-validation measure.
 \begin{figure}[t!]
 \centering
 \setkeys{Gin}{width=0.8\textwidth}
-<<plotdarwinactnumAct,fig=TRUE,echo=FALSE,width=10,height=5,prefix.string=Figures/spareg>>=
+<<plotdarwinactnumAct,fig=TRUE,echo=FALSE,width=10,height=5,prefix.string=spareg>>=
 if (is_paper) {
   p <- plot(spar_darwin, plot_type = "Val_numAct", digits=3L)
   p
@@ -1952,7 +1952,7 @@ supplementary materials).
 \begin{figure}[t!]
 \centering
 \setkeys{Gin}{width=0.8\textwidth}
-<<plotdarwincoef,fig=TRUE,echo=FALSE,width=10,height=5,prefix.string=Figures/spareg>>=
+<<plotdarwincoef,fig=TRUE,echo=FALSE,width=10,height=5,prefix.string=spareg>>=
 if (is_paper) {
   ntasks <- 25
   nfeat <- 18
