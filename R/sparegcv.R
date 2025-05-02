@@ -63,8 +63,12 @@
 #' coefs <- coef(spar_res)
 #' pred <- predict(spar_res, example_data$x)
 #' plot(spar_res)
-#' plot(spar_res, "Val_Meas", "nummod")
-#' plot(spar_res, "Val_numAct", "nu")
+#' plot(spar_res, plot_type = "Val_Meas", plot_along = "nummod", nu = 0)
+#' plot(spar_res, plot_type = "Val_Meas", plot_along = "nu", nummod = 10)
+#' plot(spar_res, plot_type = "Val_numAct",  plot_along = "nummod", nu = 0)
+#' plot(spar_res, plot_type = "Val_numAct",  plot_along = "nu", nummod = 10)
+#' plot(spar_res, plot_type = "res-vs-fitted",  xfit = example_data$xtest,
+#'   yfit = example_data$ytest, opt_par = "1se")
 #' plot(spar_res, "coefs", prange = c(1, 400))
 #' }
 #' @seealso [spar],[coef.spar.cv],[predict.spar.cv],[plot.spar.cv],[print.spar.cv]
@@ -415,7 +419,7 @@ plot.spar.cv <- function(x,
       } else {
         tmp_title <- "Fixed given "
       }
-      tmp_df <- subset(my_val_sum,nu==nu)
+      tmp_df <- my_val_sum[my_val_sum$nu==nu, ]
       ind_min <- which.min(tmp_df$Meas)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sdMeas[ind_min]
@@ -475,7 +479,7 @@ plot.spar.cv <- function(x,
       } else {
         tmp_title <- "Fixed given "
       }
-      tmp_df <- subset(my_val_sum,nu==nu)
+      tmp_df <- my_val_sum[my_val_sum$nu==nu, ]
       ind_min <- which.min(tmp_df$Meas)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sdMeas[ind_min]
