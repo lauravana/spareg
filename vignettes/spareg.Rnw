@@ -1528,9 +1528,7 @@ spar_res
 We observe that the attained \code{mae} is indeed lower for the robust version.
 %
 \ifPositive
-<<echo=FALSE>>=
-if (is_paper && !dir.exists("Figures")) dir.create("Figures")
-@
+
 \section{Illustrations} \label{sec-illustrations}
 %
 \subsection{Face image data}
