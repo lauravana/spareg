@@ -151,9 +151,13 @@ spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
 coefs <- coef(spar_res)
 pred <- predict(spar_res, xnew = example_data$x)
 plot(spar_res)
-plot(spar_res, "Val_Meas", "nummod")
-plot(spar_res, "Val_numAct", "nu")
-plot(spar_res, "coefs", prange = c(1,400))
+plot(spar_res, plot_type = "Val_Meas", plot_along = "nummod", nu = 0)
+plot(spar_res, plot_type = "Val_Meas", plot_along = "nu", nummod = 10)
+plot(spar_res, plot_type = "Val_numAct",  plot_along = "nummod", nu = 0)
+plot(spar_res, plot_type = "Val_numAct",  plot_along = "nu", nummod = 10)
+plot(spar_res, plot_type = "res-vs-fitted",  xfit = example_data$xtest,
+  yfit = example_data$ytest)
+plot(spar_res, plot_type = "coefs", prange = c(1,400))
 
 spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))

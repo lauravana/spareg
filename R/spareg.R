@@ -95,9 +95,13 @@
 #' coefs <- coef(spar_res)
 #' pred <- predict(spar_res, xnew = example_data$x)
 #' plot(spar_res)
-#' plot(spar_res, "Val_Meas", "nummod")
-#' plot(spar_res, "Val_numAct", "nu")
-#' plot(spar_res, "coefs", prange = c(1,400))
+#' plot(spar_res, plot_type = "Val_Meas", plot_along = "nummod", nu = 0)
+#' plot(spar_res, plot_type = "Val_Meas", plot_along = "nu", nummod = 10)
+#' plot(spar_res, plot_type = "Val_numAct",  plot_along = "nummod", nu = 0)
+#' plot(spar_res, plot_type = "Val_numAct",  plot_along = "nu", nummod = 10)
+#' plot(spar_res, plot_type = "res-vs-fitted",  xfit = example_data$xtest,
+#'   yfit = example_data$ytest)
+#' plot(spar_res, plot_type = "coefs", prange = c(1,400))
 #'
 #' @seealso [spar.cv],[coef.spar],[predict.spar],[plot.spar],[print.spar]
 #' @aliases spareg
@@ -649,7 +653,8 @@ plot.spar <- function(x,
       } else {
         tmp_title <- "Fixed given "
       }
-      tmp_df <- subset(spar_res$val_res,nu==nu)
+      spar_res$val_res$nu == nu
+      tmp_df <- spar_res$val_res[spar_res$val_res$nu == nu, ]
       ind_min <- which.min(tmp_df$Meas)
 
       res <- ggplot2::ggplot(data = tmp_df,
@@ -690,7 +695,7 @@ plot.spar <- function(x,
       } else {
         tmp_title <- "Fixed given "
       }
-      tmp_df <- subset(spar_res$val_res,nu==nu)
+      tmp_df <- spar_res$val_res[spar_res$val_res$nu==nu, ]
       ind_min <- which.min(tmp_df$Meas)
 
       res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nummod,y=.data$numAct)) +
