@@ -136,7 +136,8 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
                          mNumAct = mean(.data$numAct,na.rm=TRUE))
   )
 
-  res <- list(betas = SPARres$betas, intercepts = SPARres$intercepts,
+  res <- list(betas = SPARres$betas,
+              intercepts = SPARres$intercepts,
               scr_coef = SPARres$scr_coef, inds = SPARres$inds,
               RPMs = SPARres$RPMs,
               val_sum = val_sum, nus = SPARres$nus,
@@ -517,7 +518,7 @@ plot.spar.cv <- function(x,
 
     mrange <- max(Matrix::rowSums(spar_res$betas != 0))
 
-    res <- ggplot2::ggplot(tmp_df,ggplot2::aes(x=.data$predictor,
+    res2 <- ggplot2::ggplot(tmp_df,ggplot2::aes(x=.data$predictor,
                                                y=.data$`marginal model`,
                                                fill=.data$value)) +
       ggplot2::geom_tile() +
@@ -551,7 +552,7 @@ print.spar.cv <- function(x, ...) {
               min(spar_res$val_sum$mMeas),mycoef_best$nummod,
               formatC(mycoef_best$nu,digits = 2,format = "e"),
               sum(mycoef_best$beta!=0),length(mycoef_best$beta)))
-  cat("Summary of those non-zero coefficients:\n")
+  cat("Summary of those non-zero coefficients (non-standardized):\n")
   print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
   cat(sprintf(
   "\nSparsest coefficient within one standard error of best CV-Meas reached for
@@ -561,6 +562,6 @@ print.spar.cv <- function(x, ...) {
               sum(mycoef_1se$beta!=0),length(mycoef_1se$beta),
               spar_res$val_sum$mMeas[spar_res$val_sum$nummod==mycoef_1se$nummod
                                      & spar_res$val_sum$nu==mycoef_1se$nu]))
-  cat("Summary of those non-zero coefficients:\n")
+  cat("Summary of those non-zero coefficients (non-standardized):\n")
   print(summary(mycoef_1se$beta[mycoef_1se$beta!=0]))
 }
