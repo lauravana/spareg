@@ -518,7 +518,7 @@ plot.spar.cv <- function(x,
 
     mrange <- max(Matrix::rowSums(spar_res$betas != 0))
 
-    res2 <- ggplot2::ggplot(tmp_df,ggplot2::aes(x=.data$predictor,
+    res <- ggplot2::ggplot(tmp_df,ggplot2::aes(x=.data$predictor,
                                                y=.data$`marginal model`,
                                                fill=.data$value)) +
       ggplot2::geom_tile() +
