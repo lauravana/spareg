@@ -262,7 +262,8 @@ update_rp_cw <- function(...) {
   args <- list2(...)
   n <- NROW(args$x)
   p <- NCOL(args$x)
-  if (attr(args$screencoef, "reuse_in_rp")) {
+  if (attr(args$screencoef, "reuse_in_rp") &&
+      !is.null(attr(args$screencoef, "importance"))) {
     scr_coef <- attr(args$screencoef, "importance")
     inc_probs <- attr(args$screencoef, "inc_prob")
     attr(args$rp, "diagvals") <- scr_coef/max(inc_probs)

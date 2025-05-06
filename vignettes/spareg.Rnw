@@ -36,11 +36,8 @@ Laura Vana-Gür~\orcidlink{0000-0002-9613-7604}\\TU Wien
 \Abstract{
 The \pkg{spareg} package for \proglang{R} builds ensembles of predictive
 generalized linear models for high-dimensional data. It employs an algorithm
-that combines variable screening and random projection techniques to address
-the computational challenges of large predictor sets. The package makes
-this modeling approach more accessible, as variants of the algorithm have
-demonstrated competitive predictive performance compared to
-state-of-the-art methods, while maintaining low computational costs.
+that combines variable screening and random projection techniques in each model of the ensemble to address
+the computational challenges of large predictor sets.
 By implementing this modeling approach in an accessible framework,
 \pkg{spareg} enables users to apply methods that have shown competitive
 predictive performance against state-of-the-art alternatives, while at the same
@@ -95,8 +92,8 @@ if (is_paper) {
 
 The \pkg{spareg} package for \proglang{R} \citep{RLanguage} offers functionality
 for estimating generalized linear models (GLMs) in high-dimensional
-settings, where the number of predictors $p$ significantly exceeds the number
-of observations $n$ i.e.,~$p>n$ or even $p\gg n$.
+settings, where the number of predictors can $p$ significantly exceed the number
+of observations $n$, i.e.,~$p>n$ or even $p\gg n$.
 To address the challenges of
 high dimensionality, the package implements a general algorithm which integrates
 variable screening methods with
@@ -111,9 +108,9 @@ ii) the selected variables are then projected to a lower dimensional space
 (smaller than $n$) using a random projection matrix,
 iii) a GLM is estimated using the projected predictors.
 Finally, additional sparsity in the coefficients of the original variables
-can be introduced through a thresholding parameter, which together with the
+can be introduced through a thresholding parameter, which, together with the
 number of models in the
-ensemble can be chosen using a validation set or via cross-validation.
+ensemble, can be chosen using a validation set or via cross-validation.
 The final coefficients are then obtained by averaging over the marginal
 models in the ensemble.
 
@@ -231,9 +228,9 @@ A classic approach is sure independence screening (SIS),
 proposed by \cite{Fan2007SISforUHD}, which uses the vector of marginal
 empirical correlations
 $\hat{\boldsymbol\omega}=(\hat\omega_1,\ldots ,\hat\omega_p)^\top\in\mathbb{R}^p,
-\hat\omega_j=\text{Cor}(X_{j},y)$,
+\hat\omega_j=\text{Cor}(\boldsymbol X_{j},\boldsymbol y)$,
 where $\boldsymbol y$ is the $(n\times 1)$ vector of responses and
-$X_{j}$ is the $j$-th column of the matrix of predictors,
+$\boldsymbol X_{j}$ is the $j$-th column of the matrix of predictors,
 to screen predictors in a linear regression setting
 by selecting the variable set $\mathcal{A}_\delta$ which contains
 all variables for which $|\hat\omega_j|>\delta$, where $\delta$
@@ -245,10 +242,10 @@ is included in $\mathcal{A}_{\delta_n}$ with probability converging to one as
 $n\to \infty$.
 Extensions to SIS include modifications for GLMs \citep{Fan2010sisglms}, where
 screening is performed based on the log-likelihood $\ell(.)$ or the slope
-coefficient of the GLM containing only $X_j$ as a predictor:
+coefficient of the GLM containing only $\boldsymbol X_{j}$ as a predictor:
 $\hat\omega_j=: \text{argmin}_{\beta_j\in\mathbb{R}}\text{min}_{{\beta_0}\in
 \mathbb{R}}\sum_{i=1}^n -\ell(\beta_j,\beta_0;y_i,x_{ij})$, where
-$x_{ij}$ is the $j$-th entry of the vector $x_i$.
+$x_{ij}$ is the $j$-th entry of the vector $\boldsymbol x_i$.
 
 However, both mentioned approaches face limitations related to
 the required technical conditions which can rule out practically possible
@@ -258,7 +255,7 @@ due to their multicollinearity. To tackle these issues,
 use an iterative procedure where SIS is applied subsequently on the residuals
 of the model estimated in a previous step.
 Additionally, in a linear regression setting, \cite{cho2012high} propose using the tilted correlation, i.e.,~the
-correlation of a tilted version of $X_j$ with $\boldsymbol y$ where the effect of other
+correlation of a tilted version of $\boldsymbol X_{j}$ with $\boldsymbol y$ where the effect of other
 variables is reduced. \cite{Wang2015HOLP}
 propose to take into account the correlation among the predictors by
 employing the  high-dimensional ordinary least squares projection (HOLP), which is a ridge estimator where the penalty term converges to zero.  For discrete outcomes, joint feature screening
@@ -273,8 +270,8 @@ For GLMs, \cite{fan2011nonparametric} extend \cite{Fan2010sisglms} by fitting a
 generalized additive model with B-splines. Further extensions for discrete
 (or categorical) outcomes include the fused Kolmogorov filter
 \citep{mai2013kolmogorov}, the mean conditional variance, i.e.,~the expectation
-in $X_j$ of the variance in the response of the conditional cumulative
-distribution function $\Prob(X_j\leq x|y)$ \citep{cui2015model}.
+in $\boldsymbol X_{j}$ of the variance in the response of the conditional cumulative
+distribution function $\Prob(\boldsymbol X_{j}\leq x|\boldsymbol y)$ \citep{cui2015model}.
 \cite{ke2023sufficient} propose a model free method where the contribution of
 each individual predictor is quantified marginally and conditionally in the
 presence of the control variables as well as the other candidates by
@@ -332,7 +329,7 @@ points in $p$~dimensional Euclidean space collected in the rows of
 $X\in \mathbb{R}^{n\times p}$ there exists a linear map
 $\Phi\in \mathbb{R}^{m \times p}$ such that all pairwise distances are
 approximately preserved within a factor of $(1\pm\epsilon)$ for
-$m\geq m_0=\mathcal O(\epsilon^{-2}\log(n))$.
+$m\geq m_l=\mathcal O(\epsilon^{-2}\log(n))$.
 Computationally, an attractive feature of the method for high-dimensional
 settings is that the bound does not depend on $p$.
 
@@ -601,12 +598,12 @@ spar.cv(x, y, family = gaussian("identity"), model = NULL,
 \end{Code}
 %
 which implements the cross-validated procedure and returns an object of
-class `\code{spar.cv}'.
+class `\code{spar.cv}'. Additionally, the aliases
+\fct{spareg} and \fct{spareg.cv} are available.
 
 The common arguments of these functions are:
 \begin{itemize}
-\item  \code{x}  an $n \times p$ numeric matrix of predictor variables where
-$n < p$,
+\item  \code{x}  an $n \times p$ numeric matrix of predictor variables,
 
 \item \code{y} numeric response vector of length $n$,
 %
@@ -616,7 +613,8 @@ $n < p$,
 model employed for each element of the ensemble. Defaults to \code{spar_glm()} for
 Gaussian family with identity link and to \code{spar_glmnet()} for all other
 family-link combinations. The latter uses the \pkg{glmnet} package to
-penalize the marginal models with a small ridge penalty in order to increase
+penalize the marginal models with a small ridge penalty (the minimal penalty
+considered by default by \fct{glmnet::glmnet()}) in order to increase
 stability in the coefficients.
 %
 \item \code{rp} an object of class \class{randomprojection}. Defaults to
@@ -700,7 +698,7 @@ coefficients).
 The following screening coefficients are implemented in \pkg{spareg}:
 \begin{itemize}
 \item \code{screen_marglik()} -- computes the screening coefficients by the
-coefficient of $X_j$ for $j =1,\dots,p$  in a univariate GLM using the
+coefficient of $\boldsymbol X_{j}$ for $j =1,\dots,p$  in a univariate GLM using the
 \fct{stats::glm} function.
 $$
 \hat\omega_j=:\text{argmin}_{\beta_j\in \mathbb{R}}\text{min}_{{\beta_0}
@@ -713,7 +711,7 @@ Note that if \code{family} is not provided in \code{control},
 the \code{family} used in \fct{spar} will be used.
 %
 \item  \code{screen_cor()} -- computes the screening coefficients by the
-correlation between $\boldsymbol y$ and $X_j$ using the function \fct{stats::cor}. It
+correlation between $\boldsymbol y$ and $\boldsymbol X_{j}$ using the function \fct{stats::cor}. It
 allows to pass a list of controls through the \code{control} argument to
 \fct{stats::cor} -- e.g.,~\code{screen_cor(control = list(method = "spearman"))}.
 %
@@ -746,7 +744,8 @@ More specifically, the following attributes are relevant for
 function \code{spar()}:
 \begin{itemize}
 \item \code{nscreen} integer giving the number of variables to be retained
-after screening; if not specified, defaults to $2n$.
+after screening; if not specified, defaults to $2n$. If
+$2n > p$, no screening is performed.
 %
 \item \code{split_data_prop}, double between 0 and 1 which indicates the
 proportion of the data that should be used for computing the screening
@@ -857,7 +856,7 @@ objects:
 should be projected; defaults to $\log(p)$.
 %
 \item \code{msup}: integer giving the maximum dimension to which the predictors
-should be projected; defaults to $n/2$.
+should be projected; defaults to $n/2$ except in the case that the user provides a predictor matrix where the number of variables $p < n/2$, in which case it is set to $p$.
 %
 \end{itemize}
 %
@@ -869,7 +868,6 @@ For example, \cite{ACHLIOPTAS2003JL} show
 $m_0 = \log n(4 + 2\tau)/(\epsilon^2/2 - \epsilon^3/3)$ for probability
 $1 - n^{-\tau}$.
 %
-
 
 The \code{rp_*()} functions return an object of class \class{randomprojection}
 which is a list of five  elements. The most important three elements are:
@@ -1108,7 +1106,7 @@ viceversa.
 of \code{nu} values for a fixed number of models \code{nummod} or viceversa.
 
 \item \code{"res-vs-fitted"} produces a residuals-vs-fitted plot. The residuals
-are computed as $y- \widehat y$, where $\widehat y$ is the prediction computed
+are computed as $r_i=y_i- \widehat y_i$, where $\widehat y_i$ is the prediction computed
 on response level.
 
 \item \code{"coefs"}  produces a plot of the value of the standardized
@@ -1202,17 +1200,17 @@ This is possible by setting the parameter \code{parallel = TRUE} in \code{spar()
 \code{spar.cv()},
 assuming that a parallel backend for \pkg{foreach} is registered
 using the \code{registerDoParallel()}
-function of package \pkg{doParallel} \citep{pkg:doParallel}. In general, the parallelization seems to
-pay off especially for data sets with a larger number of observations $n$. A minimal example with a correlation-based
+function of package \pkg{doParallel} \citep{pkg:doParallel}. Our experiments suggest that parallelization
+pays off especially for data sets with a larger number of observations~$n$. A minimal example with a correlation-based
 probabilistic screening and a Gaussian random projection matrix
 is provided below:
 <<parallel_example,message=FALSE,eval=FALSE>>=
 set.seed(1234)
-example_data3 <- simulate_spareg_data(n = 1000, p = 2000, ntest = 1000)
+example_data4 <- simulate_spareg_data(n = 1000, p = 2000, ntest = 1000)
 library(doParallel)
 cl <- makeCluster(2, type = "PSOCK")
 registerDoParallel(cl)
-spar_res_par <- spar(example_data3$x, example_data3$y,
+spar_res_par <- spar(example_data4$x, example_data4$y,
   screencoef = screen_cor(), rp = rp_gaussian(),
   nummods = 50, parallel = TRUE)
 stopCluster(cl)
@@ -1227,7 +1225,7 @@ We exemplify how screening coefficients implemented in package
 \pkg{spareg}.
 
 We start by defining the function for generating the screening coefficients
-using function the \code{screenIID()} in \pkg{VariableScreening}.
+using function \code{screenIID()} in \pkg{VariableScreening}.
 <<>>=
 generate_scr_sirs <- function(y, x, object) {
   res_screen <- do.call(function(...)
@@ -1493,32 +1491,41 @@ spar_glmrob <- constructor_sparmodel(name = "glmrob",
   model_fun = model_glmrob)
 @
 %
-For illustration purposes we
-contaminate $25$\% of \code{example\_data2} above with outliers in the predictors
-and consider a binary version of the response variable \code{y}.
-<<contaminate_x_y>>=
-perc_cont <- 0.25
-x <- example_data2$x;
+For illustration purposes we generate another data set \code{example\_data3} and consider a count version of the response variable \code{y}.
+%
+<<generate_example_data3>>=
 set.seed(123)
+example_data3 <- simulate_spareg_data(n = 100, p = 1000,
+  ntest = 100, snr = 10, beta_vals = c(-1, 1)/10)
+ypois <- round(exp(example_data3$y)) + 1
+@
+%
+We further contaminate $25$\% of the values in the predictor matrix with outliers.
+%
+<<contaminate_x>>=
+perc_cont <- 0.25
+x <- example_data3$x;
 np <- ncol(x) * nrow(x)
 id_outliers_x <- sample(seq_len(np), perc_cont * np)
 x[id_outliers_x] <- x[id_outliers_x] + 50
 @
+%
 We can now estimate the SPAR algorithm with robust GLMs
 as marginal models and compare
-it to a version with marginal GLMs. We use no screening and
-\code{rp_gaussian()}. We set \code{measure = "mae"} i.e.,~we find the threshold
+it to a version with marginal GLMs using the \code{poisson()}
+link. We use no screening and
+\code{rp_gaussian()}. We set \code{measure = "mae"}, i.e.,~we find the threshold
 $\nu$ by choosing the value
-which delivers the lowest mean absolute error.
+which delivers the lowest mean absolute error on the training sample.
 To improve stability in the estimates from \code{robustbase::glmrob}, we set the upper bound on goal dimension
-of the random projection to 25 (default would be $n/2=100$).
+of the random projection to 25 (default would be $n/2=\Sexpr{round(nrow(x)/2)}$).
 <<compare_glmrob_glm>>=
-set.seed(1234)
-spar_rob_res <- spar(x, ystar, family = binomial(),
+set.seed(12345)
+spar_rob_res <- spar(x, ypois, family = poisson(),
   model = spar_glmrob(), rp = rp_gaussian(msup = 25),
   measure = "mae")
 set.seed(1234)
-spar_res <- spar(x, ystar, family = binomial(),
+spar_res <- spar(x, ypois, family = poisson(),
   model = spar_glm(), rp = rp_gaussian(msup = 25),
   measure = "mae")
 spar_rob_res

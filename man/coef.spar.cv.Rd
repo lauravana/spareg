@@ -10,8 +10,9 @@
 \item{object}{result of \link{spar.cv} function of class \code{'spar.cv'}.}
 
 \item{opt_par}{one of \code{c("1se","best")}, chooses whether to select the
-best pair of \code{nus} and \code{nummods} according to CV-Meas, or
-the sparsest solution within one sd of that optimal CV-Meas;
+best pair of \code{nus} and \code{nummods} according to cross-validated
+(CV) measure, or the sparsest solution within one sd of that optimal
+CV measure;
 ignored when \code{nummod} and \code{nu} are given}
 
 \item{nummod}{optional number of models used to form coefficients}
