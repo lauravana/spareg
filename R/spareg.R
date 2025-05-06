@@ -213,7 +213,10 @@ spar_algorithm <- function(x, y,
   }
 
   if (is.null(attr(screencoef, "nscreen"))) {
-    nscreen <- attr(screencoef, "nscreen") <- 2 * n
+    if (2*n > p) {
+      message("Screening is not performed by default, as 2 * n, the default number of screened variables, is larger than the number of predictors. For performing screening, adjust nscreen in screen_*().")
+    }
+    nscreen <- attr(screencoef, "nscreen") <- min(p, 2 * n)
   } else {
     nscreen <- attr(screencoef, "nscreen")
   }
@@ -221,9 +224,12 @@ spar_algorithm <- function(x, y,
   if (is.null(mslow)) mslow <- ceiling(log(p))
   msup <- attr(rp, "msup")
   if (is.null(msup)) msup <- ceiling(n/2)
-  stopifnot(mslow <= msup)
-  stopifnot(msup <= nscreen)
-
+  if (!(msup <= nscreen)) {
+    message("Provided upper bound on goal dimension of random projection (msup) or its default value (n/2) is larger than nscreen. Setting msup to nscreen.")
+    msup <- nscreen
+  }
+  stopifnot("Provided lower bound on goal dimension of random projection (mslow) or its default value (log(p)) is larger than upper bound (msup)." =
+             mslow <= msup)
   # Perform screening ----
   if (nscreen < p) {
     scr_coef <- screencoef$generate_fun(
@@ -240,7 +246,7 @@ spar_algorithm <- function(x, y,
                 sum(inc_probs > 0), nscreen))
 
     }
-    } else {
+  } else {
     scr_coef <- NULL
     # message("No screening performed.")
   }
@@ -425,7 +431,6 @@ spar_algorithm <- function(x, y,
   val_res <- do.call("rbind.data.frame", tabnummodres)
   betas <- Matrix(data=c(0),p,max_num_mod,sparse = TRUE)
   betas[xscale>0,] <- betas_std
-
 
   ## Clean up
   res <- list(betas = betas, intercepts = intercepts,

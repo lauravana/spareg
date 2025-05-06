@@ -1,7 +1,7 @@
 Type: Package
 Package: spareg
 Title: Sparse Projected Averaged Regression
-Version: 1.0.0
+Version: 1.0.1
 Authors@R:
     c(person(given = "Laura",
              family = "Vana-Gür",
