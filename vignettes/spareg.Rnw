@@ -92,7 +92,7 @@ if (is_paper) {
 
 The \pkg{spareg} package for \proglang{R} \citep{RLanguage} offers functionality
 for estimating generalized linear models (GLMs) in high-dimensional
-settings, where the number of predictors $p$ significantly exceeds the number
+settings, where the number of predictors can $p$ significantly exceed the number
 of observations $n$, i.e.,~$p>n$ or even $p\gg n$.
 To address the challenges of
 high dimensionality, the package implements a general algorithm which integrates
@@ -603,8 +603,7 @@ class `\code{spar.cv}'. Additionally, the aliases
 
 The common arguments of these functions are:
 \begin{itemize}
-\item  \code{x}  an $n \times p$ numeric matrix of predictor variables where
-$n < p$,
+\item  \code{x}  an $n \times p$ numeric matrix of predictor variables,
 
 \item \code{y} numeric response vector of length $n$,
 %
@@ -856,7 +855,7 @@ objects:
 should be projected; defaults to $\log(p)$.
 %
 \item \code{msup}: integer giving the maximum dimension to which the predictors
-should be projected; defaults to $n/2$.
+should be projected; defaults to $n/2$ except in the case that the user provides a predictor matrix where the number of variables $p < n/2$, in which case it is set to $p$.
 %
 \end{itemize}
 %
@@ -868,7 +867,6 @@ For example, \cite{ACHLIOPTAS2003JL} show
 $m_0 = \log n(4 + 2\tau)/(\epsilon^2/2 - \epsilon^3/3)$ for probability
 $1 - n^{-\tau}$.
 %
-
 
 The \code{rp_*()} functions return an object of class \class{randomprojection}
 which is a list of five  elements. The most important three elements are:
