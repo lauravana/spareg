@@ -754,8 +754,9 @@ print.spar <- function(x, ...) {
   beta <- mycoef$beta
   Meas <- x$val_res$Meas[mycoef$nu == x$val_res$nu &
                            mycoef$nummod == x$val_res$nummod ]
-  cat(sprintf("spar object:\nSmallest Validation Measure of %s reached for nummod=%d,
+  cat(sprintf("spar object:\nSmallest validation measure (%s) of %s reached for nummod=%d,
               nu=%s leading to %d / %d active predictors.\n",
+              x$measure,
               formatC(Meas,digits = 2,format = "e"),
               mycoef$nummod, formatC(mycoef$nu,digits = 2,format = "e"),
               sum(beta!=0),length(beta)))

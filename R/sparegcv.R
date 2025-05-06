@@ -167,8 +167,9 @@ spareg.cv <- spar.cv
 #' Extract coefficients from \code{'spar.cv'} object
 #' @param object result of [spar.cv] function of class \code{'spar.cv'}.
 #' @param opt_par one of \code{c("1se","best")}, chooses whether to select the
-#'        best pair of \code{nus} and \code{nummods} according to CV-Meas, or
-#'        the sparsest solution within one sd of that optimal CV-Meas;
+#'        best pair of \code{nus} and \code{nummods} according to cross-validated
+#'        (CV) measure, or the sparsest solution within one sd of that optimal
+#'        CV measure;
 #'        ignored when \code{nummod} and \code{nu} are given
 #' @param nummod optional number of models used to form coefficients
 #' @param nu optional threshold level used to form coefficients
@@ -254,8 +255,8 @@ coef.spar.cv <- function(object,
 #' @param type the type of required predictions; either on response level (default) or on link level
 #' @param avg_type type of averaging the marginal models; either on link (default) or on response level
 #' @param opt_par one of  \code{c("best","1se")}, chooses whether to select the
-#'  best pair of  \code{nus} and  \code{nummods} according to CV-Meas, or the
-#'  sparsest solution within one sd of that optimal CV-Meas;
+#'  best pair of  \code{nus} and  \code{nummods} according to CV measure, or the
+#'  sparsest solution within one sd of that optimal CV measure;
 #'  ignored when  \code{nummod} and  \code{nu}, or  \code{coef} are given
 #' @param nummod number of models used to form coefficients; value with
 #' minimal validation  \code{Meas} is used if not provided.
@@ -320,8 +321,8 @@ predict.spar.cv <- function(object,
 #' @param plot_type one of  \code{c("Val_Measure","Val_numAct","res-vs-fitted","coefs")}.
 #' @param plot_along one of  \code{c("nu","nummod")}; ignored when  \code{plot_type="res-vs-fitted"}.
 #' @param opt_par one of  \code{c("1se","best")}, chooses whether to select the
-#'  best pair of  \code{nus} and  \code{nummods} according to CV-Meas, or the
-#'  sparsest solution within one sd of that optimal CV-Meas;
+#'  best pair of  \code{nus} and  \code{nummods} according to CV measure, or the
+#'  sparsest solution within one sd of that optimal CV measure;
 #' ignored when  \code{nummod} and  \code{nu}, or  \code{coef} are given
 #' @param nummod fixed value for  \code{nummod} when  \code{plot_along="nu"} for
 #'  \code{plot_type="Val_Measure"} or  \code{"Val_numAct"};
@@ -546,19 +547,22 @@ print.spar.cv <- function(x, ...) {
   mycoef_best <- coef(spar_res,opt_par = "best")
   mycoef_1se <- coef(spar_res,opt_par = "1se")
   cat(sprintf(
-  "spar.cv object:\nSmallest CV-Meas %.1f reached for nummod=%d, nu=%s leading
+  "spar.cv object:\nSmallest CV measure (%s) %.1f reached for nummod=%d, nu=%s leading
   to %d / %d active predictors.\n",
+              spar_res$measure,
               min(spar_res$val_sum$mMeas),mycoef_best$nummod,
               formatC(mycoef_best$nu,digits = 2,format = "e"),
               sum(mycoef_best$beta!=0),length(mycoef_best$beta)))
   cat("Summary of those non-zero coefficients:\n")
   print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
   cat(sprintf(
-  "\nSparsest coefficient within one standard error of best CV-Meas reached for
-  nummod=%d, nu=%s \nleading to %d / %d active predictors with CV-Meas %.1f.\n",
+  "\nSparsest coefficient within one standard error of best CV measure (%s) reached for
+  nummod=%d, nu=%s \nleading to %d / %d active predictors with CV measure (%s) %.1f.\n",
+              spar_res$measure,
               mycoef_1se$nummod,
               formatC(mycoef_1se$nu,digits = 2,format = "e"),
               sum(mycoef_1se$beta!=0),length(mycoef_1se$beta),
+              spar_res$measure,
               spar_res$val_sum$mMeas[spar_res$val_sum$nummod==mycoef_1se$nummod
                                      & spar_res$val_sum$nu==mycoef_1se$nu]))
   cat("Summary of those non-zero coefficients:\n")
