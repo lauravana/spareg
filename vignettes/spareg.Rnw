@@ -108,9 +108,9 @@ ii) the selected variables are then projected to a lower dimensional space
 (smaller than $n$) using a random projection matrix,
 iii) a GLM is estimated using the projected predictors.
 Finally, additional sparsity in the coefficients of the original variables
-can be introduced through a thresholding parameter, which together with the
+can be introduced through a thresholding parameter, which, together with the
 number of models in the
-ensemble can be chosen using a validation set or via cross-validation.
+ensemble, can be chosen using a validation set or via cross-validation.
 The final coefficients are then obtained by averaging over the marginal
 models in the ensemble.
 
@@ -1207,11 +1207,11 @@ probabilistic screening and a Gaussian random projection matrix
 is provided below:
 <<parallel_example,message=FALSE,eval=FALSE>>=
 set.seed(1234)
-example_data3 <- simulate_spareg_data(n = 1000, p = 2000, ntest = 1000)
+example_data4 <- simulate_spareg_data(n = 1000, p = 2000, ntest = 1000)
 library(doParallel)
 cl <- makeCluster(2, type = "PSOCK")
 registerDoParallel(cl)
-spar_res_par <- spar(example_data3$x, example_data3$y,
+spar_res_par <- spar(example_data4$x, example_data4$y,
   screencoef = screen_cor(), rp = rp_gaussian(),
   nummods = 50, parallel = TRUE)
 stopCluster(cl)
@@ -1492,32 +1492,41 @@ spar_glmrob <- constructor_sparmodel(name = "glmrob",
   model_fun = model_glmrob)
 @
 %
-For illustration purposes we
-contaminate $25$\% of \code{example\_data2} above with outliers in the predictors
-and consider a binary version of the response variable \code{y}.
-<<contaminate_x_y>>=
-perc_cont <- 0.25
-x <- example_data2$x;
+For illustration purposes we generate another data set \code{example\_data3} and consider a count version of the response variable \code{y}.
+%
+<<generate_example_data3>>=
 set.seed(123)
+example_data3 <- simulate_spareg_data(n = 100, p = 1000,
+  ntest = 100, snr = 10, beta_vals = c(-1, 1)/10)
+ypois <- round(exp(example_data3$y))
+@
+%
+We further contaminate $25$\% of the values in the predictor matrix with outliers.
+%
+<<contaminate_x>>=
+perc_cont <- 0.25
+x <- example_data3$x;
 np <- ncol(x) * nrow(x)
 id_outliers_x <- sample(seq_len(np), perc_cont * np)
 x[id_outliers_x] <- x[id_outliers_x] + 50
 @
+%
 We can now estimate the SPAR algorithm with robust GLMs
 as marginal models and compare
-it to a version with marginal GLMs. We use no screening and
+it to a version with marginal GLMs using the \code{poisson()}
+link. We use no screening and
 \code{rp_gaussian()}. We set \code{measure = "mae"}, i.e.,~we find the threshold
 $\nu$ by choosing the value
 which delivers the lowest mean absolute error.
 To improve stability in the estimates from \code{robustbase::glmrob}, we set the upper bound on goal dimension
-of the random projection to 25 (default would be $n/2=100$).
+of the random projection to 25 (default would be $n/2=\Sexpr{round(nrow(x)/2)}$).
 <<compare_glmrob_glm>>=
-set.seed(1234)
-spar_rob_res <- spar(x, ystar, family = binomial(),
+set.seed(12345)
+spar_rob_res <- spar(x, ypois, family = poisson(),
   model = spar_glmrob(), rp = rp_gaussian(msup = 25),
   measure = "mae")
 set.seed(1234)
-spar_res <- spar(x, ystar, family = binomial(),
+spar_res <- spar(x, ypois, family = poisson(),
   model = spar_glm(), rp = rp_gaussian(msup = 25),
   measure = "mae")
 spar_rob_res
