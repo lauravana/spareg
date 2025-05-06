@@ -12,6 +12,7 @@ simulate_spareg_data(
   snr = 10,
   rho = 0.5,
   mu = 1,
+  beta_vals = NULL,
   seed = NULL
 )
 }
@@ -31,6 +32,9 @@ Default is 0.5. A compound symmetry correlation matrix is used. The variance of
 the predictors is fixed to 1.}
 
 \item{mu}{Numeric. Intercept term (mean of response). Default is 1.}
+
+\item{beta_vals}{Numeric. Possible values for non-zero coefficients in the true beta vector.
+Default to NULL, in which case the values -3, -2, -1, 1, 2, 3 will be used.}
 
 \item{seed}{Integer. Random seed for reproducibility. Default is NULL.}
 }

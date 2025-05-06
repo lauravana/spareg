@@ -12,6 +12,8 @@
 #'            Default is 0.5. A compound symmetry correlation matrix is used. The variance of
 #'            the predictors is fixed to 1.
 #' @param mu Numeric. Intercept term (mean of response). Default is 1.
+#' @param beta_vals Numeric. Possible values for non-zero coefficients in the true beta vector.
+#'        Default to NULL, in which case the values -3, -2, -1, 1, 2, 3 will be used.
 #' @param seed Integer. Random seed for reproducibility. Default is NULL.
 #'
 #' @return A list with the following components:
@@ -33,10 +35,11 @@
 #' @export
 simulate_spareg_data <- function(n, p, ntest, a = min(100, p/4),
                                  snr = 10, rho = 0.5, mu = 1,
-                                 seed = NULL) {
+                                 beta_vals = NULL, seed = NULL) {
   beta <- numeric(p)
   if (!is.null(seed)) set.seed(seed)
-  beta[1:a] <- sample(c(-3:3)[-4],a,replace = TRUE)
+  if (is.null(beta_vals)) beta_vals <- c(-3:3)[-4]
+  beta[1:a] <- sample(beta_vals, a, replace = TRUE)
   x <- sqrt(rho)* matrix(rep(rnorm((n+ntest),0,1),p),
                         n+ntest,p) +
     sqrt(1-rho)*matrix(rnorm((n+ntest)*p,0,1),n+ntest,p)

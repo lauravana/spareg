@@ -26,8 +26,8 @@
 \item{avg_type}{type of averaging the marginal models; either on link (default) or on response level}
 
 \item{opt_par}{one of  \code{c("best","1se")}, chooses whether to select the
-best pair of  \code{nus} and  \code{nummods} according to CV-Meas, or the
-sparsest solution within one sd of that optimal CV-Meas;
+best pair of  \code{nus} and  \code{nummods} according to CV measure, or the
+sparsest solution within one sd of that optimal CV measure;
 ignored when  \code{nummod} and  \code{nu}, or  \code{coef} are given}
 
 \item{nummod}{number of models used to form coefficients; value with
