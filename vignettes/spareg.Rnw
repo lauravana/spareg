@@ -329,7 +329,7 @@ points in $p$~dimensional Euclidean space collected in the rows of
 $X\in \mathbb{R}^{n\times p}$ there exists a linear map
 $\Phi\in \mathbb{R}^{m \times p}$ such that all pairwise distances are
 approximately preserved within a factor of $(1\pm\epsilon)$ for
-$m\geq m_0=\mathcal O(\epsilon^{-2}\log(n))$.
+$m\geq m_l=\mathcal O(\epsilon^{-2}\log(n))$.
 Computationally, an attractive feature of the method for high-dimensional
 settings is that the bound does not depend on $p$.
 
@@ -613,7 +613,8 @@ The common arguments of these functions are:
 model employed for each element of the ensemble. Defaults to \code{spar_glm()} for
 Gaussian family with identity link and to \code{spar_glmnet()} for all other
 family-link combinations. The latter uses the \pkg{glmnet} package to
-penalize the marginal models with a small ridge penalty in order to increase
+penalize the marginal models with a small ridge penalty (the minimal penalty
+considered by default by \fct{glmnet::glmnet()}) in order to increase
 stability in the coefficients.
 %
 \item \code{rp} an object of class \class{randomprojection}. Defaults to
@@ -1496,7 +1497,7 @@ For illustration purposes we generate another data set \code{example\_data3} and
 set.seed(123)
 example_data3 <- simulate_spareg_data(n = 100, p = 1000,
   ntest = 100, snr = 10, beta_vals = c(-1, 1)/10)
-ypois <- round(exp(example_data3$y))
+ypois <- round(exp(example_data3$y)) + 1
 @
 %
 We further contaminate $25$\% of the values in the predictor matrix with outliers.
@@ -1515,7 +1516,7 @@ it to a version with marginal GLMs using the \code{poisson()}
 link. We use no screening and
 \code{rp_gaussian()}. We set \code{measure = "mae"}, i.e.,~we find the threshold
 $\nu$ by choosing the value
-which delivers the lowest mean absolute error.
+which delivers the lowest mean absolute error on the training sample.
 To improve stability in the estimates from \code{robustbase::glmrob}, we set the upper bound on goal dimension
 of the random projection to 25 (default would be $n/2=\Sexpr{round(nrow(x)/2)}$).
 <<compare_glmrob_glm>>=
