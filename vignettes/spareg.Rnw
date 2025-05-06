@@ -1,5 +1,4 @@
 \documentclass[nojss]{jss}
-
 %% -- LaTeX packages and custom commands ---------------------------------------
 
 %% recommended packages
@@ -37,11 +36,8 @@ Laura Vana-Gür~\orcidlink{0000-0002-9613-7604}\\TU Wien
 \Abstract{
 The \pkg{spareg} package for \proglang{R} builds ensembles of predictive
 generalized linear models for high-dimensional data. It employs an algorithm
-that combines variable screening and random projection techniques to address
-the computational challenges of large predictor sets. The package makes
-this modeling approach more accessible, as variants of the algorithm have
-demonstrated competitive predictive performance compared to
-state-of-the-art methods, while maintaining low computational costs.
+that combines variable screening and random projection techniques in each model of the ensemble to address
+the computational challenges of large predictor sets.
 By implementing this modeling approach in an accessible framework,
 \pkg{spareg} enables users to apply methods that have shown competitive
 predictive performance against state-of-the-art alternatives, while at the same
@@ -74,7 +70,7 @@ options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
 library("ggplot2")
 library("spareg")
 is_paper <- FALSE
-clean_up <- TRUE
+tmpdir <- tempdir()
 @
 \newif\ifPositive
 <<condition_vignette, echo = FALSE, results = tex>>=
@@ -246,7 +242,7 @@ is included in $\mathcal{A}_{\delta_n}$ with probability converging to one as
 $n\to \infty$.
 Extensions to SIS include modifications for GLMs \citep{Fan2010sisglms}, where
 screening is performed based on the log-likelihood $\ell(.)$ or the slope
-coefficient of the GLM containing only $\boldsymbol X_j$ as a predictor:
+coefficient of the GLM containing only $\boldsymbol X_{j}$ as a predictor:
 $\hat\omega_j=: \text{argmin}_{\beta_j\in\mathbb{R}}\text{min}_{{\beta_0}\in
 \mathbb{R}}\sum_{i=1}^n -\ell(\beta_j,\beta_0;y_i,x_{ij})$, where
 $x_{ij}$ is the $j$-th entry of the vector $\boldsymbol x_i$.
@@ -259,7 +255,7 @@ due to their multicollinearity. To tackle these issues,
 use an iterative procedure where SIS is applied subsequently on the residuals
 of the model estimated in a previous step.
 Additionally, in a linear regression setting, \cite{cho2012high} propose using the tilted correlation, i.e.,~the
-correlation of a tilted version of $\boldsymbol X_j$ with $\boldsymbol y$ where the effect of other
+correlation of a tilted version of $\boldsymbol X_{j}$ with $\boldsymbol y$ where the effect of other
 variables is reduced. \cite{Wang2015HOLP}
 propose to take into account the correlation among the predictors by
 employing the  high-dimensional ordinary least squares projection (HOLP), which is a ridge estimator where the penalty term converges to zero.  For discrete outcomes, joint feature screening
@@ -274,8 +270,8 @@ For GLMs, \cite{fan2011nonparametric} extend \cite{Fan2010sisglms} by fitting a
 generalized additive model with B-splines. Further extensions for discrete
 (or categorical) outcomes include the fused Kolmogorov filter
 \citep{mai2013kolmogorov}, the mean conditional variance, i.e.,~the expectation
-in $\boldsymbol X_j$ of the variance in the response of the conditional cumulative
-distribution function $\Prob(\boldsymbol X_j\leq x|\boldsymbol y)$ \citep{cui2015model}.
+in $\boldsymbol X_{j}$ of the variance in the response of the conditional cumulative
+distribution function $\Prob(\boldsymbol X_{j}\leq x|\boldsymbol y)$ \citep{cui2015model}.
 \cite{ke2023sufficient} propose a model free method where the contribution of
 each individual predictor is quantified marginally and conditionally in the
 presence of the control variables as well as the other candidates by
@@ -289,7 +285,7 @@ Package \pkg{SIS} \citep{SISR}, which implements
 the (iterative) sure independence screening procedure and its extensions, as
 detailed in \cite{Fan2007SISforUHD,Fan2010sisglms,fan2010high}. This package
 also provides functionality for estimating a penalized generalized linear model
-or a Cox regression model for the variables selected by the screening procedure.
+or a cox regression model for the variables selected by the screening procedure.
 Package \pkg{VariableScreening} \citep{pkg:VariableScreening} offers screening
 methods for independent and identically distributed (iid) data,
 varying-coefficient models, and longitudinal data and includes techniques such
@@ -523,8 +519,7 @@ $I_k$.
 \item  Fit a \emph{GLM}-type model of $\boldsymbol y$ on $Z_k$ to obtain estimated
 coefficients $\widehat{\boldsymbol\gamma}^k\in\mathbb{R}^{m_k}$ and
 $\hat {\boldsymbol\beta}_{I_k}^k=\Phi_k^\top\widehat
-{\boldsymbol\gamma}^k$, $\hat {\boldsymbol\beta}_{\bar I_k}^k=0$, where $\bar I_k$ contains the index of the variables not
-contained in $I_k$.
+{\boldsymbol\gamma}^k$, $\hat {\boldsymbol\beta}_{\bar I_k}^k=0$.
 \end{enumerate}
 \item  For a given threshold $\nu>0$, set all $\hat\beta_j^k$ with $|\hat\beta_j^k|<\nu$ to $0$ for all $j,k$.
 \item  Choose $M$ and $\nu$ via a validation set or cross-validation by repeating steps 1 to 4 and employing a
@@ -703,7 +698,7 @@ coefficients).
 The following screening coefficients are implemented in \pkg{spareg}:
 \begin{itemize}
 \item \code{screen_marglik()} -- computes the screening coefficients by the
-coefficient of $\boldsymbol X_j$ for $j =1,\dots,p$  in a univariate GLM using the
+coefficient of $\boldsymbol X_{j}$ for $j =1,\dots,p$  in a univariate GLM using the
 \fct{stats::glm} function.
 $$
 \hat\omega_j=:\text{argmin}_{\beta_j\in \mathbb{R}}\text{min}_{{\beta_0}
@@ -716,7 +711,7 @@ Note that if \code{family} is not provided in \code{control},
 the \code{family} used in \fct{spar} will be used.
 %
 \item  \code{screen_cor()} -- computes the screening coefficients by the
-correlation between $\boldsymbol y$ and $\boldsymbol X_j$ using the function \fct{stats::cor}. It
+correlation between $\boldsymbol y$ and $\boldsymbol X_{j}$ using the function \fct{stats::cor}. It
 allows to pass a list of controls through the \code{control} argument to
 \fct{stats::cor} -- e.g.,~\code{screen_cor(control = list(method = "spearman"))}.
 %
@@ -749,7 +744,8 @@ More specifically, the following attributes are relevant for
 function \code{spar()}:
 \begin{itemize}
 \item \code{nscreen} integer giving the number of variables to be retained
-after screening; if not specified, defaults to $2n$.
+after screening; if not specified, defaults to $2n$. If
+$2n > p$, no screening is performed.
 %
 \item \code{split_data_prop}, double between 0 and 1 which indicates the
 proportion of the data that should be used for computing the screening
@@ -1111,7 +1107,7 @@ viceversa.
 of \code{nu} values for a fixed number of models \code{nummod} or viceversa.
 
 \item \code{"res-vs-fitted"} produces a residuals-vs-fitted plot. The residuals
-are computed as $y- \widehat y$, where $\widehat y$ is the prediction computed
+are computed as $r_i=y_i- \widehat y_i$, where $\widehat y_i$ is the prediction computed
 on response level.
 
 \item \code{"coefs"}  produces a plot of the value of the standardized
@@ -1157,30 +1153,31 @@ defaults to \code{c(1, p)}.
 %
 The four plots for the `\code{spar}' object are produced with the code below and
 shown in Figure~\ref{fig:plot_example}.
+%
 <<eval=FALSE>>=
 plot(spar_res)
 plot(spar_res, plot_type = "Val_numAct")
 plot(spar_res,  plot_type = "coefs")
 plot(spar_res, plot_type = "res-vs-fitted", xfit = example_data$xtest,
-     yfit = example_data$ytest)
+  yfit = example_data$ytest)
 @
-<<echo=FALSE,include=FALSE>>=
+%
+\begin{figure}[t!]
+\centering
+\setkeys{Gin}{width=\textwidth}
+<<plotmethod, echo=FALSE, fig=TRUE, width=14, height=4.5,prefix.string=spareg>>=
 library(ggplot2)
 p1 <- plot(spar_res)+
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))
 p2 <- plot(spar_res, plot_type = "Val_numAct") +
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))
-p4 <- plot(spar_res, plot_type = "res-vs-fitted", xfit = example_data$x,
-     yfit = example_data$y)
+p4 <- plot(spar_res, plot_type = "res-vs-fitted", xfit = example_data$xtest,
+  yfit = example_data$ytest)
 p3 <- plot(spar_res,  plot_type = "coefs")
 p <- ggpubr::ggarrange(p1, p2, p3, p4,
        ncol = 4, nrow = 1)
-ggsave(filename = "Figures/plot_example.pdf", p,
-       width = 14, height = 4.5)
+p
 @
-\begin{figure}[t!]
-\centering
-\includegraphics[width=1\textwidth]{Figures/plot_example.pdf}
 \caption{\code{plot} methods for \class{spar} object. The red dots in the first
 two figures show the best $\nu$ chosen on the validation set for the optimal number
 of models $M=5$.
@@ -1504,7 +1501,7 @@ x <- example_data2$x;
 set.seed(123)
 np <- ncol(x) * nrow(x)
 id_outliers_x <- sample(seq_len(np), perc_cont * np)
-x[id_outliers_x] <- x[id_outliers_x] + 100
+x[id_outliers_x] <- x[id_outliers_x] + 50
 @
 We can now estimate the SPAR algorithm with robust GLMs
 as marginal models and compare
@@ -1530,9 +1527,7 @@ spar_res
 We observe that the attained \code{mae} is indeed lower for the robust version.
 %
 \ifPositive
-<<echo=FALSE>>=
-if (is_paper && !dir.exists("Figures")) dir.create("Figures")
-@
+
 \section{Illustrations} \label{sec-illustrations}
 %
 \subsection{Face image data}
@@ -1546,27 +1541,23 @@ variable. The data set is publicly available for download
 at \url{https://web.archive.org/web/20150922051706/http://isomap.stanford.edu/face_data.mat.Z}.
 <<urls, echo=FALSE>>=
 if (is_paper) {
-  if (file.exists("data.zip")) {
-    unzip("data.zip")
-  } else {
     url1 <- "https://web.archive.org/web/20150922051706/"
     url2 <- "http://isomap.stanford.edu/face_data.mat.Z"
     ## On Ubuntu or MacOS use code below
     ## On Windows, download locally and unzip
-    if (!file.exists("face_data.mat")) {
+    if (!file.exists(file.path(tmpdir, "face_data.mat"))) {
       # system('uncompress face_data.mat.Z')
       library("R.matlab")
       download.file(paste0(url1, url2),
-                    file.path("face_data.mat.Z"))
-      system(sprintf('uncompress %s', paste0("face_data.mat.Z")))
+                    file.path(tmpdir, "face_data.mat.Z"))
+      system(sprintf('uncompress %s', file.path(tmpdir, "face_data.mat.Z")))
     }
-  }
 }
 @
 <<unzip_file,echo=FALSE,message=FALSE>>=
 if (is_paper) {
   library("R.matlab")
-  facedata <- readMat("face_data.mat")
+  facedata <- readMat(file.path(tmpdir,"face_data.mat"))
   x <- t(facedata$images)
   y <- facedata$poses[1,]
 }
@@ -1584,25 +1575,6 @@ y <- facedata$poses[1,]
 We can visualize one observation in this data set in the left panel
 Figure~\ref{fig:faces_predictions} (code for reproducing the figure is provided
 in the supplementary materials).
-%
-<<include=FALSE, echo=FALSE>>=
-if (is_paper) {
-  i <- 179
-  p <- ggplot(data.frame(X = rep(1:64,each=64),
-                         Y = rep(64:1,64),
-                         Z = facedata$images[,i]),
-              aes(X, Y, fill = Z)) +
-    geom_tile() +
-    theme_void() +
-    ggtitle(paste0("y = ", round(facedata$poses[1, i],1))) +
-    theme(legend.position = "none",
-          plot.title = element_text(hjust = 0.5))
-  ggsave(filename =
-           sprintf("Figures/faces_obs_%i.pdf",
-                   i), p, width = 4.5,
-         height = 4.5)
-}
-@
 %
 This data set has the issue of many columns being almost constant.
 Functions \code{spar()} and \code{spar.cv()} ignore constant columns from the estimation,
@@ -1648,7 +1620,7 @@ Moreover, each marginal model is a linear regression with the regression
 coefficients estimated by maximum likelihood. For the number of models we consider a grid of $M=5,10,20,50$.
 <<echo=FALSE>>=
 if (is_paper) {
-  file <- "faces_res.rda"
+  file <- file.path(tmpdir, "faces_res.rda")
   if (!file.exists(file)) {
     set.seed(123)
     control_glmnet <- list(lambda.min.ratio = 0.001)
@@ -1701,24 +1673,25 @@ If we wish do visualize the results for $M=5$, which is the value chosen by the 
 <<plotfacesmeasurenummod5, eval=FALSE>>=
 plot(spar_faces, nummod = 5)
 @
-<<plotfacesmeasurereal, echo=FALSE, include=FALSE>>=
+\begin{figure}[t!]
+\centering
+\setkeys{Gin}{width=0.95\textwidth}
+<<plotfacesmeasurereal_best, echo=FALSE, fig=TRUE, width=10, height=3,prefix.string=spareg>>=
 if (is_paper) {
   p <- plot(spar_faces, digits = 3L) +
     theme(axis.text.x = element_text(angle = 45, vjust = 1,
                                      hjust = 1))
+  p
+}
+@
+<<plotfacesmeasurereal_1se, echo=FALSE, fig=TRUE, width=10, height=3,prefix.string=spareg>>=
+if (is_paper) {
   p2 <- plot(spar_faces, nummod=5, digits = 3L) +
     theme(axis.text.x = element_text(angle = 45, vjust = 1,
                                      hjust = 1))
-  ggsave(filename = "Figures/faces_plot_valmeasure.pdf", p,
-         width = 10, height = 3)
-  ggsave(filename = "Figures/faces_plot_valmeasure_1se.pdf", p2,
-         width = 10, height = 3)
+  p2
 }
 @
-\begin{figure}[t!]
-\centering
-\includegraphics[width=0.95\textwidth]{Figures/faces_plot_valmeasure.pdf}
-\includegraphics[width=0.95\textwidth]{Figures/faces_plot_valmeasure_1se.pdf}
 \caption{Plot of mean squared error over a grid of threshold values $\nu$ for
 fixed number of optimal models (top) and for the number of models chosen by
 the 1-standard-error rule (bottom) for the \emph{Isomap faces} data set.
@@ -1802,10 +1775,29 @@ if(is_paper) {
 For this data set, one can visualize $\hat\beta^\text{1se}_j x^\text{new}_{i,j}$, the effect of each pixel
 in predicting the face orientation in a given image. The contribution of each pixel in predicting the orientation of
 the face in the left panel of Figure~\ref{fig:faces_predictions} can be visualized in the right panel of Figure~\ref{fig:faces_predictions}. We observe that the face contour and the hairline are most informative for the prediction.
-<<plotobsvspred, echo=FALSE, include=FALSE>>=
+%%
+\begin{figure}[t!]
+\centering
+\setkeys{Gin}{width=0.45\textwidth}
+<<plotfacesobs179, fig=TRUE,echo=FALSE,width=4.5,height=4.5,prefix.string=spareg>>=
+if (is_paper) {
+  i <- 179
+  p <- ggplot(data.frame(X = rep(1:64,each=64),
+                         Y = rep(64:1,64),
+                         Z = facedata$images[,i]),
+              aes(X, Y, fill = Z)) +
+    geom_tile() +
+    theme_void() +
+    ggtitle(paste0("y = ", round(facedata$poses[1, i],1))) +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5))
+  p
+}
+@
+<<plotobsvspred179,fig=TRUE,echo=FALSE,width=4.5,height=4.5,prefix.string=spareg>>=
 if (is_paper) {
   id <- 3
-  plot4 <- ggplot(data.frame(X = rep(1:64, each = 64),
+  p4 <- ggplot(data.frame(X = rep(1:64, each = 64),
                              Y = rep(64:1, 64),
                              effect = xtest[id,] * face_coef_1se$beta),
                   aes(X, Y, fill = effect)) +
@@ -1814,14 +1806,9 @@ if (is_paper) {
     scale_fill_gradient2() +
     ggtitle(bquote(hat(y) == .(round(ynew[id]))), ) +
     theme(plot.title = element_text(hjust = 0.5))
-  ggsave(filename = "Figures/faces_plot_predictions.pdf", plot4,
-         width = 4.5, height = 4.5)
+  p4
 }
 @
-\begin{figure}[t!]
-\centering
-\includegraphics[width=0.45\textwidth]{Figures/faces_obs_179.pdf}
-\includegraphics[width=0.45\textwidth]{Figures/faces_plot_predictions.pdf}
 \caption{Left: Image corresponding to one observation in the
 \emph{Isomap faces} data set. Right: The effect of each pixel $\hat\beta^\text{1se}_j x^\text{new}_{i,j}$ in predicting the face
 orientation in left panel. \label{fig:faces_predictions}}
@@ -1831,25 +1818,31 @@ orientation in left panel. \label{fig:faces_predictions}}
 %
 The Darwin data set \citep{CILIA2022darwin} contains a binary response for Alzheimer's disease (AD) together with extracted features from 25 handwriting tests (18 features per task) for 89 AD patients and 85 healthy people ($n=174$). The data set can be downloaded from \url{https://archive.ics.uci.edu/dataset/732/darwin} as a \code{.zip} file.
 <<readdarwin, eval=FALSE, echo=FALSE>>=
+tmpdir <- tempdir()
 download.file("https://archive.ics.uci.edu/static/public/732/darwin.zip",
-              "darwin.zip")
+              file.path(tmpdir, "darwin.zip"))
 @
 <<readdarwinreal, echo=FALSE,message=FALSE>>=
 if (is_paper) {
-  if (file.exists("data.zip")) {
-    unzip("data.zip")
-  } else {
-    if (!file.exists("darwin.zip")) {
+  # if (file.exists(file.path(tmpdir, "data.zip"))) {
+  #  unzip(file.path(tmpdir, "data.zip")exdir = )
+  #} else {
+  if (!file.exists(file.path(tmpdir, "darwin.zip"))) {
       download.file("https://archive.ics.uci.edu/static/public/732/darwin.zip",
-                    "darwin.zip")
-    }
+                    file.path(tmpdir, "darwin.zip"))
+      unzip(zipfile = file.path(tmpdir, "darwin.zip"),
+            files = "data.csv",
+            exdir = tmpdir)
   }
-  darwin_tmp <- read.csv(unzip("darwin.zip",  "data.csv"),
+  darwin_tmp <- read.csv(file.path(tmpdir, "data.csv"),
                        stringsAsFactors = TRUE)
 }
 @
 <<readdarwinzip,eval=FALSE>>=
-darwin_tmp <- read.csv(unzip("darwin.zip",  "data.csv"),
+unzip(zipfile = file.path(tmpdir, "darwin.zip"),
+  files = "data.csv",
+  exdir = file.path(tmpdir))
+darwin_tmp <- read.csv(file.path(tmpdir, "data.csv"),
   stringsAsFactors = TRUE)
 @
 Before proceeding with the analysis, the data is screened for
@@ -1866,7 +1859,7 @@ darwin <- list(x = tmp$Ximp, y = darwin_orig$y)
 @
 <<echo=FALSE,message=FALSE>>=
 if (is_paper) {
-darwin_orig <- list(
+  darwin_orig <- list(
     x = darwin_tmp[, !(colnames(darwin_tmp) %in% c("ID", "class"))],
     y = as.numeric(darwin_tmp$class) - 1)
   tmp <- cellWise::DDC(
@@ -1882,25 +1875,26 @@ str(darwin)
 <<echo=FALSE,message=FALSE>>=
 if (is_paper) str(darwin)
 @
-
 %
 We estimate the SPAR algorithm with the screening and random projection
 introduced in \cite{parzer2024glms} for binomial family and logit link,
 using $1-$area under the ROC curve as the cross-validation measure:
 <<spardarwin, eval=FALSE>>=
+set.seed(1234)
 spar_darwin <- spar.cv(darwin$x, darwin$y,
-  family = binomial(logit), screencoef = screen_glmnet(),
-  nummods = c(5, 10, 20, 50), measure = "1-auc")
+  family = binomial(logit), screencoef = screen_glmnet(reuse_in_rp = TRUE),
+  nummods = c(10, 20, 30, 50), measure = "1-auc")
 spar_darwin
 @
 <<spardarwinreal, echo=FALSE>>=
 if (is_paper) {
-  file <- "darwin_res.rda"
+  file <- file.path(tmpdir, "darwin_res.rda")
   if (!file.exists(file)) {
-    spar_darwin <- spar.cv(darwin$x, darwin$y,
+    set.seed(1234)
+    spar_darwin <- spareg::spar.cv(darwin$x, darwin$y,
                            family = binomial(logit),
-                           screencoef = screen_glmnet(),
-                           nummods = c(5, 10, 20, 50),
+                           screencoef = screen_glmnet(reuse_in_rp = TRUE),
+                           nummods = c(10, 20, 30, 50),
                            measure = "1-auc")
     save(spar_darwin, file = file)
   } else {
@@ -1921,23 +1915,24 @@ to almost all variables being active (some variables can be inactive at $\nu=0$
 as they may never be screened).
 The 1-standard-error rule would however indicate that more sparsity can be
 introduced without too much increase in the cross-validation measure.
-<<plotdarwinactreal, echo=FALSE, include=FALSE>>=
-if (is_paper) {
-p <- plot(spar_darwin, plot_type = "Val_numAct", digits=3L)
-ggsave(filename = "Figures/darwin_plot_valnumAct.pdf", p,
-       width = 10, height = 5)
-}
-@
+%
 \begin{figure}[t!]
 \centering
-\includegraphics[width=0.8\textwidth]{Figures/darwin_plot_valnumAct.pdf}
+\setkeys{Gin}{width=0.8\textwidth}
+<<plotdarwinactnumAct,fig=TRUE,echo=FALSE,width=10,height=5,prefix.string=spareg>>=
+if (is_paper) {
+  p <- plot(spar_darwin, plot_type = "Val_numAct", digits=3L)
+  p
+}
+@
 \caption{Average number of active variables for the grid of thresholding values
 $\nu$ and $M=10$ models for the \emph{Darwin} data set. The red points
 correspond to the average number of active variables for the model with the
 lowest cross-validation measures and to the one chosen by the 1-standard-error
 rule. \label{fig:darwin_activevars}}
 \end{figure}
-Finally, coefficients of the predictors across the maximum number of
+%
+Finally, standardized coefficients of the predictors across the maximum number of
 considered marginal models (in this case $M=50$) can be visualized with
 \code{plot(spar_darwin, plot_type = "coefs")}.
 In this data set, the predictors are ordered by task, where the first 18
@@ -1952,29 +1947,29 @@ We can achieve this by using reordering argument \code{coef\_order} in method
 (see Figure~\ref{fig:darwin_coefs} which can be reproduced with code
 in the
 supplementary materials).
-<<plotdarwincoefreal,echo=FALSE, include=FALSE>>=
-if (is_paper) {
-ntasks <- 25
-nfeat <- 18
-reorder_ind <- c(outer(
-  (seq_len(ntasks) - 1) * nfeat,
-  seq_len(nfeat), "+"))
-feat_names <- sapply(colnames(darwin$x)[seq_len(nfeat)],
-                     function(name) substr(name, 1, nchar(name) - 1))
-p <- plot(spar_darwin,"coefs",coef_order = reorder_ind) +
-  geom_vline(xintercept = 0.5 + seq_len(ntasks - 1) * ntasks,
-             alpha = 0.2, linetype = 2) +
-  annotate("text",x = (seq_len(nfeat) - 1) * ntasks + 12,
-           y = 40,
-           label=feat_names, angle = 90,
-           size = 3)
-ggsave(filename = "Figures/darwin_plot_coefs.pdf", p,
-       width = 10, height = 5)
-}
-@
+%%
 \begin{figure}[t!]
 \centering
-\includegraphics[width=0.8\textwidth]{Figures/darwin_plot_coefs.pdf}
+\setkeys{Gin}{width=0.8\textwidth}
+<<plotdarwincoef,fig=TRUE,echo=FALSE,width=10,height=5,prefix.string=spareg>>=
+if (is_paper) {
+  ntasks <- 25
+  nfeat <- 18
+  reorder_ind <- c(outer(
+    (seq_len(ntasks) - 1) * nfeat,
+    seq_len(nfeat), "+"))
+  feat_names <- sapply(colnames(darwin$x)[seq_len(nfeat)],
+                       function(name) substr(name, 1, nchar(name) - 1))
+  p <- plot(spar_darwin,"coefs",coef_order = reorder_ind) +
+    geom_vline(xintercept = 0.5 + seq_len(ntasks - 1) * ntasks,
+               alpha = 0.2, linetype = 2) +
+    annotate("text",x = (seq_len(nfeat) - 1) * ntasks + 12,
+             y = 40,
+             label=feat_names, angle = 90,
+             size = 3)
+  p
+}
+@
 \caption{Coefficient plot for all variables and all considered $M=50$ models
 in the SPAR ensemble for the \emph{Darwin} data set. The coefficients are
 standardized, before thresholding. \label{fig:darwin_coefs}}
@@ -1982,21 +1977,6 @@ standardized, before thresholding. \label{fig:darwin_coefs}}
 In general we observe that the different features measures across different
 tasks have the same impact on the probability of AD (observable by the blocks
 of blue or red lines).
-
-<<clean_up, include=FALSE, echo=FALSE>>=
-# clean up
-if (clean_up) {
-  if (file.exists("darwin.zip")) invisible(file.remove("darwin.zip"))
-  if (file.exists("data.csv")) invisible(file.remove("data.csv"))
-  if (file.exists("face_data.mat")) invisible(file.remove("face_data.mat"))
-  if (file.exists("cannings_example.rda")) invisible(file.remove("cannings_example.rda"))
-  if (file.exists("faces_res.rda")) invisible(file.remove("faces_res.rda"))
-  if (file.exists("darwin_res.rda")) invisible(file.remove("darwin_res.rda"))
-  if (dir.exists("Figures")) {
-    invisible(file.remove("Figures/*"))
-  }
-}
-@
 \fi
 
 \section{Conclusion} \label{sec-conclusion}
