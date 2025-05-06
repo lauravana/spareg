@@ -97,7 +97,7 @@ if (is_paper) {
 The \pkg{spareg} package for \proglang{R} \citep{RLanguage} offers functionality
 for estimating generalized linear models (GLMs) in high-dimensional
 settings, where the number of predictors $p$ significantly exceeds the number
-of observations $n$ i.e.,~$p>n$ or even $p\gg n$.
+of observations $n$, i.e.,~$p>n$ or even $p\gg n$.
 To address the challenges of
 high dimensionality, the package implements a general algorithm which integrates
 variable screening methods with
@@ -232,9 +232,9 @@ A classic approach is sure independence screening (SIS),
 proposed by \cite{Fan2007SISforUHD}, which uses the vector of marginal
 empirical correlations
 $\hat{\boldsymbol\omega}=(\hat\omega_1,\ldots ,\hat\omega_p)^\top\in\mathbb{R}^p,
-\hat\omega_j=\text{Cor}(X_{j},y)$,
+\hat\omega_j=\text{Cor}(\boldsymbol X_{j},\boldsymbol y)$,
 where $\boldsymbol y$ is the $(n\times 1)$ vector of responses and
-$X_{j}$ is the $j$-th column of the matrix of predictors,
+$\boldsymbol X_{j}$ is the $j$-th column of the matrix of predictors,
 to screen predictors in a linear regression setting
 by selecting the variable set $\mathcal{A}_\delta$ which contains
 all variables for which $|\hat\omega_j|>\delta$, where $\delta$
@@ -246,10 +246,10 @@ is included in $\mathcal{A}_{\delta_n}$ with probability converging to one as
 $n\to \infty$.
 Extensions to SIS include modifications for GLMs \citep{Fan2010sisglms}, where
 screening is performed based on the log-likelihood $\ell(.)$ or the slope
-coefficient of the GLM containing only $X_j$ as a predictor:
+coefficient of the GLM containing only $\boldsymbol X_j$ as a predictor:
 $\hat\omega_j=: \text{argmin}_{\beta_j\in\mathbb{R}}\text{min}_{{\beta_0}\in
 \mathbb{R}}\sum_{i=1}^n -\ell(\beta_j,\beta_0;y_i,x_{ij})$, where
-$x_{ij}$ is the $j$-th entry of the vector $x_i$.
+$x_{ij}$ is the $j$-th entry of the vector $\boldsymbol x_i$.
 
 However, both mentioned approaches face limitations related to
 the required technical conditions which can rule out practically possible
@@ -259,7 +259,7 @@ due to their multicollinearity. To tackle these issues,
 use an iterative procedure where SIS is applied subsequently on the residuals
 of the model estimated in a previous step.
 Additionally, in a linear regression setting, \cite{cho2012high} propose using the tilted correlation, i.e.,~the
-correlation of a tilted version of $X_j$ with $\boldsymbol y$ where the effect of other
+correlation of a tilted version of $\boldsymbol X_j$ with $\boldsymbol y$ where the effect of other
 variables is reduced. \cite{Wang2015HOLP}
 propose to take into account the correlation among the predictors by
 employing the  high-dimensional ordinary least squares projection (HOLP), which is a ridge estimator where the penalty term converges to zero.  For discrete outcomes, joint feature screening
@@ -274,8 +274,8 @@ For GLMs, \cite{fan2011nonparametric} extend \cite{Fan2010sisglms} by fitting a
 generalized additive model with B-splines. Further extensions for discrete
 (or categorical) outcomes include the fused Kolmogorov filter
 \citep{mai2013kolmogorov}, the mean conditional variance, i.e.,~the expectation
-in $X_j$ of the variance in the response of the conditional cumulative
-distribution function $\Prob(X_j\leq x|y)$ \citep{cui2015model}.
+in $\boldsymbol X_j$ of the variance in the response of the conditional cumulative
+distribution function $\Prob(\boldsymbol X_j\leq x|\boldsymbol y)$ \citep{cui2015model}.
 \cite{ke2023sufficient} propose a model free method where the contribution of
 each individual predictor is quantified marginally and conditionally in the
 presence of the control variables as well as the other candidates by
@@ -289,7 +289,7 @@ Package \pkg{SIS} \citep{SISR}, which implements
 the (iterative) sure independence screening procedure and its extensions, as
 detailed in \cite{Fan2007SISforUHD,Fan2010sisglms,fan2010high}. This package
 also provides functionality for estimating a penalized generalized linear model
-or a cox regression model for the variables selected by the screening procedure.
+or a Cox regression model for the variables selected by the screening procedure.
 Package \pkg{VariableScreening} \citep{pkg:VariableScreening} offers screening
 methods for independent and identically distributed (iid) data,
 varying-coefficient models, and longitudinal data and includes techniques such
@@ -523,7 +523,8 @@ $I_k$.
 \item  Fit a \emph{GLM}-type model of $\boldsymbol y$ on $Z_k$ to obtain estimated
 coefficients $\widehat{\boldsymbol\gamma}^k\in\mathbb{R}^{m_k}$ and
 $\hat {\boldsymbol\beta}_{I_k}^k=\Phi_k^\top\widehat
-{\boldsymbol\gamma}^k$, $\hat {\boldsymbol\beta}_{\bar I_k}^k=0$.
+{\boldsymbol\gamma}^k$, $\hat {\boldsymbol\beta}_{\bar I_k}^k=0$, where $\bar I_k$ contains the index of the variables not
+contained in $I_k$.
 \end{enumerate}
 \item  For a given threshold $\nu>0$, set all $\hat\beta_j^k$ with $|\hat\beta_j^k|<\nu$ to $0$ for all $j,k$.
 \item  Choose $M$ and $\nu$ via a validation set or cross-validation by repeating steps 1 to 4 and employing a
@@ -602,7 +603,8 @@ spar.cv(x, y, family = gaussian("identity"), model = NULL,
 \end{Code}
 %
 which implements the cross-validated procedure and returns an object of
-class `\code{spar.cv}'.
+class `\code{spar.cv}'. Additionally, the aliases
+\fct{spareg} and \fct{spareg.cv} are available.
 
 The common arguments of these functions are:
 \begin{itemize}
@@ -701,7 +703,7 @@ coefficients).
 The following screening coefficients are implemented in \pkg{spareg}:
 \begin{itemize}
 \item \code{screen_marglik()} -- computes the screening coefficients by the
-coefficient of $X_j$ for $j =1,\dots,p$  in a univariate GLM using the
+coefficient of $\boldsymbol X_j$ for $j =1,\dots,p$  in a univariate GLM using the
 \fct{stats::glm} function.
 $$
 \hat\omega_j=:\text{argmin}_{\beta_j\in \mathbb{R}}\text{min}_{{\beta_0}
@@ -714,7 +716,7 @@ Note that if \code{family} is not provided in \code{control},
 the \code{family} used in \fct{spar} will be used.
 %
 \item  \code{screen_cor()} -- computes the screening coefficients by the
-correlation between $\boldsymbol y$ and $X_j$ using the function \fct{stats::cor}. It
+correlation between $\boldsymbol y$ and $\boldsymbol X_j$ using the function \fct{stats::cor}. It
 allows to pass a list of controls through the \code{control} argument to
 \fct{stats::cor} -- e.g.,~\code{screen_cor(control = list(method = "spearman"))}.
 %
@@ -1202,8 +1204,8 @@ This is possible by setting the parameter \code{parallel = TRUE} in \code{spar()
 \code{spar.cv()},
 assuming that a parallel backend for \pkg{foreach} is registered
 using the \code{registerDoParallel()}
-function of package \pkg{doParallel} \citep{pkg:doParallel}. In general, the parallelization seems to
-pay off especially for data sets with a larger number of observations $n$. A minimal example with a correlation-based
+function of package \pkg{doParallel} \citep{pkg:doParallel}. Our experiments suggest that parallelization
+pays off especially for data sets with a larger number of observations~$n$. A minimal example with a correlation-based
 probabilistic screening and a Gaussian random projection matrix
 is provided below:
 <<parallel_example,message=FALSE,eval=FALSE>>=
@@ -1227,7 +1229,7 @@ We exemplify how screening coefficients implemented in package
 \pkg{spareg}.
 
 We start by defining the function for generating the screening coefficients
-using function the \code{screenIID()} in \pkg{VariableScreening}.
+using function \code{screenIID()} in \pkg{VariableScreening}.
 <<>>=
 generate_scr_sirs <- function(y, x, object) {
   res_screen <- do.call(function(...)
@@ -1502,12 +1504,12 @@ x <- example_data2$x;
 set.seed(123)
 np <- ncol(x) * nrow(x)
 id_outliers_x <- sample(seq_len(np), perc_cont * np)
-x[id_outliers_x] <- x[id_outliers_x] + 50
+x[id_outliers_x] <- x[id_outliers_x] + 100
 @
 We can now estimate the SPAR algorithm with robust GLMs
 as marginal models and compare
 it to a version with marginal GLMs. We use no screening and
-\code{rp_gaussian()}. We set \code{measure = "mae"} i.e.,~we find the threshold
+\code{rp_gaussian()}. We set \code{measure = "mae"}, i.e.,~we find the threshold
 $\nu$ by choosing the value
 which delivers the lowest mean absolute error.
 To improve stability in the estimates from \code{robustbase::glmrob}, we set the upper bound on goal dimension
