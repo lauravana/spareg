@@ -270,8 +270,7 @@ For GLMs, \cite{fan2011nonparametric} extend \cite{Fan2010sisglms} by fitting a
 generalized additive model with B-splines. Further extensions for discrete
 (or categorical) outcomes include the fused Kolmogorov filter
 \citep{mai2013kolmogorov}, the mean conditional variance, i.e.,~the expectation
-in $\boldsymbol X_{j}$ of the variance in the response of the conditional cumulative
-distribution function $\Prob(\boldsymbol X_{j}\leq x|\boldsymbol y)$ \citep{cui2015model}.
+in $\boldsymbol X_{j}$ of the variance in the response of the empirical distribution function of each predictor conditional on the response \citep{cui2015model}.
 \cite{ke2023sufficient} propose a model free method where the contribution of
 each individual predictor is quantified marginally and conditionally in the
 presence of the control variables as well as the other candidates by
@@ -374,9 +373,9 @@ classification problem among a set of data-agnostic random projections.
 On the other hand,  \cite{parzer2024glms} propose
 to use a random projection matrix for GLMs which directly incorporates
 information about the relationship between the predictors and
-the response in the projection matrix, rather than a projection matrix
-which satisfies the JL lemma. \cite{parzer2024sparse} also provide in the linear regression
-a theoretical bound on the expected gain in prediction error in using a
+the response, rather than a projection matrix
+which satisfies the JL lemma. \cite{parzer2024sparse} also provide in the linear regression case
+a theoretical bound on the expected gain in prediction error when using a
 projection which incorporates information
 about the true regression coefficients compared to a conventional random projection.
 Motivated by this result, they propose to construct a projection matrix using
@@ -440,9 +439,9 @@ matrices, namely Gaussian random matrix and sparse random matrix.
 %
 \subsection{Generalized linear models}
 %
-After we perform in each marginal model an
+After we perform an
 initial screening step followed
-by a projection step,
+by a projection step in each marginal model,
 we assume that the reduced and projected set of
 predictors $\boldsymbol{z}_i=\Phi\boldsymbol{x}_i \in \mathbb{R}^m$ together
 with the response arise from a GLM with
@@ -510,7 +509,7 @@ if probabilistic screening should
 be employed, draw the predictors sequentially without replacement using an
 initial vector of probabilities $p_j\propto |\hat\omega_j|$. Otherwise,
 select the $p_0$ variables with the highest $|\hat\omega_j|$. If $p < p_0$,
-perform no screening and $I_k=\{1,\dots,p\}$.
+perform no screening and set $I_k=\{1,\dots,p\}$.
 \item  Project the screened variables to a random dimension
 $m_k\sim \text{Unif}\{m_l,\dots,m_u\}$ using \emph{projection matrix}
 $\Phi_k$ to obtain $Z_k=X_{\cdot I_k}\Phi_k^\top \in \mathbb{R}^{n\times m_k}$,
@@ -531,7 +530,8 @@ loss function $K(M, \nu)$ on the test set
 \emph{simple average} of the regression coefficients
 $\hat{\boldsymbol\beta} = \sum_{k=1}^M\hat {\boldsymbol\beta}^k / M$ (this results in averaging of the
 models on the link level) or via the fitted values by taking a
-\emph{simple average} of $\hat y = \sum_{k=1}^Mg^{-1}(\boldsymbol x_i^\top\hat{\boldsymbol\beta}^k) / M$.
+\emph{simple average} of $\hat y = \sum_{k=1}^Mg^{-1}(\boldsymbol x_i^\top\hat{\boldsymbol\beta}^k) / M$ (here we omit the intercept for
+the sake of notational simplicity).
 \item Output the averaged estimated coefficients and predictions for the chosen $M$ and $\nu$.
 \end{enumerate}
 %
@@ -549,6 +549,12 @@ A further modification of the algorithm above is to
 employ part of the data for estimating the screening coefficients (Step~3) and the remaining data to estimate the ensemble models (Step~4). Such a strategy could avoid issues related to overfitting. Even though \cite{parzer2024sparse} find that in the linear regression case such a splitting approach does not improve performance, the implementation in \pkg{spareg}
 allows for data splitting.
 
+Finally, when choosing the optimal $\nu$ and $M$ in Step~6 given a grid of values
+for each parameter, one can pick the combination delivering the lowest loss
+function or the combination delivering
+the sparsest model with a loss within one standard deviation of the minimum (this corresponds to the commonly employed ``one-standard-error (1se)'' rule
+in penalized regression).
+
 \section{Software} \label{sec-software}
 %
 Package \pkg{spareg} \citep{spareg} is available from the Comprehensive \proglang{R} Archive Network (CRAN) at \url{https://CRAN.R-project.org/package=spareg}.
@@ -560,7 +566,7 @@ and loaded by
 library("spareg")
 @
 %
-In this section we rely for illustration purposes on a simulated example data
+In this section, we rely for illustration purposes on a simulated example data
 set which contains $n=200$ observations of a continuous response
 \code{y} and $p=2000$ predictors \code{x} which can be used as a training data set and
 $n=100$ observations to be used as a test set.
@@ -629,7 +635,7 @@ considered for thresholding; defaults to 20;
 \item  \code{nus} is an optional vector of $\nu$ values to be considered for
 thresholding. If it is not provided, is defaults to a grid of \code{nnu} values.
 This grid is generated by including zero and \code{nnu}$-1$ quantiles of the
-absolute values of the estimated coefficients from the marginal models, chosen
+absolute values of the estimated non-zero coefficients from the marginal models, chosen
 to be equally spaced  on the probability scale.
 %
 \item \code{nummods} is the number of models to be considered in the ensemble;
@@ -671,7 +677,8 @@ number of folds to be used for cross-validation. It relies on a lightweight
 version of \code{spar()}
 as a workhorse, which is called for each fold. The random projections
 for each model are held fixed throughout the cross-validation  to reduce the
-computational burden. If data-driven random projections are employed, only the
+computational burden. This is achieved by
+calling \code{spar()} on the whole data set before starting the cross-validation. The random projections and the screening indicators generated by this function call are held then fixed throughout the cross-validation procedure. If data-driven random projections are employed, only the
 data to be used in the random projection will be updated in
 each fold iteration with the corresponding training data. More details will
 be provided in Section~\ref{sec-extensibility}.
@@ -751,7 +758,7 @@ $2n > p$, no screening is performed.
 proportion of the data that should be used for computing the screening
 coefficient. The remaining data will be used for estimating the marginal
 models in the SPAR algorithm; if not specified,
-the whole data will be used for estimating the
+the whole data will be used for estimating both the
 screening coefficient and the marginal models.
 %
 \item \code{type} character -- either \code{"prob"} (indicating that
@@ -779,7 +786,7 @@ vector of (standardized in the Gaussian case) responses, and the argument
 It returns a vector of screening coefficients of length $p$.
 %
 \item  \code{control}, which is the control list passed by the user in
-\code{screen_*}. These controls are arguments which are needed in
+\code{screen_*()}. These controls are arguments which are needed in
 \code{generate_fun()} in order to generate the desired screening coefficients.
 \end{itemize}
 
@@ -802,7 +809,7 @@ coefficient. Note that it considers the controls in \code{object$control} when
 calling the \code{stats::glm()} function (unless it is provided, the
 \code{family} argument in \code{stats::glm()} will be set to the ``global''
 family of the SPAR algorithm which is assigned
-inside the \code{spar()} function an attribute for the \class{screencoef} object).
+inside the \code{spar()} function as an attribute for the \class{screencoef} object).
 
 For convenience, a constructor function \code{constructor_screencoef()}
 is provided, which can be used to create new \code{screen_*} functions.
@@ -830,7 +837,7 @@ normal entries).
 \item \code{rp_sparse()} -- random projection object where the generated matrix
 will be the one in \cite{ACHLIOPTAS2003JL}.
 The value of $\psi$ can be passed
-through the \code{control} argument and defaults to  \code{psi = 1}
+through the \code{control} argument and defaults to  \code{psi = 1},
 e.g.,~\code{rp_sparse(control = list(psi = 1/3))}.
 %
 \item \code{rp_cw()} -- sparse embedding random projection in
@@ -965,7 +972,7 @@ string and adds it as an attribute. Function \code{update_rpm_w_data()} is
 The package provides a class `\code{sparmodel}'
 for the marginal model to be fitted for
 each element of the ensemble. The framework
-assumes that model employs a linear predictor, i.e.,~a linear combination of
+assumes that the model employs a linear predictor, i.e.,~a linear combination of
 the projected variables.
 
 Similar to the objects for random projection and screening
@@ -1024,7 +1031,7 @@ spar_res
 @
 %
 For `\code{spar.cv}' it also provides the same information for the $(\nu, M)$
-combination chosen by the one-standard error rule.
+combination chosen by the one-standard-error rule.
 <<>>=
 spar_cv <- spar.cv(example_data$x, example_data$y,
   nummods = c(5, 10, 15, 20, 25, 30))
@@ -1050,7 +1057,7 @@ It returns a list with the intercept, vector of \code{beta} coefficients and
 the \code{nummod} and \code{nu} employed in the calculation.
 Additionally for `\code{spar.cv}', the \code{coef} method
 also has argument \code{opt_par} which is one of
-\code{c("1se","best")} and chooses whether to select the best pair of \code{nus}
+\code{c("best", "1se")} and chooses whether to select the best pair of \code{nus}
 and \code{nummods} according to cross-validation
 \code{measure}, or the solution yielding the sparsest vector of coefficients
 within one standard deviation
@@ -1354,7 +1361,7 @@ generate_cannings <- function(rp, m, included_vector, x, y) {
   ytrain <- y[-id_test];  ytest <- y[id_test]
   control_glmnet <-
     rp$control[names(rp$control) %in% names(formals(glmnet::glmnet))]
-  best_val <- 1e5
+  best_val <- Inf
   family <- eval(parse(text = rp$control$family_string))
   for (b in seq_len(B2)) {
     RM <- simulate_haar(m, p)
@@ -1377,7 +1384,7 @@ generate_cannings <- function(rp, m, included_vector, x, y) {
   return(best_RM)
 }
 @
-In the cross-validation procedure, we do not generate new matrices for each step to keep computational costs low, so we do not specify a function \code{update_rpm_w_data()}.
+If the cross-validation procedure implemented in \fct{spar.cv} should be employed, we choose to not generate new matrices for each fold to keep computational costs low, so we do not specify a function \code{update_rpm_w_data()}.
 
 Putting it all together, we get:
 <<define_rp_cannings>>=
@@ -1461,7 +1468,7 @@ Finally, we illustrate how to implement a new marginal model in \pkg{spareg}.
 We consider estimating a robust GLM as a marginal model using the package \pkg{robustbase} \citep{pkg:robustbase}.
 
 We start by defining the \code{model_fun()} function,
-where  \code{y} is the vector of responses, \code{z} is the matrix of reduced predictors and \code{object} is a `\code{sparmodel}' object. In the case of a linear model, we rely on the function
+where  \code{y} is the vector of responses, \code{z} is the matrix of reduced predictors and \code{object} is a `\code{sparmodel}' object. In the case of a linear model, i.e.,~Gaussian family with identity link, we rely on the function
 \code{robustbase::lmrob()}, for other family-links we use
 \code{robustbase::glmrob()}.
 <<>>=
@@ -1532,7 +1539,7 @@ spar_rob_res
 spar_res
 @
 %
-We observe that the attained \code{mae} is indeed lower for the robust version.
+We observe that the attained \code{mae} is indeed lower for the robust version. We also observe that all predictors are active. Even though the optimal threshold parameter was greater than zero, it did not happen that the coefficients of one predictor were set to zero in all $M=20$ marginal models.
 %
 \ifPositive
 
@@ -1677,7 +1684,7 @@ exercise
 <<plotfacesmeasure, eval=FALSE>>=
 plot(spar_faces)
 @
-If we wish do visualize the results for $M=5$, which is the value chosen by the 1-standard-error rule, we can specify this through the \code{nummod} argument (see Figure~\ref{fig:facesplot_valmeasure} bottom panel).
+If we wish do visualize the results for $M=5$, which is the value chosen by the one-standard-error rule, we can specify this through the \code{nummod} argument (see Figure~\ref{fig:facesplot_valmeasure} bottom panel).
 <<plotfacesmeasurenummod5, eval=FALSE>>=
 plot(spar_faces, nummod = 5)
 @
@@ -1702,17 +1709,18 @@ if (is_paper) {
 @
 \caption{Plot of mean squared error over a grid of threshold values $\nu$ for
 fixed number of optimal models (top) and for the number of models chosen by
-the 1-standard-error rule (bottom) for the \emph{Isomap faces} data set.
-The red points correspond to the threshold which achieves the
-lowest cross-validation measure and the one with the largest cross-validation
-measure within one standard deviation away from minimum.
+the one-standard-error rule (bottom) for the \emph{Isomap faces} data set.
+The left-most red point corresponds to the threshold value in the grid which achieves the
+lowest cross-validation measure.
+The right-most red point corresponds to threshold which leads to the most sparse
+vector of coefficients while achieving a on average a cross-validation measure within one standard deviation of the best.
 Confidence bands represent one standard deviation in the measures across
 the number of folds. \label{fig:facesplot_valmeasure}}
 \end{figure}
 %
 We observe that 50 models and $\nu=0$ delivers the lowest MSE but
 that the differences in MSE compared to the value of $\nu=0.00408$ chosen by
-1-standard-error rule (for 50 models) are minimal.
+one-standard-error rule (for 50 models) are minimal.
 
 The coefficients of the different variables (in this example pixels) obtained by
 averaging over the coefficients the marginal models (for optimal $\nu$ and
@@ -1921,7 +1929,7 @@ plot(spar_darwin, plot_type = "Val_numAct")
 We observe again that no thresholding achieves the best measure and translates
 to almost all variables being active (some variables can be inactive at $\nu=0$
 as they may never be screened).
-The 1-standard-error rule would however indicate that more sparsity can be
+The one-standard-error rule would however indicate that more sparsity can be
 introduced without too much increase in the cross-validation measure.
 %
 \begin{figure}[t!]
@@ -1936,7 +1944,7 @@ if (is_paper) {
 \caption{Average number of active variables for the grid of thresholding values
 $\nu$ and $M=10$ models for the \emph{Darwin} data set. The red points
 correspond to the average number of active variables for the model with the
-lowest cross-validation measures and to the one chosen by the 1-standard-error
+lowest cross-validation measures and to the one chosen by the one-standard-error
 rule. \label{fig:darwin_activevars}}
 \end{figure}
 %
@@ -1982,7 +1990,7 @@ if (is_paper) {
 in the SPAR ensemble for the \emph{Darwin} data set. The coefficients are
 standardized, before thresholding. \label{fig:darwin_coefs}}
 \end{figure}
-In general we observe that the different features measures across different
+In general we observe that the different features across different
 tasks have the same impact on the probability of AD (observable by the blocks
 of blue or red lines).
 \fi
@@ -2013,7 +2021,9 @@ regression coefficients can be recovered approximately after the projection.
 Methodologically, the SPAR algorithm with ridge screening coefficients and
 the data-driven random projection (as proposed in \cite{parzer2024glms}) has been demonstrated
 to perform effectively in terms of predictive power and variable ranking in settings with correlated predictors and across different degrees of sparsity of the coefficient
-vector, making it a suitable method for high-dimensional settings with correlated predictors where the sparsity of the problem is unknown.
+vector, making it a suitable method for high-dimensional settings with correlated predictors where the sparsity of the problem is unknown. This is the motivation
+behind setting the screening coefficient
+and random projection in \cite{parzer2024glms} as default values in \pkg{spareg}.
 
 Moreover, the flexibility and adaptability of the \pkg{spareg} package in
 dealing with different types of screening, random projection and types of

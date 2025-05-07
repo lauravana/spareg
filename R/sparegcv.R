@@ -561,8 +561,9 @@ print.spar.cv <- function(x, ...) {
   cat("Summary of those non-zero coefficients (non-standardized):\n")
   print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
   cat(sprintf(
-  "\nSparsest coefficient within one standard error of best CV measure (%s) reached for
-  nummod=%d, nu=%s \nleading to %d / %d active predictors with CV measure (%s) %.1f.\n",
+  "\nSparsest coefficient within one standard error of best CV measure (%s)
+  reached for nummod=%d, nu=%s leading to %d / %d active predictors
+  with CV measure (%s) %.1f.\n",
               spar_res$measure,
               mycoef_1se$nummod,
               formatC(mycoef_1se$nu,digits = 2,format = "e"),
