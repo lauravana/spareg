@@ -3,7 +3,7 @@
 
 %% recommended packages
 \usepackage{orcidlink,thumbpdf,lmodern}
-
+\usepackage[utf8]{inputenc}
 %% another package (only for this demo article)
 \usepackage{tikz,bbm,amsmath,amssymb}
 
@@ -87,8 +87,8 @@ E-mail: \email{peter.filzmoser@tuwien.ac.at}
 options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
 library("ggplot2")
 library("spareg")
-is_paper <- FALSE
-tmpdir <- tempdir()
+is_paper <- TRUE
+tmpdir <- "."#tempdir()
 @
 \newif\ifPositive
 <<condition_vignette, echo = FALSE, results = tex>>=
@@ -636,6 +636,7 @@ number of models is not computationally intensive as we only need to train the m
 \section{Software} \label{sec-software}
 %
 Package \pkg{spareg} can be installed from CRAN:
+
 <<eval=FALSE>>=
 install.packages("spareg")
 @
@@ -1314,6 +1315,7 @@ Moreover, the \code{plot} method for object `\code{spar.cv}' with
 from first running \fct{spar} on the whole data set, before cross-validation is performed.
 
 
+
 The \code{plot} methods return objects of class \class{ggplot} \citep{ggplotR}.
 %
 \subsection{Parallelization}
@@ -1398,7 +1400,6 @@ spar_example
 %
 In the following we exemplify how new random projections can be implemented
 in the framework of \pkg{spareg}.
-
 We implement the random projection of \cite{cannings2017random},
 who propose using the Haar measure for generating the random projections.
 They simulate matrices from the Haar measure by
@@ -1651,6 +1652,7 @@ link. We use no screening and
 \code{rp_gaussian()}. We set \code{measure = "mae"}, i.e.,~we find the threshold
 $\nu$ by choosing the value
 which delivers the lowest mean absolute error on the training sample.
+We use the default of $M=20$ models in the ensemble.
 To improve stability in the estimates from \code{robustbase::glmrob}, we set the upper bound on goal dimension
 of the random projection to 25 (default would be $n/2=\Sexpr{round(nrow(x)/2)}$).
 <<run_glmrob_glm>>=
@@ -2120,6 +2122,7 @@ lowest cross-validation measures and to the one chosen by the one-standard-error
 rule. \label{fig:darwin_activevars}}
 \end{figure}
 %
+
 Finally, standardized coefficients of the predictors across the maximum number of
 considered marginal models (in this case $M=50$) can be visualized with
 \code{plot(spar_darwin, plot_type = "coefs")}.
