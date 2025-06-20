@@ -1315,7 +1315,6 @@ Moreover, the \code{plot} method for object `\code{spar.cv}' with
 from first running \fct{spar} on the whole data set, before cross-validation is performed.
 
 
-
 The \code{plot} methods return objects of class \class{ggplot} \citep{ggplotR}.
 %
 \subsection{Parallelization}
