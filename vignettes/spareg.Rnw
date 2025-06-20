@@ -663,7 +663,6 @@ number of models is not computationally intensive as we only need to train the m
 \section{Software} \label{sec-software}
 %
 Package \pkg{spareg} can be installed from CRAN:
-
 <<eval=FALSE>>=
 install.packages("spareg")
 @
