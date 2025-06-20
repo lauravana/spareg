@@ -87,8 +87,8 @@ E-mail: \email{peter.filzmoser@tuwien.ac.at}
 options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
 library("ggplot2")
 library("spareg")
-is_paper <- TRUE
-tmpdir <- "."#tempdir()
+is_paper <- FALSE
+tmpdir <- tempdir()
 @
 \newif\ifPositive
 <<condition_vignette, echo = FALSE, results = tex>>=
