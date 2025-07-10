@@ -1024,6 +1024,7 @@ and a summary of the non-zero coefficients.
 We estimate the SPAR algorithm with no screening and \code{rp_cw(data = TRUE)} (default).
 <<first_example>>=
 set.seed(12)
+colnames(example_data$x) <- paste0("x", 1:ncol(example_data$x))
 spar_res <- spar(example_data$x, example_data$y,
   xval = example_data$xtest, yval = example_data$ytest,
   nummods = c(5, 10, 15, 20, 25, 30))

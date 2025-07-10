@@ -439,7 +439,7 @@ spar_algorithm <- function(x, y,
   val_res <- do.call("rbind.data.frame", tabnummodres)
   betas <- Matrix(data=c(0),p,max_num_mod,sparse = TRUE)
   betas[xscale>0,] <- betas_std
-
+  rownames(betas) <- colnames(x)
   ## Clean up
   res <- list(betas = betas, intercepts = intercepts,
               scr_coef = scr_coef,
@@ -470,7 +470,7 @@ spar_algorithm <- function(x, y,
 #' @param nu threshold level used to form coefficients; value with minimal
 #'        validation \code{Meas} is used if not provided.
 #' @param ... further arguments passed to or from other methods
-#' @return List with elements
+#' @return object of class  \code{'coefspar'} which is aL list with elements
 #' \itemize{
 #'  \item \code{intercept} intercept value
 #'  \item \code{beta} vector of length p of averaged coefficients
@@ -478,7 +478,7 @@ spar_algorithm <- function(x, y,
 #'  \item \code{nu}  threshold based on which the coefficient is computed
 #' }
 #' @export
-
+#' @method coef spar
 coef.spar <- function(object,
                       nummod = NULL,
                       nu = NULL, ...) {
@@ -511,14 +511,85 @@ coef.spar <- function(object,
   }
 
   # calc for chosen parameters
-  final_coef <- object$betas[object$xscale>0,1:nummod,drop=FALSE]
-  final_coef[abs(final_coef)<nu] <- 0
+  final_coef <- object$betas[object$xscale>0, seq_len(nummod), drop=FALSE]
+  final_coef[abs(final_coef) < nu] <- 0
   p <- length(object$xscale)
   beta <- numeric(p)
   beta[object$xscale>0] <- object$yscale*Matrix::rowMeans(final_coef)/(object$xscale[object$xscale>0])
-  intercept <- object$ycenter + mean(object$intercepts[1:nummod]) - sum(object$xcenter*beta)
-  return(list(intercept=intercept,beta=beta,nummod=nummod,nu=nu))
+  names(beta) <- rownames(final_coef)
+  intercept <- object$ycenter + mean(object$intercepts[seq_len(nummod)]) - sum(object$xcenter*beta)
+  res <- list(intercept = intercept,
+              beta = beta,
+              nummod = nummod,
+              nu = nu)
+  class(res) <- "coefspar"
+  best_ind <- which.min(object$val_res$Meas)
+  par <- object$val_res[best_ind,]
+  if (nummod == par$nummod &  nu == par$nu) {
+    attr(res, "best") <- TRUE
+  } else {
+    attr(res, "best") <- FALSE
+  }
+  return(res)
 }
+
+#' Print method for coefspar objects
+#'
+#' Print method showing the basic components of a  \code{'coefspar'} object.
+#'
+#' @param x An object of class \code{'coefspar'}, typically created by a custom model function.
+#' @param ... Additional arguments passed to or from other methods (ignored here).
+#'
+#' @return Invisibly returns the input object \code{x}.
+#' @export
+#' @method print coefspar
+print.coefspar <- function(x, ...) {
+  cat(sprintf("Coefficients of spar object based on %s threshold and number of models combination: \n\n",
+              ifelse(attr(x, "best"), "best", "given")))
+
+  coefs <- c("(Intercept)" = x$intercept, x$beta)
+  n_show <- 6
+  shown <- head(coefs, n_show)
+
+  # Assign default names if unnamed
+  if (is.null(names(shown)) || any(names(shown) == "")) {
+    names(shown) <- paste0("V", seq_along(shown) - 1)
+    names(shown)[1] <- "(Intercept)"
+  }
+  # Print header and values
+  print(noquote(format(round(shown, 4), nsmall = 4, justify = "right")))
+
+  # Add inline ...
+  if (length(coefs) > n_show) {
+    cat("\n...", sprintf("(%d coefficients not shown)\n\n", length(coefs) - 6))
+  }
+
+  cat("Number of variables: ", length(x$beta), "\n")
+  cat("Number of models (nummod): ", x$nummod, "\n")
+  cat("Threshold (nu): ", x$nu, "\n")
+  invisible(x)
+}
+
+#' Summary method for coefspar objects
+#'
+#' Provides a summary of a \code{coefspar} object.
+#'
+#' @param object An object of class \code{coefspar}.
+#' @param ... Additional arguments (ignored).
+#' @return Invisibly returns \code{object}.
+#' @export
+#' @method summary coefspar
+summary.coefspar <- function(object, ...) {
+  cat("Summary of Model (class 'coefspar')\n")
+  cat("------------------------------------------------\n")
+  cat("Intercept:\n  ", round(object$intercept, 4), "\n")
+  cat("Number of models used:\n  ", object$nummod, "\n")
+  cat("Threshold (nu):\n  ", object$nu, "\n")
+  cat("Coefficient summary (beta):\n")
+  print(summary(object$beta))
+  invisible(object)
+}
+
 
 #' predict.spar
 #'
@@ -729,7 +800,7 @@ plot.spar <- function(x,
     tmp_mat <- data.frame(t(apply(as.matrix(spar_res$betas)[coef_order,],1,
                                   function(row)row[order(abs(row),decreasing = TRUE)])),
                           predictor=1:p)
-    colnames(tmp_mat) <- c(1:nummod,"predictor")
+    colnames(tmp_mat) <- c(seq_len(nummod),"predictor")
     tmp_df <- reshape(tmp_mat, idvar = "predictor",
                       varying = seq_len(nummod),
                       v.names = "value",

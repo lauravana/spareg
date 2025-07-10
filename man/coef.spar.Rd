@@ -18,7 +18,7 @@ validation \code{Meas} is used if not provided.}
 \item{...}{further arguments passed to or from other methods}
 }
 \value{
-List with elements
+object of class  \code{'coefspar'} which is aL list with elements
 \itemize{
 \item \code{intercept} intercept value
 \item \code{beta} vector of length p of averaged coefficients
