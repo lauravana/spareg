@@ -1,4 +1,4 @@
-\documentclass[review]{jss}
+\documentclass[nojss]{jss}
 %% -- LaTeX packages and custom commands ---------------------------------------
 
 %% recommended packages

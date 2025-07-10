@@ -169,5 +169,5 @@ spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
 }
 }
 \seealso{
-\link{spar.cv},\link{coef.spar},\link{predict.spar},\link{plot.spar},\link{print.spar}
+\link{spar.cv}, \link{coef.spar}, \link{predict.spar}, \link{plot.spar}, \link{print.spar}
 }

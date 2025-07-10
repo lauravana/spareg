@@ -101,7 +101,7 @@
 #'   yfit = example_data$ytest)
 #' plot(spar_res, plot_type = "coefs", prange = c(1,400))
 #'
-#' @seealso [spar.cv],[coef.spar],[predict.spar],[plot.spar],[print.spar]
+#' @seealso [spar.cv], [coef.spar], [predict.spar], [plot.spar], [print.spar]
 #' @aliases spareg
 #' @export
 #'

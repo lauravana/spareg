@@ -69,7 +69,7 @@
 #'   yfit = example_data$ytest, opt_par = "1se")
 #' plot(spar_res, "coefs", prange = c(1, 400))
 #' }
-#' @seealso [spar],[coef.spar.cv],[predict.spar.cv],[plot.spar.cv],[print.spar.cv]
+#' @seealso [spar], [coef.spar.cv], [predict.spar.cv], [plot.spar.cv], [print.spar.cv]
 #' @aliases spareg.cv
 #' @export
 spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),

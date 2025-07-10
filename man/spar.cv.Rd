@@ -132,5 +132,5 @@ spar_res <- spareg.cv(example_data$x, example_data$y,
 }
 }
 \seealso{
-\link{spar},\link{coef.spar.cv},\link{predict.spar.cv},\link{plot.spar.cv},\link{print.spar.cv}
+\link{spar}, \link{coef.spar.cv}, \link{predict.spar.cv}, \link{plot.spar.cv}, \link{print.spar.cv}
 }
