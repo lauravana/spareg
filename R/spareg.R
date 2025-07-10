@@ -170,6 +170,7 @@ spar_algorithm <- function(x, y,
 
   if (!is.null(seed)) {
     if (parallel & requireNamespace("doRNG", quietly = TRUE)) {
+      registerDoRNG <- getNamespace("doRNG")$registerDoRNG
       registerDoRNG(seed = seed)
     } else {
       set.seed(seed)

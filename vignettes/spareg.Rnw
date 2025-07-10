@@ -1,4 +1,4 @@
-\documentclass[nojss]{jss}
+\documentclass[review]{jss}
 %% -- LaTeX packages and custom commands ---------------------------------------
 
 %% recommended packages
@@ -81,7 +81,7 @@ if (is_paper) {
 }
 @
 % \VignetteIndexEntry{spareg: Sparse Projected Averaged Regression in R}
-% \VignetteDepends{robustbase,cellWise,VariableScreening,R.matlab,doParallel,ggpubr}
+% \VignetteDepends{robustbase,cellWise,VariableScreening,R.matlab,doParallel,doRNG,ggpubr}
 % \VignetteKeyword{random projection}
 % \VignetteKeyword{screening}
 % \VignetteKeyword{ensemble learning}
@@ -589,7 +589,7 @@ The two main functions for fitting the SPAR algorithm are:
 spar(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
   screencoef = NULL, xval = NULL, yval = NULL, nnu = 20, nus = NULL,
   nummods = c(20), measure = c("deviance", "mse", "mae", "class", "1-auc"),
-  parallel = FALSE, inds = NULL, RPMs = NULL, ...)
+  parallel = FALSE, inds = NULL, RPMs = NULL, seed = NULL, ...)
 \end{Code}
 %
 which implements the algorithm in Section~\ref{sec-algo} without
@@ -600,7 +600,7 @@ and
 spar.cv(x, y, family = gaussian("identity"), model = NULL,
   rp = NULL, screencoef = NULL, nfolds = 10, nnu = 20, nus = NULL,
   nummods = c(20), measure = c("deviance", "mse", "mae", "class", "1-auc"),
-  parallel = FALSE, ...)
+  parallel = FALSE, seed = NULL, ...)
 \end{Code}
 %
 which implements the cross-validated procedure and returns an object of
@@ -1181,7 +1181,7 @@ p4 <- plot(spar_res, plot_type = "res-vs-fitted", xfit = example_data$xtest,
   yfit = example_data$ytest)
 p3 <- plot(spar_res,  plot_type = "coefs")
 p <- ggpubr::ggarrange(p1, p2, p3, p4,
-       ncol = 4, nrow = 1)
+  ncol = 4, nrow = 1)
 p
 @
 \caption{\code{plot} methods for \class{spar} object. The red dots in the first
@@ -1207,19 +1207,25 @@ This is possible by setting the parameter \code{parallel = TRUE} in \code{spar()
 \code{spar.cv()},
 assuming that a parallel backend for \pkg{foreach} is registered
 using the \code{registerDoParallel()}
-function of package \pkg{doParallel} \citep{pkg:doParallel}. Our experiments suggest that parallelization
+function of package \pkg{doParallel} \citep{pkg:doParallel}.
+To ensure reproducibility the \pkg{doRNG} \citep{pkg:doRNG}
+can be used.
+%
+Our experiments suggest that parallelization
 pays off especially for data sets with a larger number of observations~$n$. A minimal example with a correlation-based
 probabilistic screening and a Gaussian random projection matrix
 is provided below:
 <<parallel_example,message=FALSE,eval=FALSE>>=
-set.seed(1234)
-example_data4 <- simulate_spareg_data(n = 1000, p = 2000, ntest = 1000)
+example_data4 <- simulate_spareg_data(n = 1000, p = 2000, ntest = 1000,
+  seed = 123)
 library(doParallel)
+library(doRNG)
 cl <- makeCluster(2, type = "PSOCK")
 registerDoParallel(cl)
-spar_res_par <- spar(example_data4$x, example_data4$y,
-  screencoef = screen_cor(), rp = rp_gaussian(),
-  nummods = 50, parallel = TRUE)
+  registerDoRNG(seed = 123)
+  spar_res_par <- spar(example_data4$x, example_data4$y,
+    screencoef = screen_cor(), rp = rp_gaussian(),
+    nummods = 50, parallel = TRUE)
 stopCluster(cl)
 @
 %
@@ -1556,17 +1562,17 @@ variable. The data set is publicly available for download
 at \url{https://web.archive.org/web/20150922051706/http://isomap.stanford.edu/face_data.mat.Z}.
 <<urls, echo=FALSE>>=
 if (is_paper) {
-    url1 <- "https://web.archive.org/web/20150922051706/"
-    url2 <- "http://isomap.stanford.edu/face_data.mat.Z"
-    ## On Ubuntu or MacOS use code below
-    ## On Windows, download locally and unzip
-    if (!file.exists(file.path(tmpdir, "face_data.mat"))) {
-      # system('uncompress face_data.mat.Z')
-      library("R.matlab")
-      download.file(paste0(url1, url2),
-                    file.path(tmpdir, "face_data.mat.Z"))
-      system(sprintf('uncompress %s', file.path(tmpdir, "face_data.mat.Z")))
-    }
+  url1 <- "https://web.archive.org/web/20150922051706/"
+  url2 <- "http://isomap.stanford.edu/face_data.mat.Z"
+  ## On Ubuntu or MacOS use code below
+  ## On Windows, download locally and unzip
+  if (!file.exists(file.path(tmpdir, "face_data.mat"))) {
+    # system('uncompress face_data.mat.Z')
+    library("R.matlab")
+    download.file(paste0(url1, url2),
+                  file.path(tmpdir, "face_data.mat.Z"))
+    system(sprintf('uncompress %s', file.path(tmpdir, "face_data.mat.Z")))
+  }
 }
 @
 <<unzip_file,echo=FALSE,message=FALSE>>=
@@ -1814,9 +1820,9 @@ if (is_paper) {
 if (is_paper) {
   id <- 3
   p4 <- ggplot(data.frame(X = rep(1:64, each = 64),
-                             Y = rep(64:1, 64),
-                             effect = xtest[id,] * face_coef_1se$beta),
-                  aes(X, Y, fill = effect)) +
+                          Y = rep(64:1, 64),
+                          effect = xtest[id,] * face_coef_1se$beta),
+               aes(X, Y, fill = effect)) +
     geom_tile() +
     theme_void() +
     scale_fill_gradient2() +
@@ -1844,22 +1850,22 @@ if (is_paper) {
   #  unzip(file.path(tmpdir, "data.zip")exdir = )
   #} else {
   if (!file.exists(file.path(tmpdir, "darwin.zip"))) {
-      download.file("https://archive.ics.uci.edu/static/public/732/darwin.zip",
-                    file.path(tmpdir, "darwin.zip"))
-      unzip(zipfile = file.path(tmpdir, "darwin.zip"),
-            files = "data.csv",
-            exdir = tmpdir)
+    download.file("https://archive.ics.uci.edu/static/public/732/darwin.zip",
+                  file.path(tmpdir, "darwin.zip"))
+    unzip(zipfile = file.path(tmpdir, "darwin.zip"),
+          files = "data.csv",
+          exdir = tmpdir)
   }
   darwin_tmp <- read.csv(file.path(tmpdir, "data.csv"),
-                       stringsAsFactors = TRUE)
+                         stringsAsFactors = TRUE)
 }
 @
 <<readdarwinzip,eval=FALSE>>=
 unzip(zipfile = file.path(tmpdir, "darwin.zip"),
-  files = "data.csv",
-  exdir = file.path(tmpdir))
+      files = "data.csv",
+      exdir = file.path(tmpdir))
 darwin_tmp <- read.csv(file.path(tmpdir, "data.csv"),
-  stringsAsFactors = TRUE)
+                       stringsAsFactors = TRUE)
 @
 Before proceeding with the analysis, the data is screened for
 multivariate outliers using the DDC algorithm in package \pkg{cellWise}
@@ -1908,10 +1914,10 @@ if (is_paper) {
   if (!file.exists(file)) {
     set.seed(1234)
     spar_darwin <- spareg::spar.cv(darwin$x, darwin$y,
-                           family = binomial(logit),
-                           screencoef = screen_glmnet(reuse_in_rp = TRUE),
-                           nummods = c(10, 20, 30, 50),
-                           measure = "1-auc")
+                                   family = binomial(logit),
+                                   screencoef = screen_glmnet(reuse_in_rp = TRUE),
+                                   nummods = c(10, 20, 30, 50),
+                                   measure = "1-auc")
     save(spar_darwin, file = file)
   } else {
     load(file = file)

@@ -47,6 +47,7 @@ Suggests:
     testthat (>= 3.0.0),
     foreach,
     doParallel,
+    doRNG,
     robustbase,
     cellWise,
     VariableScreening,

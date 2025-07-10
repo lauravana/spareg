@@ -22,7 +22,6 @@ spar(
   inds = NULL,
   RPMs = NULL,
   seed = NULL,
-  set.seed.iteration = FALSE,
   ...
 )
 
@@ -43,7 +42,6 @@ spareg(
   inds = NULL,
   RPMs = NULL,
   seed = NULL,
-  set.seed.iteration = FALSE,
   ...
 )
 }
@@ -102,9 +100,6 @@ marginal model of length \code{max(nummods)}, diagonal elements will be
 overwritten with a coefficient only depending on the given \code{x} and \code{y}.}
 
 \item{seed}{integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.}
-
-\item{set.seed.iteration}{a boolean indicating whether a different seed should be set in each marginal model \code{i}.
-Defaults to \code{FALSE}. If \code{TRUE}, seed will be set to  \code{seed + i} in each marginal model i.}
 
 \item{...}{further arguments mainly to ensure back-compatibility}
 }

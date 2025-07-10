@@ -19,7 +19,6 @@ spar.cv(
   measure = c("deviance", "mse", "mae", "class", "1-auc"),
   parallel = FALSE,
   seed = NULL,
-  set.seed.iteration = FALSE,
   ...
 )
 
@@ -37,7 +36,6 @@ spareg.cv(
   measure = c("deviance", "mse", "mae", "class", "1-auc"),
   parallel = FALSE,
   seed = NULL,
-  set.seed.iteration = FALSE,
   ...
 )
 }
@@ -81,9 +79,6 @@ logical indicating whether the function should use it in parallelizing the
 estimation of the marginal models. Defaults to FALSE.}
 
 \item{seed}{integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.}
-
-\item{set.seed.iteration}{a boolean indicating whether a different seed should be set in each marginal model \code{i}.
-Defaults to \code{FALSE}. If \code{TRUE}, seed will be set to  \code{seed + i} in each marginal model i.}
 
 \item{...}{further arguments mainly to ensure back-compatibility}
 }

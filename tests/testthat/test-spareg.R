@@ -179,7 +179,7 @@ test_that("Get results with parallel option", {
     cl <- parallel::makeCluster(2, "PSOCK")
     doParallel::registerDoParallel(cl)
     if (requireNamespace("doRNG", quietly = TRUE)) {
-      registerDoRNG(seed = 123)
+      doRNG::registerDoRNG(seed = 123)
       suppressMessages(
         spar_res2 <- spar(x, y, screencoef = screen_cor(),
                           rp = rp_gaussian(),
@@ -196,6 +196,11 @@ test_that("Get results with parallel option", {
   }
 })
 
+test_that("Get errors for msup > nscreen", {
+  x <- matrix(rnorm(300), ncol = 30)
+  y <- rnorm(10)
+  expect_message(spar(x,y,nscreen=18, msup = 20))
+})
 
 # Tests expecting errors
 
@@ -217,11 +222,6 @@ test_that("Get errors for mslow > msup", {
   expect_error(spar(x,y,mslow = 15,msup = 10))
 })
 
-test_that("Get errors for msup > nscreen", {
-  x <- matrix(rnorm(300), ncol = 30)
-  y <- rnorm(10)
-  expect_error(spar(x,y,nscreen=18, msup = 20))
-})
 
 test_that("Get errors for to small length of inds and RPMs lists", {
   x <- example_data$x
@@ -257,3 +257,4 @@ test_that("Get errors for classification validation measure for non-binomial fam
   y <- example_data$y
   expect_error(spar(x,y,measure = "1-auc"))
 })
+
