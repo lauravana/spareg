@@ -50,8 +50,6 @@
 #' marginal model of length \code{max(nummods)}, diagonal elements will be
 #'  overwritten with a coefficient only depending on the given \code{x} and \code{y}.
 #' @param seed integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.
-#' @param set.seed.iteration a boolean indicating whether a different seed should be set in each marginal model \code{i}.
-#'        Defaults to \code{FALSE}. If \code{TRUE}, seed will be set to  \code{seed + i} in each marginal model i.
 #' @param ... further arguments mainly to ensure back-compatibility
 #' @returns object of class \code{'spar'} with elements
 #' \itemize{
@@ -119,8 +117,7 @@
 spar <- function(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
                  screencoef = NULL, xval = NULL, yval = NULL, nnu = 20, nus = NULL,
                  nummods = c(20), measure = c("deviance","mse","mae","class","1-auc"),
-                 parallel = FALSE, inds = NULL, RPMs = NULL, seed = NULL,
-                 set.seed.iteration = FALSE, ...) {
+                 parallel = FALSE, inds = NULL, RPMs = NULL, seed = NULL, ...) {
   # Set up and checks ----
   measure <- match.arg(measure)
   stopifnot("Length of y does not fit nrow(x)." = length(y) == nrow(x))
@@ -142,7 +139,7 @@ spar <- function(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
                         measure = measure,
                         inds = inds, RPMs = RPMs,
                         parallel = parallel,
-                        seed = seed, set.seed.iteration = set.seed.iteration)
+                        seed = seed)
   return(res)
 
 }
@@ -163,7 +160,7 @@ spar_algorithm <- function(x, y,
                            nummods, measure,
                            inds = NULL, RPMs = NULL,
                            parallel = FALSE,
-                           seed = NULL, set.seed.iteration = FALSE){
+                           seed = NULL){
   # Start SPAR algorithm
   p <- ncol(x)
   n <- nrow(x)
@@ -171,6 +168,13 @@ spar_algorithm <- function(x, y,
   xcenter <- colMeans(x)
   xscale  <- apply(x, 2, sd)
 
+  if (!is.null(seed)) {
+    if (parallel & requireNamespace("doRNG", quietly = TRUE)) {
+      registerDoRNG(seed = seed)
+    } else {
+      set.seed(seed)
+    }
+  }
   if (is.null(inds) || is.null(RPMs)) {
     actual_p <- sum(xscale > 0)
     z <- scale(x[, xscale > 0],
@@ -264,7 +268,7 @@ spar_algorithm <- function(x, y,
 
   max_num_mod <- max(nummods)
 
-  if (!is.null(seed)) set.seed(seed)
+
   drawRPMs <- FALSE
   if (is.null(RPMs)) {
     RPMs <- vector("list", length = max_num_mod)
@@ -283,7 +287,6 @@ spar_algorithm <- function(x, y,
   marginal_model_function <- function(i) {
     ## Function for screening, drawing the RP and estimating one model in ensemble
     ## Screening step  ----
-    if (set.seed.iteration) set.seed(seed + i)
     out <- list()
     if (drawinds) {
       if (nscreen < p) {
@@ -636,7 +639,7 @@ plot.spar <- function(x,
         tmp_title <- "Fixed given nummod="
       }
 
-      tmp_df <- subset(spar_res$val_res,nummod==mynummod)
+      tmp_df <- spar_res$val_res[spar_res$val_res$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$Meas)
 
       res <- ggplot2::ggplot(data = tmp_df,
@@ -658,7 +661,6 @@ plot.spar <- function(x,
       } else {
         tmp_title <- "Fixed given "
       }
-      spar_res$val_res$nu == nu
       tmp_df <- spar_res$val_res[spar_res$val_res$nu == nu, ]
       ind_min <- which.min(tmp_df$Meas)
 
@@ -679,7 +681,7 @@ plot.spar <- function(x,
       } else {
         tmp_title <- "Fixed given nummod="
       }
-      tmp_df <- subset(spar_res$val_res,nummod==mynummod)
+      tmp_df <- spar_res$val_res[spar_res$val_res$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$Meas)
 
       res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nnu,y=.data$numAct)) +

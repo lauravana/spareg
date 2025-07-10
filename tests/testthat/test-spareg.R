@@ -172,20 +172,27 @@ test_that("Test the screen_glm() with poisson family", {
   expect_equal(round(spar_screen_glm$val_res$Meas[1], 2), 1431.17)
 })
 
-test_that("Get same results with parallel option", {
+test_that("Get results with parallel option", {
   x <- example_data$x
   y <- example_data$y
-  set.seed(123)
-  spar_res <- spar(x, y, screencoef = screen_cor(), rp = rp_gaussian(),
-                   seed = 123, set.seed.iteration = TRUE)
   if (requireNamespace("doParallel", quietly = TRUE)) {
     cl <- parallel::makeCluster(2, "PSOCK")
     doParallel::registerDoParallel(cl)
-    suppressMessages(
-      spar_res2 <- spar(x, y, screencoef = screen_cor(), rp = rp_gaussian(),
-                        parallel = TRUE, set.seed.iteration = TRUE, seed = 123))
+    if (requireNamespace("doRNG", quietly = TRUE)) {
+      registerDoRNG(seed = 123)
+      suppressMessages(
+        spar_res2 <- spar(x, y, screencoef = screen_cor(),
+                          rp = rp_gaussian(),
+                          parallel = TRUE)
+      )
+      suppressMessages(
+        spar_res3 <- spar(x, y, screencoef = screen_cor(),
+                          rp = rp_gaussian(),
+                          parallel = TRUE, seed = 123)
+      )
+    }
     parallel::stopCluster(cl)
-    expect_equal(spar_res$betas[1:10],  spar_res2$betas[1:10])
+    expect_equal(spar_res2$val_res$Meas[1:3],  spar_res3$val_res$Meas[1:3])
   }
 })
 

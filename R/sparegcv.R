@@ -31,8 +31,6 @@
 #'        logical indicating whether the function should use it in parallelizing the
 #'        estimation of the marginal models. Defaults to FALSE.
 #' @param seed integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.
-#' @param set.seed.iteration a boolean indicating whether a different seed should be set in each marginal model \code{i}.
-#'        Defaults to \code{FALSE}. If \code{TRUE}, seed will be set to  \code{seed + i} in each marginal model i.
 #' @param ... further arguments mainly to ensure back-compatibility
 #' @returns object of class \code{'spar.cv'} with elements
 #' \itemize{
@@ -63,12 +61,8 @@
 #' coefs <- coef(spar_res)
 #' pred <- predict(spar_res, example_data$x)
 #' plot(spar_res)
-#' plot(spar_res, plot_type = "Val_Meas", plot_along = "nummod", nu = 0)
-#' plot(spar_res, plot_type = "Val_Meas", plot_along = "nu", nummod = 10)
-#' plot(spar_res, plot_type = "Val_numAct",  plot_along = "nummod", nu = 0)
-#' plot(spar_res, plot_type = "Val_numAct",  plot_along = "nu", nummod = 10)
-#' plot(spar_res, plot_type = "res-vs-fitted",  xfit = example_data$xtest,
-#'   yfit = example_data$ytest, opt_par = "1se")
+#' plot(spar_res, "Val_Meas", "nummod")
+#' plot(spar_res, "Val_numAct", "nu")
 #' plot(spar_res, "coefs", prange = c(1, 400))
 #' }
 #' @seealso [spar],[coef.spar.cv],[predict.spar.cv],[plot.spar.cv],[print.spar.cv]
@@ -77,7 +71,7 @@
 spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
   rp = NULL, screencoef = NULL, nfolds = 10, nnu = 20, nus = NULL,
   nummods = c(20), measure = c("deviance","mse","mae","class","1-auc"),
-  parallel = FALSE, seed = NULL, set.seed.iteration = FALSE, ...) {
+  parallel = FALSE, seed = NULL, ...) {
   # Set up and checks ----
   n <- length(y)
   stopifnot("Length of y does not fit nrow(x)." = n == nrow(x))
@@ -108,8 +102,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
                         measure = measure,
                         inds = NULL, RPMs = NULL,
                         parallel = parallel,
-                        seed = seed,
-                        set.seed.iteration = set.seed.iteration)
+                        seed = seed)
 
   val_res <- SPARres$val_res
   folds <- sample(cut(seq_len(n), breaks = nfolds, labels=FALSE))
@@ -128,7 +121,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
       nummods = nummods,
       measure = measure,
       parallel = parallel,
-      set.seed.iteration = FALSE)
+      seed = seed)
     val_res <- rbind(val_res,foldSPARres$val_res)
   }
 
@@ -140,8 +133,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
                          mNumAct = mean(.data$numAct,na.rm=TRUE))
   )
 
-  res <- list(betas = SPARres$betas,
-              intercepts = SPARres$intercepts,
+  res <- list(betas = SPARres$betas, intercepts = SPARres$intercepts,
               scr_coef = SPARres$scr_coef, inds = SPARres$inds,
               RPMs = SPARres$RPMs,
               val_sum = val_sum, nus = SPARres$nus,
@@ -420,7 +412,7 @@ plot.spar.cv <- function(x,
       } else {
         tmp_title <- "Fixed given "
       }
-      tmp_df <- my_val_sum[my_val_sum$nu==nu, ]
+      tmp_df <- subset(my_val_sum,nu==nu)
       ind_min <- which.min(tmp_df$Meas)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sdMeas[ind_min]
@@ -480,7 +472,7 @@ plot.spar.cv <- function(x,
       } else {
         tmp_title <- "Fixed given "
       }
-      tmp_df <- my_val_sum[my_val_sum$nu==nu, ]
+      tmp_df <- subset(my_val_sum,nu==nu)
       ind_min <- which.min(tmp_df$Meas)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sdMeas[ind_min]
@@ -558,7 +550,7 @@ print.spar.cv <- function(x, ...) {
               min(spar_res$val_sum$mMeas),mycoef_best$nummod,
               formatC(mycoef_best$nu,digits = 2,format = "e"),
               sum(mycoef_best$beta!=0),length(mycoef_best$beta)))
-  cat("Summary of those non-zero coefficients (non-standardized):\n")
+  cat("Summary of those non-zero coefficients:\n")
   print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
   cat(sprintf(
   "\nSparsest coefficient within one standard error of best CV measure (%s)
@@ -571,6 +563,6 @@ print.spar.cv <- function(x, ...) {
               spar_res$measure,
               spar_res$val_sum$mMeas[spar_res$val_sum$nummod==mycoef_1se$nummod
                                      & spar_res$val_sum$nu==mycoef_1se$nu]))
-  cat("Summary of those non-zero coefficients (non-standardized):\n")
+  cat("Summary of those non-zero coefficients:\n")
   print(summary(mycoef_1se$beta[mycoef_1se$beta!=0]))
 }

@@ -4,6 +4,7 @@
 * Allow for cases where $p < n$.
 * Allow specification of possible beta values in `simulate_spareg_data()`.
 * Changed robust example in vignette to using a `poisson()` link.
+* Reproducibility of parallel case is introduced using doRNG.
 
 # spareg 1.0.0
 
