@@ -167,13 +167,17 @@ spareg.cv <- spar.cv
 #'
 #' Extract coefficients from \code{'spar.cv'} object
 #' @param object result of [spar.cv] function of class \code{'spar.cv'}.
+#' @param nummod optional number of models used to form coefficients
+#' @param nu optional threshold level used to form coefficients
 #' @param opt_par one of \code{c("1se","best")}, chooses whether to select the
 #'        best pair of \code{nus} and \code{nummods} according to cross-validated
 #'        (CV) measure, or the sparsest solution within one sd of that optimal
 #'        CV measure;
 #'        ignored when \code{nummod} and \code{nu} are given
-#' @param nummod optional number of models used to form coefficients
-#' @param nu optional threshold level used to form coefficients
+#' @param aggregate character one of c("mean", "median", "none"). If set to "none"
+#'        the coefficients are not aggregated over the marginal models, otherwise
+#'        the coefficients are aggregated using the specified method (mean or median).
+#'        Defaults to mean aggregation.
 #' @param ... further arguments passed to or from other methods
 #' @return List with elements
 #' \itemize{
@@ -185,25 +189,38 @@ spareg.cv <- spar.cv
 #' @export
 
 coef.spar.cv <- function(object,
-                         opt_par = c("best","1se"),
                          nummod = NULL,
-                         nu = NULL, ...) {
+                         nu = NULL,
+                         opt_par = c("best","1se"),
+                         aggregate = c("mean", "median", "none"),
+                         ...) {
   opt_nunum <- match.arg(opt_par)
+  aggregate <- match.arg(aggregate)
+  given_pars <- !is.null(nummod) & !is.null(nu)
+
+  # best model
+  best_ind <- which.min(object$val_sum$mMeas)
+  parbest <- object$val_sum[best_ind,]
+
+  # 1se model
+  allowed_ind <- object$val_sum$mMeas<object$val_sum$mMeas[best_ind]+
+    object$val_sum$sdMeas[best_ind]
+  ind_1cv <- which.min(object$val_sum$mNumAct[allowed_ind])
+  par1se <- object$val_sum[allowed_ind,][ind_1cv,]
+
   if (is.null(nummod) & is.null(nu)) {
-    best_ind <- which.min(object$val_sum$mMeas)
-    if (opt_nunum=="1se") {
-      allowed_ind <- object$val_sum$mMeas<object$val_sum$mMeas[best_ind]+
-        object$val_sum$sdMeas[best_ind]
-      ind_1cv <- which.min(object$val_sum$mNumAct[allowed_ind])
-      par <- object$val_sum[allowed_ind,][ind_1cv,]
+
+    if (opt_nunum == "1se") {
+      nummod <- par1se$nummod
+      nu <- par1se$nu
     } else {
-      par <- object$val_sum[best_ind,]
+      nummod <- parbest$nummod
+      nu <- parbest$nu
     }
-    nummod <- par$nummod
-    nu <- par$nu
+
   } else if (is.null(nummod)) {
-    if (!nu %in% object$val_sum$nu) {
-      stop("nu needs to be among the previously fitted values when nummod is not provided!")
+    if (!is.null(nu) & !nu %in% object$val_sum$nu) {
+      stop("nu needs to be among the previously considered values when nummod is not provided!")
     }
     tmp_val_sum <- object$val_sum[object$val_sum$nu==nu,]
     if (opt_nunum=="1se") {
@@ -215,8 +232,8 @@ coef.spar.cv <- function(object,
     }
     nummod <- par$nummod
   } else if (is.null(nu)) {
-    if (!nummod %in% object$val_res$nummod) {
-      stop("Number of models needs to be among the previously fitted values when nu is not provided!")
+    if (!is.null(nummod) & !nummod %in% object$val_res$nummod) {
+      stop("Number of models needs to be among the previously considered values when nu is not provided!")
     }
     tmp_val_sum <- object$val_sum[object$val_sum$nummod==nummod,]
     if (opt_nunum=="1se") {
@@ -239,14 +256,50 @@ coef.spar.cv <- function(object,
   }
 
   # calc for chosen parameters
-  final_coef <- object$betas[object$xscale>0,1:nummod,drop=FALSE]
-  final_coef[abs(final_coef)<nu] <- 0
+  final_coef <- object$betas[object$xscale>0, seq_len(nummod), drop=FALSE]
+  final_coef[abs(final_coef) < nu] <- 0
   p <- length(object$xscale)
-  beta <- numeric(p)
-  beta[object$xscale>0] <- object$yscale*Matrix::rowMeans(final_coef)/(object$xscale[object$xscale>0])
-  intercept <- object$ycenter + mean(object$intercepts[1:nummod]) - sum(object$xcenter*beta)
-  return(list(intercept=intercept,beta=beta,nummod=nummod,nu=nu))
+  if (aggregate == "none") {
+    beta <- matrix(0, nrow = p, ncol = nummod)
+    beta_std <- final_coef
+    beta[object$xscale>0,] <- as.matrix(object$yscale *
+                                          beta_std/(object$xscale[object$xscale>0]))
+    rownames(beta) <- rownames(final_coef)
+    colnames(beta) <- paste0("Model_", seq_len(nummod))
+    intercept <- drop(object$ycenter + object$intercepts[seq_len(nummod)] -
+                        crossprod(object$xcenter, beta))
+    names(intercept) <- colnames(beta)
+  } else {
+    avg_fun <- switch(aggregate,
+                      "mean" = function(x) mean(x, na.rm = TRUE),
+                      "median" = function(x) median(x, na.rm = TRUE),
+                      "Aggregration method not implemeneted")
+    beta <- numeric(p)
+    beta_std <- apply(final_coef, 1, avg_fun)
+    beta[object$xscale>0] <- object$yscale * beta_std/(object$xscale[object$xscale>0])
+    names(beta) <- rownames(final_coef)
+    intercept <- object$ycenter + avg_fun(object$intercepts[seq_len(nummod)]) - sum(object$xcenter*beta)
+    names(intercept) <- "(Intercept)"
+  }
+  res <- list(intercept = intercept,
+              beta = beta,
+              nummod = nummod,
+              nu = nu)
+
+  class(res) <- "coefspar"
+  best_ind <- which.min(object$val_res$Meas)
+  par <- object$val_res[best_ind,]
+  attr(res, "M_best") <- parbest$nummod
+  attr(res, "nu_best") <- parbest$nu
+  attr(res, "M_1se") <- par1se$nummod
+  attr(res, "nu_1se") <- par1se$nu
+  attr(res, "M_nu_combination") <-
+    ifelse(given_pars, "given", opt_par)
+  attr(res, "aggregate") <- aggregate
+  attr(res, "parent_object") <- class(object)
+  return(res)
 }
+
 
 #' predict.spar.cv
 #'
@@ -263,7 +316,7 @@ coef.spar.cv <- function(object,
 #' minimal validation  \code{Meas} is used if not provided.
 #' @param nu threshold level used to form coefficients; value with minimal
 #'  validation  \code{Meas} is used if not provided.
-#' @param coef optional; result of \code{\link{coef.spar.cv}} can be used.
+#' @param coefs optional; result of \code{\link{coef.spar.cv}} can be used.
 #' @param ... further arguments passed to or from other methods
 #' @return Vector of predictions
 #' @export
@@ -274,36 +327,37 @@ predict.spar.cv <- function(object,
                             opt_par = c("best","1se"),
                             nummod = NULL,
                             nu = NULL,
-                            coef = NULL, ...) {
+                            coefs = NULL, ...) {
   if (ncol(xnew)!=length(object$xscale)) {
     stop("xnew must have same number of columns as initial x!")
   }
   type <- match.arg(type)
   avg_type <- match.arg(avg_type)
-  if (is.null(coef)) {
-    coef <- coef(object,opt_par,nummod,nu)
+  if (is.null(coefs)) {
+    coefs <- coef(object,opt_par = opt_par,
+                  nummod = nummod, nu = nu)
   }
   if (avg_type=="link") {
     if (type=="link") {
-      res <- as.numeric(xnew%*%coef$beta + coef$intercept)
+      res <- as.numeric(xnew %*% coefs$beta + coefs$intercept)
     } else {
-      eta <- as.numeric(xnew%*%coef$beta + coef$intercept)
+      eta <- as.numeric(xnew %*% coefs$beta + coefs$intercept)
       res <- object$family$linkinv(eta)
     }
   } else {
     if (type=="link") {
-      res <- as.numeric(xnew%*%coef$beta + coef$intercept)
+      res <- as.numeric(xnew%*%coefs$beta + coef$intercept)
     } else {
       # do diff averaging
-      final_coef <- object$betas[,1:coef$nummod,drop=FALSE]
-      final_coef[abs(final_coef)<coef$nu] <- 0
+      final_coef <- object$betas[,1:coefs$nummod,drop=FALSE]
+      final_coef[abs(final_coef)<coefs$nu] <- 0
 
-      preds <- sapply(1:coef$nummod,function(j){
+      preds <- sapply(1:coefs$nummod,function(j){
         tmp_coef <- final_coef[object$xscale>0,j]
         beta <- numeric(length(object$xscale))
         beta[object$xscale>0] <- object$yscale*tmp_coef/(object$xscale[object$xscale>0])
         intercept <- object$ycenter + object$intercepts[j]  - sum(object$xcenter*beta)
-        eta <- as.numeric(xnew%*%beta + coef$intercept)
+        eta <- as.numeric(xnew%*%beta + coefs$intercept)
         object$family$linkinv(eta)
       })
       res <- rowMeans(preds)

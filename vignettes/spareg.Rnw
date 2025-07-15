@@ -1024,7 +1024,6 @@ and a summary of the non-zero coefficients.
 We estimate the SPAR algorithm with no screening and \code{rp_cw(data = TRUE)} (default).
 <<first_example>>=
 set.seed(12)
-colnames(example_data$x) <- paste0("x", 1:ncol(example_data$x))
 spar_res <- spar(example_data$x, example_data$y,
   xval = example_data$xtest, yval = example_data$ytest,
   nummods = c(5, 10, 15, 20, 25, 30))
@@ -1049,25 +1048,56 @@ not provided.
 %
 \item \code{nu} -- threshold level used to compute the averaged coefficients;
 value with minimal  \code{measure} is used if not provided.
+\item \code{aggregate} -- one of \code{c("mean", "median", "none")}.
+If set to \code{"none"}, the coefficients are not aggregated over the \code{nummod} marginal models , otherwise the coefficients are aggregated over the \code{nummod} marginal models using the specified method (mean or median).
+Defaults to mean aggregation.
 \end{itemize}
-<<>>=
-str(coef(spar_res))
-@
-%
-It returns a list with the intercept, vector of \code{beta} coefficients and
-the \code{nummod} and \code{nu} employed in the calculation.
 Additionally for `\code{spar.cv}', the \code{coef} method
 also has argument \code{opt_par} which is one of
-\code{c("best", "1se")} and chooses whether to select the best pair of \code{nus}
-and \code{nummods} according to cross-validation
+\code{c("best", "1se")} and chooses whether to select the best pair of
+\code{nus} and \code{nummods} according to the cross-validation
 \code{measure}, or the solution yielding the sparsest vector of coefficients
 within one standard deviation
 of that optimal cross-validation
 \code{measure}. This argument is ignored when \code{nummod} and \code{nu} are given.
+
+It returns an object of class \class{coefspar}, which is a list with the following elements: intercept (numeric -- if \code{aggregate} is set to \code{"mean"} or \code{"median"} -- or a vector of length \code{nummod}
+if \code{aggregate = "none"}), \code{beta} -- a vector of length $p$ or a matrix of dimension
+$p\times$\code{nummod} of \code{beta} coefficients, together with
+the \code{nummod} and \code{nu} employed in the calculation.
+For class \class{coefspar} user-friendly \code{print} and \code{summary} methods are provided:
 <<>>=
-str(coef(spar_cv))
+coef(spar_res)
+@
+<<>>=
+coef(spar_res, aggregate = "none")
+@
+<<>>=
+summary(coef(spar_res, aggregate = "median"))
+@
+as well as accessor functions \code{get_intercept} and \code{get_coef} which return the values of the intercept and coefficients, respectively:
+<<>>=
+get_intercept(coef(spar_res, nummod = 10, aggregate = "none"))
 @
 %
+<<eval=FALSE, echo=FALSE>>=
+print(coef(spar_res), show = 10)
+coef(spar_res, aggregate = "none")
+coef(spar_res, nummod = 30, aggregate = "none")
+summary(coef(spar_res, aggregate = "none"))
+summary(coef(spar_res, aggregate = "median"))
+summary(coef(spar_res,  nummod = 30,aggregate = "median"))
+get_intercept(coef(spar_res))
+get_intercept(coef(spar_res, aggregate = "none"))
+get_intercept(coef(spar_res, aggregate = "median"))
+coef(spar_cv, aggregate = "none")
+coef(spar_cv, opt_par = "1se", aggregate = "none")
+coef(spar_cv, opt_par = "best", aggregate = "none")
+coef(spar_cv, nummod = 20, nu = 0.0049,
+     opt_par = "best", aggregate = "none")
+
+
+@
 %
 \subsubsection[predict]{\code{predict}}
 Functionality for computing predictions is provided through the method
@@ -1090,12 +1120,12 @@ if not provided.
 \item \code{nu} -- threshold level used to compute the averaged coefficients;
 value with minimal  \code{measure} is used if not provided.
 %
-\item \code{coef} --	optional vector of coefficients to be used directly in
+\item \code{coefs} --	optional vector of coefficients to be used directly in
 the prediction.
 \end{itemize}
 Additionally, for class `\code{spar.cv}', argument \code{opt_par} is available
 and used in the computation of the
-coefficients to be used for prediction (see above description of  method \code{coef}).
+coefficients to be used for prediction (see above description of method \code{coef}).
 %
 %
 \subsubsection[plot]{\code{plot}}

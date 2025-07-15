@@ -4,7 +4,13 @@
 \alias{coef.spar}
 \title{coef.spar}
 \usage{
-\method{coef}{spar}(object, nummod = NULL, nu = NULL, ...)
+\method{coef}{spar}(
+  object,
+  nummod = NULL,
+  nu = NULL,
+  aggregate = c("mean", "median", "none"),
+  ...
+)
 }
 \arguments{
 \item{object}{result of \link{spar} function of class \code{'spar'}.}
@@ -15,10 +21,15 @@ validation \code{Meas} is used if not provided.}
 \item{nu}{threshold level used to form coefficients; value with minimal
 validation \code{Meas} is used if not provided.}
 
+\item{aggregate}{character one of c("mean", "median", "none"). If set to "none"
+the coefficients are not aggregated over the marginal models, otherwise
+the coefficients are aggregated using the specified method (mean or median).
+Defaults to mean aggregation.}
+
 \item{...}{further arguments passed to or from other methods}
 }
 \value{
-object of class  \code{'coefspar'} which is aL list with elements
+object of class  \code{'coefspar'} which is a list with elements
 \itemize{
 \item \code{intercept} intercept value
 \item \code{beta} vector of length p of averaged coefficients
@@ -28,4 +39,7 @@ object of class  \code{'coefspar'} which is aL list with elements
 }
 \description{
 Extract coefficients from \code{'spar'} object
+}
+\seealso{
+\link{print.coefspar}, \link{summary.coefspar}
 }

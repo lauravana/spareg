@@ -238,7 +238,7 @@ spar_algorithm <- function(x, y,
     msup <- nscreen
   }
   stopifnot("Provided lower bound on goal dimension of random projection (mslow) or its default value (log(p)) is larger than upper bound (msup)." =
-             mslow <= msup)
+              mslow <= msup)
   # Perform screening ----
   if (nscreen < p) {
     scr_coef <- screencoef$generate_fun(
@@ -469,19 +469,27 @@ spar_algorithm <- function(x, y,
 #'        validation \code{Meas} is used if not provided.
 #' @param nu threshold level used to form coefficients; value with minimal
 #'        validation \code{Meas} is used if not provided.
+#' @param aggregate character one of c("mean", "median", "none"). If set to "none"
+#'        the coefficients are not aggregated over the marginal models, otherwise
+#'        the coefficients are aggregated using the specified method (mean or median).
+#'        Defaults to mean aggregation.
 #' @param ... further arguments passed to or from other methods
-#' @return object of class  \code{'coefspar'} which is aL list with elements
+#' @return object of class  \code{'coefspar'} which is a list with elements
 #' \itemize{
 #'  \item \code{intercept} intercept value
 #'  \item \code{beta} vector of length p of averaged coefficients
 #'  \item \code{nummod} number of models based on which the coefficient is computed
 #'  \item \code{nu}  threshold based on which the coefficient is computed
 #' }
+#' @seealso [print.coefspar], [summary.coefspar]
 #' @export
 #' @method coef spar
 coef.spar <- function(object,
                       nummod = NULL,
-                      nu = NULL, ...) {
+                      nu = NULL,
+                      aggregate = c("mean", "median", "none"),
+                      ...) {
+  aggregate <- match.arg(aggregate)
   if (is.null(nummod) & is.null(nu)) {
     best_ind <- which.min(object$val_res$Meas)
     par <- object$val_res[best_ind,]
@@ -489,7 +497,7 @@ coef.spar <- function(object,
     nu <- par$nu
   } else if (is.null(nummod)) {
     if (!nu %in% object$val_res$nu) {
-      stop("Nu needs to be among the previously fitted values when nummod is not provided!")
+      stop("Nu needs to be among the previously considered values when nummod is not provided!")
     }
     tmp_val_res <- object$val_res[object$val_res$nu==nu,]
     nummod <- tmp_val_res$nummod[which.min(tmp_val_res$Meas)]
@@ -514,10 +522,28 @@ coef.spar <- function(object,
   final_coef <- object$betas[object$xscale>0, seq_len(nummod), drop=FALSE]
   final_coef[abs(final_coef) < nu] <- 0
   p <- length(object$xscale)
-  beta <- numeric(p)
-  beta[object$xscale>0] <- object$yscale*Matrix::rowMeans(final_coef)/(object$xscale[object$xscale>0])
-  names(beta) <- rownames(final_coef)
-  intercept <- object$ycenter + mean(object$intercepts[seq_len(nummod)]) - sum(object$xcenter*beta)
+  if (aggregate == "none") {
+    beta <- matrix(0, nrow = p, ncol = nummod)
+    beta_std <- final_coef
+    beta[object$xscale>0,] <- as.matrix(object$yscale *
+                                          beta_std/(object$xscale[object$xscale>0]))
+    rownames(beta) <- rownames(final_coef)
+    colnames(beta) <- paste0("Model_", seq_len(nummod))
+    intercept <- drop(object$ycenter + object$intercepts[seq_len(nummod)] -
+                        crossprod(object$xcenter, beta))
+    names(intercept) <- colnames(beta)
+  } else {
+    avg_fun <- switch(aggregate,
+                      "mean" = function(x) mean(x, na.rm = TRUE),
+                      "median" = function(x) median(x, na.rm = TRUE),
+                      "Aggregration method not implemeneted")
+    beta <- numeric(p)
+    beta_std <- apply(final_coef, 1, avg_fun)
+    beta[object$xscale>0] <- object$yscale * beta_std/(object$xscale[object$xscale>0])
+    names(beta) <- rownames(final_coef)
+    intercept <- object$ycenter + avg_fun(object$intercepts[seq_len(nummod)]) - sum(object$xcenter*beta)
+    names(intercept) <- "(Intercept)"
+  }
   res <- list(intercept = intercept,
               beta = beta,
               nummod = nummod,
@@ -525,11 +551,12 @@ coef.spar <- function(object,
   class(res) <- "coefspar"
   best_ind <- which.min(object$val_res$Meas)
   par <- object$val_res[best_ind,]
-  if (nummod == par$nummod &  nu == par$nu) {
-    attr(res, "best") <- TRUE
-  } else {
-    attr(res, "best") <- FALSE
-  }
+  attr(res, "M_best") <- par$nummod
+  attr(res, "nu_best") <- par$nu
+  attr(res, "M_nu_combination") <- ifelse(nummod == par$nummod &  nu == par$nu,
+                                          "best", "given")
+  attr(res, "aggregate") <- aggregate
+  attr(res, "parent_object") <- class(object)
   return(res)
 }
 
@@ -538,35 +565,95 @@ coef.spar <- function(object,
 #' Print method showing the basic components of a  \code{'coefspar'} object.
 #'
 #' @param x An object of class \code{'coefspar'}, typically created by a custom model function.
+#' @param digits integer digits to be printed, defaults to 4L.
+#' @param show integer number of coefficients to be shown, defaults to 6L.
 #' @param ... Additional arguments passed to or from other methods (ignored here).
 #'
 #' @return Invisibly returns the input object \code{x}.
+#' @examples
+#' example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+#' spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
+#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#' coef(spar_res)
+#' coef(spar_res, aggregate = "median")
+#' coef(spar_res, aggregate = "none")
+#' print(coef(spar_res), show = 10L, digits = 6L)
 #' @export
 #' @method print coefspar
-print.coefspar <- function(x, ...) {
-  cat(sprintf("Coefficients of spar object based on %s threshold and number of models combination: \n\n",
-              ifelse(attr(x, "best"), "best", "given")))
+print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
+  cat(sprintf("Coefficients from %s object:\n", attr(x, "parent_object")))
+  cat(sprintf("Based on the %s selection\n\n",
+              switch(attr(x, "M_nu_combination"),
+                     "best" = "*best rule* (min error)",
+                     "1se" = "*1se rule*",
+                     "given"= "*given* nummod and nu")))
 
-  coefs <- c("(Intercept)" = x$intercept, x$beta)
-  n_show <- 6
-  shown <- head(coefs, n_show)
-
-  # Assign default names if unnamed
-  if (is.null(names(shown)) || any(names(shown) == "")) {
-    names(shown) <- paste0("V", seq_along(shown) - 1)
-    names(shown)[1] <- "(Intercept)"
+  if (!is.null(attr(x, "aggregate"))) {
+    cat(sprintf("Aggregation method over models: %s\n",
+                attr(x, "aggregate")))
   }
-  # Print header and values
-  print(noquote(format(round(shown, 4), nsmall = 4, justify = "right")))
+  cat("Selected combination: ", x$nummod, " models, threshold = ",
+      x$nu, "\n")
+  cat("\n")
+  if (attr(x, "M_nu_combination") != "best") {
+    cat("Best combination overall (min error):",
+    attr(x, "M_best"), "models, threshold =",
+        attr(x, "nu_best"), "\n")
+  }
+  if (attr(x, "M_nu_combination") != "1se") {
+    if (!is.null(attr(x, "M_1se")) & !is.null(attr(x, "nu_1se"))) {
+    cat("1se combination:",  attr(x, "M_1se"), "models, threshold =",
+        attr(x, "nu_1se"), "\n")
+    }
+  }
+  cat("\n")
+  # Coefficient vectors or matrices
+  cat("Coefficients:\n\n")
+  if (attr(x, "aggregate") == "none") {
+    ## No aggregation ----
+    coefs <- rbind("(Intercept)" = x$intercept, x$beta)
+    shown <- head(coefs, show)
+    # Assign default names if unnamed
+    # if (any(is.null(rownames(shown))) || any(rownames(shown) == "")) {
+    #   rownames(shown)[-1] <- paste0("V", seq_along(shown - 1))
+    # }
+    # Print header and values
+    print(noquote(format(round(shown, digits), nsmall = digits,
+                         justify = "right")))
+    # Add inline ...
+    if (nrow(coefs) > show) {
+      cat("\n...", sprintf("(%d rows not shown)\n\n", nrow(coefs) - show))
+    }
+    cat("Number of active variables: \n")
+    no_non_zero_coefs <- paste0(colSums(x$beta != 0), "/", nrow(x$beta))
+    names(no_non_zero_coefs) <- colnames(x$beta)
+    print(noquote(format(no_non_zero_coefs, nsmall = digits,
+                         justify = "right")))
+    cat("\n")
+  } else {
+    ## Aggregation ----
+    coefs <- c(x$intercept, x$beta)
+    shown <- head(coefs, show)
+    # Assign default names if unnamed
+    if (is.null(names(shown)) || any(names(shown) == "")) {
+      names(shown) <- paste0("V", seq_along(shown) - 1)
+      names(shown)[1] <- "(Intercept)"
+    }
 
-  # Add inline ...
-  if (length(coefs) > n_show) {
-    cat("\n...", sprintf("(%d coefficients not shown)\n\n", length(coefs) - 6))
+    # Print header and values
+    print(noquote(format(round(shown, digits), nsmall = digits,
+                         justify = "right")))
+
+    # Add inline ...
+    if (length(coefs) > show) {
+      cat("\n...", sprintf("(%d coefficients not shown)\n\n",
+                           length(coefs) - show))
+    }
+
+    cat("Number of active variables: ",
+        paste0(sum(x$beta != 0), "/", length(x$beta)), "\n\n")
   }
 
-  cat("Number of variables: ", length(x$beta), "\n")
-  cat("Number of models (nummod): ", x$nummod, "\n")
-  cat("Threshold (nu): ", x$nu, "\n")
   invisible(x)
 }
 
@@ -574,20 +661,82 @@ print.coefspar <- function(x, ...) {
 #'
 #' Provides a summary of a \code{coefspar} object.
 #'
-#' @param object An object of class \code{coefspar}.
+#' @param x An object of class \code{coefspar}.
+#' @param digits integer digits to be printed, defaults to 4L.
 #' @param ... Additional arguments (ignored).
 #' @return Invisibly returns \code{object}.
+#' @examples
+#' example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+#' spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
+#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#' summary(coef(spar_res))
+#' summary(coef(spar_res, aggregate = "none"))
 #' @export
 #' @method summary coefspar
-summary.coefspar <- function(object, ...) {
-  cat("Summary of Model (class 'coefspar')\n")
-  cat("------------------------------------------------\n")
-  cat("Intercept:\n  ", round(object$intercept, 4), "\n")
-  cat("Number of models used:\n  ", object$nummod, "\n")
-  cat("Threshold (nu):\n  ", object$nu, "\n")
+summary.coefspar <- function(x, digits = 4L, ...) {
+  stopifnot(inherits(x, "coefspar"))
+  cat(sprintf(
+  "Summary of coefficients from %s object:\n", attr(x, "parent_object")))
+  cat(sprintf("Based on the %s selection\n\n",
+              switch(attr(x, "M_nu_combination"),
+                     "best" = "*best rule* (min error)",
+                     "1se" = "*1se rule*",
+                     "given"= "*given* nummod and nu")))
+
+  if (!is.null(attr(x, "aggregate"))) {
+    cat(sprintf("Aggregation method over models: %s\n",
+                attr(x, "aggregate")))
+  }
+  cat("Selected combination: ", x$nummod, " models, threshold = ",
+      x$nu, "\n")
+  cat("\n")
+  if (attr(x, "M_nu_combination") != "best") {
+    cat("Best combination overall (min error):",
+        attr(x, "M_best"), "models, threshold =",
+        attr(x, "nu_best"), "\n\n")
+  }
+  if (attr(x, "M_nu_combination") != "1se") {
+    if (!is.null(attr(x, "M_1se")) & !is.null(attr(x, "nu_1se"))) {
+      cat("1se combination:",  attr(x, "M_1se"), "models, threshold =",
+          attr(x, "nu_1se"), "\n\n")
+    }
+  }
+  if (attr(x, "aggregate") == "none") {
+    cat("Number of coefficients equal to zero across all models:",
+        paste0(sum(rowMeans(x$beta) == 0), "/", nrow(x$beta)), "\n")
+    cat("Number of coefficients non-zero across all models:",
+        paste0(sum(rowMeans(x$beta != 0) == 1), "/", nrow(x$beta)), "\n\n")
+  } else {
+    cat("Number of active coefficients:",
+        paste0(sum(x$beta != 0), "/", length(x$beta)), "\n\n")
+  }
+  if (attr(x, "aggregate") == "none") {
+    cat("Intercept:\n  ")
+  }
+  print(round(x$intercept, digits))
   cat("Coefficient summary (beta):\n")
-  print(summary(object$beta))
-  invisible(object)
+  print(summary(x$beta, digits = digits))
+  invisible(x)
+}
+
+
+
+#' Accessor for model coefficients from `coefspar'
+#' @param x A `\code{coefspar}' object.
+#' @return A numeric vector or matrix of coefficients.
+#' @export
+get_coef <- function(x) {
+  stopifnot(inherits(x, "coefspar"))
+  x$beta
+}
+
+#' Accessor for model intercept from `coefspar'
+#' @param x A `\code{coefspar}' object.
+#' @return Intercept (numeric or vector).
+#' @export
+get_intercept <- function(x) {
+  stopifnot(inherits(x, "coefspar"))
+  x$intercept
 }
 
 

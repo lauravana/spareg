@@ -4,10 +4,21 @@
 \alias{coef.spar.cv}
 \title{coef.spar.cv}
 \usage{
-\method{coef}{spar.cv}(object, opt_par = c("best", "1se"), nummod = NULL, nu = NULL, ...)
+\method{coef}{spar.cv}(
+  object,
+  nummod = NULL,
+  nu = NULL,
+  opt_par = c("best", "1se"),
+  aggregate = c("mean", "median", "none"),
+  ...
+)
 }
 \arguments{
 \item{object}{result of \link{spar.cv} function of class \code{'spar.cv'}.}
+
+\item{nummod}{optional number of models used to form coefficients}
+
+\item{nu}{optional threshold level used to form coefficients}
 
 \item{opt_par}{one of \code{c("1se","best")}, chooses whether to select the
 best pair of \code{nus} and \code{nummods} according to cross-validated
@@ -15,9 +26,10 @@ best pair of \code{nus} and \code{nummods} according to cross-validated
 CV measure;
 ignored when \code{nummod} and \code{nu} are given}
 
-\item{nummod}{optional number of models used to form coefficients}
-
-\item{nu}{optional threshold level used to form coefficients}
+\item{aggregate}{character one of c("mean", "median", "none"). If set to "none"
+the coefficients are not aggregated over the marginal models, otherwise
+the coefficients are aggregated using the specified method (mean or median).
+Defaults to mean aggregation.}
 
 \item{...}{further arguments passed to or from other methods}
 }
