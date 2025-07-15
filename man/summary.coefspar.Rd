@@ -4,10 +4,10 @@
 \alias{summary.coefspar}
 \title{Summary method for coefspar objects}
 \usage{
-\method{summary}{coefspar}(x, digits = 4L, ...)
+\method{summary}{coefspar}(object, digits = 4L, ...)
 }
 \arguments{
-\item{x}{An object of class \code{coefspar}.}
+\item{object}{An object of class \code{coefspar}.}
 
 \item{digits}{integer digits to be printed, defaults to 4L.}
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/spareg.R
 \name{get_coef}
 \alias{get_coef}
-\title{Accessor for model coefficients from `coefspar'}
+\title{Accessor for model coefficients from `\code{coefspar}' object}
 \usage{
 get_coef(x)
 }
@@ -13,5 +13,8 @@ get_coef(x)
 A numeric vector or matrix of coefficients.
 }
 \description{
-Accessor for model coefficients from `coefspar'
+Accessor for model coefficients from `\code{coefspar}' object
+}
+\seealso{
+\link{coef.spar}, \link{coef.spar.cv}, \link{print.coefspar}, \link{summary.coefspar}
 }

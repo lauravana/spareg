@@ -2,7 +2,7 @@
 % Please edit documentation in R/spareg.R
 \name{get_intercept}
 \alias{get_intercept}
-\title{Accessor for model intercept from `coefspar'}
+\title{Accessor for model intercept from `\code{coefspar}' object}
 \usage{
 get_intercept(x)
 }
@@ -13,5 +13,5 @@ get_intercept(x)
 Intercept (numeric or vector).
 }
 \description{
-Accessor for model intercept from `coefspar'
+Accessor for model intercept from `\code{coefspar}' object
 }

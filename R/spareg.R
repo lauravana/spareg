@@ -106,8 +106,9 @@
 #' @export
 #'
 #' @import methods
-#' @importFrom stats reshape glm.fit coef fitted gaussian predict rnorm quantile
+#' @importFrom stats median reshape glm.fit coef fitted gaussian predict rnorm quantile
 #'  residuals sd var cor glm
+#' @importFrom utils head
 #' @importFrom Matrix Matrix solve crossprod tcrossprod rowMeans
 #' @importFrom Rdpack reprompt
 #' @importFrom rlang list2
@@ -661,7 +662,7 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
 #'
 #' Provides a summary of a \code{coefspar} object.
 #'
-#' @param x An object of class \code{coefspar}.
+#' @param object An object of class \code{coefspar}.
 #' @param digits integer digits to be printed, defaults to 4L.
 #' @param ... Additional arguments (ignored).
 #' @return Invisibly returns \code{object}.
@@ -673,64 +674,65 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
 #' summary(coef(spar_res, aggregate = "none"))
 #' @export
 #' @method summary coefspar
-summary.coefspar <- function(x, digits = 4L, ...) {
-  stopifnot(inherits(x, "coefspar"))
+summary.coefspar <- function(object, digits = 4L, ...) {
+  stopifnot(inherits(object, "coefspar"))
   cat(sprintf(
-  "Summary of coefficients from %s object:\n", attr(x, "parent_object")))
+  "Summary of coefficients from %s object:\n", attr(object, "parent_object")))
   cat(sprintf("Based on the %s selection\n\n",
-              switch(attr(x, "M_nu_combination"),
+              switch(attr(object, "M_nu_combination"),
                      "best" = "*best rule* (min error)",
                      "1se" = "*1se rule*",
                      "given"= "*given* nummod and nu")))
 
-  if (!is.null(attr(x, "aggregate"))) {
+  if (!is.null(attr(object, "aggregate"))) {
     cat(sprintf("Aggregation method over models: %s\n",
-                attr(x, "aggregate")))
+                attr(object, "aggregate")))
   }
-  cat("Selected combination: ", x$nummod, " models, threshold = ",
-      x$nu, "\n")
+  cat("Selected combination: ", object$nummod, " models, threshold = ",
+      object$nu, "\n")
   cat("\n")
-  if (attr(x, "M_nu_combination") != "best") {
+  if (attr(object, "M_nu_combination") != "best") {
     cat("Best combination overall (min error):",
-        attr(x, "M_best"), "models, threshold =",
-        attr(x, "nu_best"), "\n\n")
+        attr(object, "M_best"), "models, threshold =",
+        attr(object, "nu_best"), "\n\n")
   }
-  if (attr(x, "M_nu_combination") != "1se") {
-    if (!is.null(attr(x, "M_1se")) & !is.null(attr(x, "nu_1se"))) {
-      cat("1se combination:",  attr(x, "M_1se"), "models, threshold =",
-          attr(x, "nu_1se"), "\n\n")
+  if (attr(object, "M_nu_combination") != "1se") {
+    if (!is.null(attr(object, "M_1se")) & !is.null(attr(object, "nu_1se"))) {
+      cat("1se combination:",  attr(object, "M_1se"), "models, threshold =",
+          attr(object, "nu_1se"), "\n\n")
     }
   }
-  if (attr(x, "aggregate") == "none") {
+  if (attr(object, "aggregate") == "none") {
     cat("Number of coefficients equal to zero across all models:",
-        paste0(sum(rowMeans(x$beta) == 0), "/", nrow(x$beta)), "\n")
+        paste0(sum(rowMeans(object$beta) == 0), "/", nrow(object$beta)), "\n")
     cat("Number of coefficients non-zero across all models:",
-        paste0(sum(rowMeans(x$beta != 0) == 1), "/", nrow(x$beta)), "\n\n")
+        paste0(sum(rowMeans(object$beta != 0) == 1), "/", nrow(object$beta)), "\n\n")
   } else {
     cat("Number of active coefficients:",
-        paste0(sum(x$beta != 0), "/", length(x$beta)), "\n\n")
+        paste0(sum(object$beta != 0), "/", length(object$beta)), "\n\n")
   }
-  if (attr(x, "aggregate") == "none") {
+  if (attr(object, "aggregate") == "none") {
     cat("Intercept:\n  ")
   }
-  print(round(x$intercept, digits))
+  print(round(object$intercept, digits))
   cat("Coefficient summary (beta):\n")
-  print(summary(x$beta, digits = digits))
-  invisible(x)
+  print(summary(object$beta, digits = digits))
+  invisible(object)
 }
 
 
 
-#' Accessor for model coefficients from `coefspar'
+#' Accessor for model coefficients from `\code{coefspar}' object
 #' @param x A `\code{coefspar}' object.
 #' @return A numeric vector or matrix of coefficients.
+#' @seealso [coef.spar], [coef.spar.cv], [print.coefspar], [summary.coefspar]
 #' @export
 get_coef <- function(x) {
   stopifnot(inherits(x, "coefspar"))
   x$beta
 }
 
-#' Accessor for model intercept from `coefspar'
+#' Accessor for model intercept from `\code{coefspar}' object
 #' @param x A `\code{coefspar}' object.
 #' @return Intercept (numeric or vector).
 #' @export
