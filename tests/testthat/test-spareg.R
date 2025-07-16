@@ -51,8 +51,8 @@ test_that("Returned coef and preds are correct for fixed screening and projectio
   sparcoef <- coef(spar_res)
   pred     <- predict(spar_res,xnew=xnew)
   expect_equal(sparcoef$nu,0.002285171,tolerance = 1e-6)
-  expect_equal(sparcoef$beta[53],0)
-  expect_equal(sparcoef$beta[1],0.125971, tolerance = 1e-6)
+  expect_equal(sparcoef$beta[53],c("V53"=0))
+  expect_equal(sparcoef$beta[1],c("V1"=0.125971), tolerance = 1e-6)
   expect_equal(pred[1],20.44922,tolerance = 1e-5)
 })
 
@@ -80,8 +80,8 @@ test_that("Returned coef and preds are correct for fixed screening and projectio
   sparcoef <- coef(spar_res)
   pred <- predict(spar_res,xnew=xnew)
   expect_equal(sparcoef$nu,0.009850679 ,tolerance = 1e-6)
-  expect_equal(sparcoef$beta[11],0)
-  expect_equal(sparcoef$beta[1],0.04795905,tolerance = 1e-6)
+  expect_equal(sparcoef$beta[11],c("V11"=0))
+  expect_equal(sparcoef$beta[1],c("V1"= 0.04795905),tolerance = 1e-6)
   expect_equal(pred[1],0.9749038,tolerance = 1e-5)
 
 })
@@ -92,7 +92,7 @@ test_that("Columns with zero sd get ceofficient 0", {
   y <- example_data$y
   spar_res <- spar(x,y)
   sparcoef <- coef(spar_res)
-  expect_equal(sparcoef$beta[c(1,11,111)],c(0,0,0))
+  expect_equal(sparcoef$beta[c(1,11,111)],c("V1"=0,"V11"=0,"V111"=0))
 })
 
 test_that("Thresholding can be avoided ", {
@@ -102,7 +102,7 @@ test_that("Thresholding can be avoided ", {
   spar_res <- spar(x, y, screencoef = screen_glmnet(),
                    nus = 0, model = spar_glm())
   sparcoef <- coef(spar_res)
-  expect_equal(sparcoef$beta[c(4,10)],c(0,0))
+  expect_equal(unname(sparcoef$beta[c(4,10)]),c(0,0))
 })
 
 test_that("Data splitting delivers different results", {

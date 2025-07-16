@@ -48,7 +48,7 @@ test_that("Columns with zero sd get coefficient 0", {
   spar_res <- spar.cv(x, y, screencoef = screen_glmnet(),
                       measure = "mae", model = spar_glm())
   sparcoef <- coef(spar_res)
-  expect_equal(sparcoef$beta[c(1,11,111)],c(0,0,0))
+  expect_equal(unname(sparcoef$beta[c(1,11,111)]),c(0,0,0))
 })
 
 # Tests expecting errors
