@@ -73,9 +73,10 @@
 #' @aliases spareg.cv
 #' @export
 spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
-  rp = NULL, screencoef = NULL, nfolds = 10, nnu = 20, nus = NULL,
-  nummods = c(20), measure = c("deviance","mse","mae","class","1-auc"),
-  parallel = FALSE, seed = NULL, ...) {
+                    rp = NULL, screencoef = NULL, nfolds = 10,
+                    nnu = 20, nus = NULL,
+                    nummods = c(20), measure = c("deviance","mse","mae","class","1-auc"),
+                    parallel = FALSE, seed = NULL, ...) {
   # Set up and checks ----
   n <- length(y)
   stopifnot("Length of y does not fit nrow(x)." = n == nrow(x))
@@ -98,15 +99,15 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
 
   # Run initial spar algorithm ----
   SPARres <- spar_algorithm(x = x, y = y,
-                        family = family,
-                        model = model, rp = rp, screencoef = screencoef,
-                        xval = NULL, yval = NULL,
-                        nnu = nnu, nus = nus,
-                        nummods = nummods,
-                        measure = measure,
-                        inds = NULL, RPMs = NULL,
-                        parallel = parallel,
-                        seed = seed)
+                            family = family,
+                            model = model, rp = rp, screencoef = screencoef,
+                            xval = NULL, yval = NULL,
+                            nnu = nnu, nus = nus,
+                            nummods = nummods,
+                            measure = measure,
+                            inds = NULL, RPMs = NULL,
+                            parallel = parallel,
+                            seed = seed)
 
   val_res <- cbind("fold" = 0, SPARres$val_res)
   folds <- sample(cut(seq_len(n), breaks = nfolds, labels=FALSE))
@@ -450,14 +451,14 @@ plot.spar.cv <- function(x,
                                           ymax=.data$Meas+.data$sdMeas),
                              alpha=0.2,linetype=2,show.legend = FALSE) +
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
-                   color="red",show.legend = FALSE,
-                   data=data.frame(x = c(tmp_df$nnu[ind_min],tmp_df$nnu[tmp_df$nu==nu_1se]),
-                                   y = c(tmp_df$Meas[ind_min],tmp_df$Meas[tmp_df$nu==nu_1se])))
-        # ggplot2::annotate("segment",x = tmp_df$nnu[ind_min],
-        #                   y = tmp_df$Meas[ind_min] + tmp_df$sdMeas[ind_min],
-        #                   xend = tmp_df$nnu[allowed_ind][ind_1se],
-        #                   yend = tmp_df$Meas[ind_min] + tmp_df$sdMeas[ind_min],
-        #                   color=2,linetype=2)
+                            color="red",show.legend = FALSE,
+                            data=data.frame(x = c(tmp_df$nnu[ind_min],tmp_df$nnu[tmp_df$nu==nu_1se]),
+                                            y = c(tmp_df$Meas[ind_min],tmp_df$Meas[tmp_df$nu==nu_1se])))
+      # ggplot2::annotate("segment",x = tmp_df$nnu[ind_min],
+      #                   y = tmp_df$Meas[ind_min] + tmp_df$sdMeas[ind_min],
+      #                   xend = tmp_df$nnu[allowed_ind][ind_1se],
+      #                   yend = tmp_df$Meas[ind_min] + tmp_df$sdMeas[ind_min],
+      #                   color=2,linetype=2)
     } else {
       if (is.null(nu)) {
         nu <- my_val_sum$nu[which.min(my_val_sum$Meas)]
@@ -532,7 +533,7 @@ plot.spar.cv <- function(x,
       ind_1se <- which.min(tmp_df$numAct[allowed_ind])
 
       res <- ggplot2::ggplot(data = tmp_df,
-        ggplot2::aes(x=.data$nummod,y=.data$numAct)) +
+                             ggplot2::aes(x=.data$nummod,y=.data$numAct)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
@@ -593,30 +594,41 @@ plot.spar.cv <- function(x,
 #' @return text summary
 #' @export
 print.spar.cv <- function(x, ...) {
-  spar_res <- x
-  mycoef_best <- coef(spar_res,opt_par = "best")
-  mycoef_1se <- coef(spar_res,opt_par = "1se")
-  val_sum <- compute_val_summary(spar_res$val_res)
-  cat(sprintf(
-  "spar.cv object:\nSmallest CV measure (%s) %.1f reached for nummod=%d, nu=%s leading
+  mycoef_best <- coef(x,opt_par = "best")
+  mycoef_1se  <- coef(x,opt_par = "1se")
+  val_sum <- compute_val_summary(x$val_res)
+  if (nrow(val_sum) == 1) {
+    cat(sprintf(
+      "spar.cv object: \nCV measure (%s) %.1f reached for nummod=%d, nu=%s leading
   to %d / %d active predictors.\n",
-              spar_res$measure,
-              min(val_sum$mMeas),mycoef_best$nummod,
-              formatC(mycoef_best$nu,digits = 2,format = "e"),
-              sum(mycoef_best$beta!=0),length(mycoef_best$beta)))
-  cat("Summary of those non-zero coefficients:\n")
-  print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
-  cat(sprintf(
-  "\nSparsest coefficient within one standard error of best CV measure (%s)
+      x$measure,
+      min(val_sum$mMeas),mycoef_best$nummod,
+      formatC(mycoef_best$nu,digits = 2,format = "e"),
+      sum(mycoef_best$beta!=0),length(mycoef_best$beta)))
+    cat("Summary of those non-zero coefficients:\n")
+    print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
+  } else {
+    cat(sprintf(
+      "spar.cv object:\nSmallest CV measure (%s) %.1f reached for nummod=%d, nu=%s leading
+  to %d / %d active predictors.\n",
+      x$measure,
+      min(val_sum$mMeas),mycoef_best$nummod,
+      formatC(mycoef_best$nu,digits = 2,format = "e"),
+      sum(mycoef_best$beta!=0),length(mycoef_best$beta)))
+    cat("Summary of those non-zero coefficients:\n")
+    print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
+    cat(sprintf(
+      "\nSparsest coefficient within one standard error of best CV measure (%s)
   reached for nummod=%d, nu=%s leading to %d / %d active predictors
   with CV measure (%s) %.1f.\n",
-              spar_res$measure,
-              mycoef_1se$nummod,
-              formatC(mycoef_1se$nu,digits = 2,format = "e"),
-              sum(mycoef_1se$beta!=0),length(mycoef_1se$beta),
-              spar_res$measure,
-              val_sum$mMeas[val_sum$nummod==mycoef_1se$nummod
-                                     & val_sum$nu==mycoef_1se$nu]))
-  cat("Summary of those non-zero coefficients:\n")
-  print(summary(mycoef_1se$beta[mycoef_1se$beta!=0]))
+      x$measure,
+      mycoef_1se$nummod,
+      formatC(mycoef_1se$nu,digits = 2,format = "e"),
+      sum(mycoef_1se$beta!=0),length(mycoef_1se$beta),
+      x$measure,
+      val_sum$mMeas[val_sum$nummod==mycoef_1se$nummod
+                    & val_sum$nu==mycoef_1se$nu]))
+    cat("Summary of those non-zero coefficients:\n")
+    print(summary(mycoef_1se$beta[mycoef_1se$beta!=0]))
+  }
 }

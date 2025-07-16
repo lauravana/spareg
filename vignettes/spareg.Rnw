@@ -1075,7 +1075,7 @@ coef(spar_res, aggregate = "none")
 <<>>=
 summary(coef(spar_res, aggregate = "median"))
 @
-as well as accessor functions \code{get_intercept} and \code{get_coef} which return the values of the intercept and coefficients, respectively:
+as well as extractor functions \code{get_intercept} and \code{get_coef} which return the values of the intercept and coefficients, respectively:
 <<>>=
 get_intercept(coef(spar_res, nummod = 10, aggregate = "none"))
 @
@@ -1442,7 +1442,7 @@ example_data2 <- simulate_spareg_data(n = 100, p = 1000, ntest = 100)
 ystar <- (example_data2$y > 0) + 0
 ystarval <- (example_data2$ytest > 0) + 0
 @
-We use $50$ models  \citep[which is in line to recommendations
+We use only one value for the number of models $M=50$ \citep[which is in line to recommendations
 in][]{cannings2017random}, and no screening procedure.
 Moreover, we do not perform any thresholding:
 <<run_cannings, echo=FALSE>>=
@@ -1492,13 +1492,17 @@ spar_example_2 <- spar(x = example_data2$x, y = ystar,
   nus = 0, nummods = 50, xval = example_data2$xtest, yval = ystarval,
   measure = "class")
 @
-We can now compare the two approaches by looking at the minimum measure \code{Meas}
-achieved on the validation set:
+Given that we only consider the case of $\nu=0$ and $M=50$,
+We can now compare the two approaches by directly looking at the validation \code{measure} value achieved on the
+provided validation set.
+The extractor function
+\code{get_measure()} can be used to extract the value of the measure for the \class{spar} model object:
 <<compare>>=
-spar_example_1$val_res[which.min(spar_example_1$val_res$Meas), ]
-spar_example_2$val_res[which.min(spar_example_2$val_res$Meas), ]
+get_measure(spar_example_1)
+get_measure(spar_example_2)
 @
 %
+%%
 \subsection{Marginal models}
 %
 Finally, we illustrate how to implement a new marginal model in \pkg{spareg}.
@@ -1563,8 +1567,8 @@ $\nu$ by choosing the value
 which delivers the lowest mean absolute error on the training sample.
 To improve stability in the estimates from \code{robustbase::glmrob}, we set the upper bound on goal dimension
 of the random projection to 25 (default would be $n/2=\Sexpr{round(nrow(x)/2)}$).
-<<compare_glmrob_glm>>=
-set.seed(12345)
+<<run_glmrob_glm>>=
+set.seed(1234)
 spar_rob_res <- spar(x, ypois, family = poisson(),
   model = spar_glmrob(), rp = rp_gaussian(msup = 25),
   measure = "mae")
@@ -1572,10 +1576,20 @@ set.seed(1234)
 spar_res <- spar(x, ypois, family = poisson(),
   model = spar_glm(), rp = rp_gaussian(msup = 25),
   measure = "mae")
-spar_rob_res
-spar_res
 @
 %
+The extractor function
+\code{get_model(object, opt_par = c("best", "1se"))} can be employed to extract the best $\nu$ for $M=20$ (which is the default for the number of models consider). It extracts the best model for \class{spar} objects and the best model or the one chosen by the one-standard-error rule for \class{spar.cv} objects.
+<<compare_glmrob_glm>>=
+best_rob <- get_model(spar_rob_res, opt_par = "best")
+best_glm <- get_model(spar_res, opt_par = "best")
+@
+Then the extractor function
+\code{get_measure()} can be used to extract the value of the measure for the best model:`
+<<compare_glmrob_glm>>=
+get_measure(best_rob)
+get_measure(best_glm)
+@
 We observe that the attained \code{mae} is indeed lower for the robust version. We also observe that all predictors are active. Even though the optimal threshold parameter was greater than zero, it did not happen that the coefficients of one predictor were set to zero in all $M=20$ marginal models.
 %
 \ifPositive
@@ -1765,12 +1779,12 @@ number of models) are given by:
 %
 <<facecoef,eval=FALSE>>=
 face_coef <- coef(spar_faces, opt_par = "best")
-str(face_coef)
+summary(face_coef)
 @
 <<facecoef,echo=FALSE>>=
 if (is_paper) {
   face_coef <- coef(spar_faces, opt_par = "best")
-  str(face_coef)
+  summary(face_coef)
 }
 @
 %
@@ -1779,12 +1793,12 @@ For a sparser solution we can compute the coefficients using
 %
 <<facecoef1se, eval=FALSE>>=
 face_coef_1se <- coef(spar_faces, opt_par = "1se")
-str(face_coef_1se)
+summary(face_coef_1se)
 @
 <<facecoef1se,echo=FALSE>>=
 if (is_paper) {
   face_coef_1se <- coef(spar_faces, opt_par = "1se")
-  str(face_coef_1se)
+  summary(face_coef_1se)
 }
 @
 %
@@ -1811,8 +1825,6 @@ tarp_faces <-  spar.cv(xtrain, ytrain,
   nummods = c(5, 10, 20, 50), measure = "mse")
 ynew_tarp <- predict(tarp_faces, xnew = xtest,
   coef = coef(tarp_faces, opt_par = "1se"))
-c("SPAR" = mean((ytest-ynew)^2),
-  "TARP" = mean((ytest-ynew_tarp)^2))
 @
 <<tarp_comparison_true,echo=FALSE>>=
 if(is_paper) {
@@ -1822,10 +1834,44 @@ if(is_paper) {
                          nummods = c(5, 10, 20, 50), measure = "mse")
   ynew_tarp <- predict(tarp_faces, xnew = xtest,
                        coef = coef(tarp_faces, opt_par = "1se"))
+}
+@
+We can assess the predictive performance of the two approaches on the training data, by first extracting the model using
+the $(\nu, M)$ combination selected by the one-standard-error rule and then looking at the average mean squared error measure
+across the folds:
+<<train_tarp_comparison_false,eval=FALSE>>=
+spar_faces_1se <- get_model(spar_faces, opt_par = "1se")
+tarp_faces_1se <- get_model(tarp_faces, opt_par = "1se")
+get_measure(spar_faces_1se)
+@
+<<train_tarp_comparison_true,eval=TRUE,echo=FALSE>>=
+if (is_paper){
+  spar_faces_1se <- get_model(spar_faces, opt_par = "1se")
+  get_measure(spar_faces_1se)
+}
+@
+<<eval=FALSE>>=
+get_measure(tarp_faces_1se)
+@
+<<train_tarp_comparison_true,eval=TRUE,echo=FALSE>>=
+if (is_paper){
+  tarp_faces_1se <- get_model(tarp_faces, opt_par = "1se")
+  get_measure(tarp_faces_1se)
+}
+@
+The predictive performance on the test data is given by:
+<<test_tarp_comparison_false,eval=FALSE>>=
+c("SPAR" = mean((ytest - ynew)^2),
+  "TARP" = mean((ytest - ynew_tarp)^2))
+@
+<<test_tarp_comparison_true,echo=FALSE>>=
+if(is_paper) {
   c("SPAR" = mean((ytest-ynew)^2),  "TARP" = mean((ytest-ynew_tarp)^2))
 }
 @
-For this data set, one can visualize $\hat\beta^\text{1se}_j x^\text{new}_{i,j}$, the effect of each pixel
+
+
+Finally,  for this data set, one can visualize $\hat\beta^\text{1se}_j x^\text{new}_{i,j}$, the effect of each pixel
 in predicting the face orientation in a given image. The contribution of each pixel in predicting the orientation of
 the face in the left panel of Figure~\ref{fig:faces_predictions} can be visualized in the right panel of Figure~\ref{fig:faces_predictions}. We observe that the face contour and the hairline are most informative for the prediction.
 %%

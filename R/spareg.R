@@ -722,25 +722,6 @@ summary.coefspar <- function(object, digits = 4L, ...) {
 
 
 
-#' Accessor for model coefficients from `\code{coefspar}' object
-#' @param x A `\code{coefspar}' object.
-#' @return A numeric vector or matrix of coefficients.
-#' @seealso [coef.spar], [coef.spar.cv], [print.coefspar], [summary.coefspar]
-#' @export
-get_coef <- function(x) {
-  stopifnot(inherits(x, "coefspar"))
-  x$beta
-}
-
-#' Accessor for model intercept from `\code{coefspar}' object
-#' @param x A `\code{coefspar}' object.
-#' @return Intercept (numeric or vector).
-#' @export
-get_intercept <- function(x) {
-  stopifnot(inherits(x, "coefspar"))
-  x$intercept
-}
-
 
 #' predict.spar
 #'
@@ -988,26 +969,64 @@ print.spar <- function(x, ...) {
   mycoef <- coef(x)
   beta <- mycoef$beta
   measure <- x$val_res$measure[mycoef$nu == x$val_res$nu &
-                           mycoef$nummod == x$val_res$nummod ]
-  cat(sprintf("spar object:\nSmallest validation measure (%s) of %s reached for nummod=%d,
+    mycoef$nummod == x$val_res$nummod ]
+  if (nrow(x$val_res) == 1) {
+    cat(sprintf("spar object: \nValidation measure (%s) of %s reached for nummod=%d,
               nu=%s leading to %d / %d active predictors.\n",
-              x$measure,
-              formatC(measure,digits = 2,format = "e"),
-              mycoef$nummod, formatC(mycoef$nu,digits = 2,format = "e"),
-              sum(beta!=0),length(beta)))
+                x$measure,
+                formatC(measure,digits = 2,format = "e"),
+                mycoef$nummod, formatC(mycoef$nu,digits = 2,format = "e"),
+                sum(beta!=0),length(beta)))
+  } else {
+    cat(sprintf("spar object:\nSmallest validation measure (%s) of %s reached for nummod=%d,
+              nu=%s leading to %d / %d active predictors.\n",
+                x$measure,
+                formatC(measure,digits = 2,format = "e"),
+                mycoef$nummod, formatC(mycoef$nu,digits = 2,format = "e"),
+                sum(beta!=0),length(beta)))
+  }
   cat("Summary of those non-zero coefficients:\n")
   print(summary(beta[beta!=0]))
 }
 
 
+#' Extractor for model coefficients from `\code{coefspar}' object
+#' @param x A `\code{coefspar}' object.
+#' @return A numeric vector or matrix of coefficients.
+#' @seealso [coef.spar], [coef.spar.cv], [print.coefspar], [summary.coefspar]
+#' @export
+get_coef <- function(x) {
+  stopifnot(inherits(x, "coefspar"))
+  x$beta
+}
 
-#' Extract a specific model from a '\code{spar}' object
+#' Extractor for model intercept from `\code{coefspar}' object
+#' @param x A `\code{coefspar}' object.
+#' @return Intercept (numeric or vector).
+#' @export
+get_intercept <- function(x) {
+  stopifnot(inherits(x, "coefspar"))
+  x$intercept
+}
+
+#' Extractor of model from a '\code{spar}' or '\code{spar.cv}' object
 #'
 #' @param object A fitted '\code{spar}' or '\code{spar.cv}'  model
 #' @param opt_par One of "best", "1se"
 #'
 #' @return A '\code{spar}'  or '\code{spar.cv}'  object where the beta and intercept elements are
 #'  the ones which correspond to the best or the 1se model.
+#' @examples
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#' best_model <- get_model(spar_res, opt_par = "best")
+#' \donttest{
+#' spar_cv <- spar.cv(example_data$x, example_data$y,
+#'   nummods = c(5, 10, 15, 20, 25, 30), nfolds = 4)
+#' best_model_cv <- get_model(spar_cv, opt_par = "best")
+#' onese_model_cv <- get_model(spar_cv, opt_par = "1se")
+#' }
 #' @export
 get_model <- function(object, opt_par = c("best", "1se")) {
   stopifnot(inherits(object, "spar") || inherits(object, "spar.cv"))
@@ -1016,33 +1035,68 @@ get_model <- function(object, opt_par = c("best", "1se")) {
     stop("1se model is not available for spar objects, use spar.cv instead.")
   }
   # best
-  object$val_res
-  best_ind <- which.min(object$val_res$measure)
-  parbest <- object$val_res[best_ind,]
-
-  # 1se model
-  ## TODO
-  if (inherits(object, "spar.cv")) {
-    allowed_ind <- object$val_sum$mMeas<object$val_sum$mMeas[best_ind]+
-      object$val_sum$sdMeas[best_ind]
-    ind_1cv <- which.min(object$val_sum$mNumAct[allowed_ind])
-    par1se <- object$val_sum[allowed_ind,][ind_1cv,]
+  if(inherits(object, "spar.cv")) {
+    val_table <- compute_val_summary(object$val_res)
+    best_ind <- which.min(val_table$mMeas)
+  }
+  if(inherits(object, "spar")) {
+    val_table <- object$val_res
+    best_ind <- which.min(val_table$measure)
   }
 
 
-  nummod <- ifelse(opt_nunum == "best", parbest$nummod, par1se$nummod)
+  parbest <- val_table[best_ind,]
+
+  # 1se model
+  if (inherits(object, "spar.cv")) {
+    allowed_ind <- val_table$mMeas <
+      (val_table$mMeas + val_table$sdMeas)[best_ind]
+
+    ind_1cv <- which.min(val_table$mNumAct[allowed_ind])
+    par1se <- val_table[allowed_ind,][ind_1cv,]
+  }
+
+  nummod <- ifelse(opt_nunum == "best", parbest$nummod,
+                   par1se$nummod)
   nu <- ifelse(opt_nunum == "best", parbest$nu, par1se$nu)
 
 
   final_coef <- object$betas[, seq_len(nummod), drop=FALSE]
   final_coef[abs(final_coef) < nu] <- 0
-
   intercepts <- object$intercepts[seq_len(nummod)]
+
   object$betas <- final_coef
-  object$val_res <- object$val_res[object$val_res$nummod == nummod &
-                                     object$val_res$nu == nu, , drop = FALSE]
+  object$intercepts <- intercepts
+  object$val_res <- object$val_res[
+    object$val_res$nummod == nummod & object$val_res$nu == nu, ,
+    drop = FALSE]
 
   return(object)
 }
 
+#' Extractor for (cross-)validation measure from '\code{spar}' or '\code{spar.cv}' object
+#' @param object A fitted '\code{spar}' or '\code{spar.cv}'  model
+#' @return data.frame containing the (cross-)validation measure for the considered threshold and number of model combinations.
+#' For '\code{spar}' objects it contains information about the measure  calculated on the validation set (or on the training sample if
+#' xval and yval are missing) and the number of active variables. For '\code{spar.cv}' objects it contains information
+#' on the average measure obtained across folds together with the standard deviation across the folds and the average number of active variables.
+#' the \code{nfolds} of the training set.
+#' @seealso [spar], [spar.cv]
+#' @export
+get_measure <- function(object) {
+  stopifnot(inherits(object, "spar") || inherits(object, "spar.cv"))
+  if(inherits(object, "spar.cv")) {
+    val_table <- compute_val_summary(object$val_res)
+    measure <- val_table$mMeas
+    attr(measure, "measure") <- object$measure
+  }
+  if(inherits(object, "spar")) {
+    val_table <- object$val_res
+    measure <- val_table$measure
+  }
+  # attr(measure, "nu") <- val_table$nu
+  # attr(measure, "nummod") <- val_table$nummod
+  attr(val_table, "measure") <- object$measure
+  val_table[, !(colnames(val_table) %in% c("nnu"))]
+}
 
