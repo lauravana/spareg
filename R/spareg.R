@@ -400,7 +400,7 @@ spar_algorithm <- function(x, y,
 
   ## Validation set
   val_res <- data.frame(nnu = NULL, nu = NULL,
-                        nummod = NULL,numAct = NULL, Meas = NULL)
+                        nummod = NULL,numAct = NULL, measure = NULL)
   if (!is.null(yval) && !is.null(xval)) {
     val_set <- TRUE
   } else {
@@ -430,11 +430,11 @@ spar_algorithm <- function(x, y,
         nu = unname(thresh),
         nummod = nummod,
         numAct = sum(tmp_beta!=0),
-        Meas = val.meas(yval,eta_hat)
+        measure = val.meas(yval,eta_hat)
       )
     })
     out <- do.call("rbind", tabres)
-    colnames(out) <- c("nnu","nu","nummod","numAct","Meas")
+    colnames(out) <- c("nnu","nu","nummod","numAct","measure")
     out
   })
   val_res <- do.call("rbind.data.frame", tabnummodres)
@@ -467,9 +467,9 @@ spar_algorithm <- function(x, y,
 #' Extract coefficients from \code{'spar'} object
 #' @param object result of [spar] function of class \code{'spar'}.
 #' @param nummod number of models used to form coefficients; value with minimal
-#'        validation \code{Meas} is used if not provided.
+#'        validation \code{measure} is used if not provided.
 #' @param nu threshold level used to form coefficients; value with minimal
-#'        validation \code{Meas} is used if not provided.
+#'        validation \code{measure} is used if not provided.
 #' @param aggregate character one of c("mean", "median", "none"). If set to "none"
 #'        the coefficients are not aggregated over the marginal models, otherwise
 #'        the coefficients are aggregated using the specified method (mean or median).
@@ -492,7 +492,7 @@ coef.spar <- function(object,
                       ...) {
   aggregate <- match.arg(aggregate)
   if (is.null(nummod) & is.null(nu)) {
-    best_ind <- which.min(object$val_res$Meas)
+    best_ind <- which.min(object$val_res$measure)
     par <- object$val_res[best_ind,]
     nummod <- par$nummod
     nu <- par$nu
@@ -501,13 +501,13 @@ coef.spar <- function(object,
       stop("Nu needs to be among the previously considered values when nummod is not provided!")
     }
     tmp_val_res <- object$val_res[object$val_res$nu==nu,]
-    nummod <- tmp_val_res$nummod[which.min(tmp_val_res$Meas)]
+    nummod <- tmp_val_res$nummod[which.min(tmp_val_res$measure)]
   } else if (is.null(nu)) {
     if (!nummod %in% object$val_res$nummod) {
       stop("Number of models needs to be among the previously fitted values when nu is not provided!")
     }
     tmp_val_res <- object$val_res[object$val_res$nummod==nummod,]
-    nu <- tmp_val_res$nu[which.min(tmp_val_res$Meas)]
+    nu <- tmp_val_res$nu[which.min(tmp_val_res$measure)]
   } else {
     if (length(nummod)!=1 | length(nu)!=1) {
       stop("Length of nummod and nu must be 1!")
@@ -537,7 +537,7 @@ coef.spar <- function(object,
     avg_fun <- switch(aggregate,
                       "mean" = function(x) mean(x, na.rm = TRUE),
                       "median" = function(x) median(x, na.rm = TRUE),
-                      "Aggregration method not implemeneted")
+                      "Aggregration method not implemented.")
     beta <- numeric(p)
     beta_std <- apply(final_coef, 1, avg_fun)
     beta[object$xscale>0] <- object$yscale * beta_std/(object$xscale[object$xscale>0])
@@ -550,7 +550,7 @@ coef.spar <- function(object,
               nummod = nummod,
               nu = nu)
   class(res) <- "coefspar"
-  best_ind <- which.min(object$val_res$Meas)
+  best_ind <- which.min(object$val_res$measure)
   par <- object$val_res[best_ind,]
   attr(res, "M_best") <- par$nummod
   attr(res, "nu_best") <- par$nu
@@ -598,13 +598,13 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
   cat("\n")
   if (attr(x, "M_nu_combination") != "best") {
     cat("Best combination overall (min error):",
-    attr(x, "M_best"), "models, threshold =",
+        attr(x, "M_best"), "models, threshold =",
         attr(x, "nu_best"), "\n")
   }
   if (attr(x, "M_nu_combination") != "1se") {
     if (!is.null(attr(x, "M_1se")) & !is.null(attr(x, "nu_1se"))) {
-    cat("1se combination:",  attr(x, "M_1se"), "models, threshold =",
-        attr(x, "nu_1se"), "\n")
+      cat("1se combination:",  attr(x, "M_1se"), "models, threshold =",
+          attr(x, "nu_1se"), "\n")
     }
   }
   cat("\n")
@@ -677,7 +677,7 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
 summary.coefspar <- function(object, digits = 4L, ...) {
   stopifnot(inherits(object, "coefspar"))
   cat(sprintf(
-  "Summary of coefficients from %s object:\n", attr(object, "parent_object")))
+    "Summary of coefficients from %s object:\n", attr(object, "parent_object")))
   cat(sprintf("Based on the %s selection\n\n",
               switch(attr(object, "M_nu_combination"),
                      "best" = "*best rule* (min error)",
@@ -749,8 +749,8 @@ get_intercept <- function(x) {
 #' @param xnew matrix of new predictor variables; must have same number of columns as  \code{x}.
 #' @param type the type of required predictions; either on response level (default) or on link level
 #' @param avg_type type of averaging the marginal models; either on link (default) or on response level
-#' @param nummod number of models used to form coefficients; value with minimal validation Meas is used if not provided.
-#' @param nu threshold level used to form coefficients; value with minimal validation Meas is used if not provided.
+#' @param nummod number of models used to form coefficients; value with minimal validation measure is used if not provided.
+#' @param nu threshold level used to form coefficients; value with minimal validation measure is used if not provided.
 #' @param coef optional; result of [coef.spar] can be used.
 #' @param ... further arguments passed to or from other methods
 #' @return Vector of predictions
@@ -856,17 +856,17 @@ plot.spar <- function(x,
   } else if (plot_type == "Val_Measure") {
     if (plot_along=="nu") {
       if (is.null(nummod)) {
-        mynummod <- spar_res$val_res$nummod[which.min(spar_res$val_res$Meas)]
+        mynummod <- spar_res$val_res$nummod[which.min(spar_res$val_res$measure)]
         tmp_title <- "Fixed optimal nummod="
       } else {
         tmp_title <- "Fixed given nummod="
       }
 
       tmp_df <- spar_res$val_res[spar_res$val_res$nummod==mynummod, ]
-      ind_min <- which.min(tmp_df$Meas)
+      ind_min <- which.min(tmp_df$measure)
 
       res <- ggplot2::ggplot(data = tmp_df,
-                             ggplot2::aes(x=.data$nnu,y=.data$Meas)) +
+                             ggplot2::aes(x=.data$nnu,y=.data$measure)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         ggplot2::scale_x_continuous(breaks=seq(1,nrow(tmp_df)),
@@ -874,38 +874,38 @@ plot.spar <- function(x,
                                                    format = "e", digits = digits)) +
         ggplot2::labs(x=expression(nu),y=spar_res$measure) +
         ggplot2::geom_point(data=data.frame(x=tmp_df$nnu[ind_min],
-                                            y=tmp_df$Meas[ind_min]),
+                                            y=tmp_df$measure[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red") +
         ggplot2::ggtitle(paste0(tmp_title,mynummod))
     } else {
       if (is.null(nu)) {
-        nu <- spar_res$val_res$nu[which.min(spar_res$val_res$Meas)]
+        nu <- spar_res$val_res$nu[which.min(spar_res$val_res$measure)]
         tmp_title <- "Fixed optimal "
       } else {
         tmp_title <- "Fixed given "
       }
       tmp_df <- spar_res$val_res[spar_res$val_res$nu == nu, ]
-      ind_min <- which.min(tmp_df$Meas)
+      ind_min <- which.min(tmp_df$measure)
 
       res <- ggplot2::ggplot(data = tmp_df,
-                             ggplot2::aes(x=.data$nummod,y=.data$Meas)) +
+                             ggplot2::aes(x=.data$nummod,y=.data$measure)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         ggplot2::labs(y=spar_res$measure) +
-        ggplot2::geom_point(data=data.frame(x=tmp_df$nummod[ind_min],y=tmp_df$Meas[ind_min]),
+        ggplot2::geom_point(data=data.frame(x=tmp_df$nummod[ind_min],y=tmp_df$measure[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red")+
         ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3))))
     }
   } else if (plot_type=="Val_numAct") {
     if (plot_along=="nu") {
       if (is.null(nummod)) {
-        mynummod <- spar_res$val_res$nummod[which.min(spar_res$val_res$Meas)]
+        mynummod <- spar_res$val_res$nummod[which.min(spar_res$val_res$measure)]
         tmp_title <- "Fixed optimal nummod="
       } else {
         tmp_title <- "Fixed given nummod="
       }
       tmp_df <- spar_res$val_res[spar_res$val_res$nummod==mynummod, ]
-      ind_min <- which.min(tmp_df$Meas)
+      ind_min <- which.min(tmp_df$measure)
 
       res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nnu,y=.data$numAct)) +
         ggplot2::geom_point() +
@@ -920,13 +920,13 @@ plot.spar <- function(x,
         ggplot2::ggtitle(paste0(tmp_title,mynummod))
     } else {
       if (is.null(nu)) {
-        nu <- spar_res$val_res$nu[which.min(spar_res$val_res$Meas)]
+        nu <- spar_res$val_res$nu[which.min(spar_res$val_res$measure)]
         tmp_title <- "Fixed optimal "
       } else {
         tmp_title <- "Fixed given "
       }
       tmp_df <- spar_res$val_res[spar_res$val_res$nu==nu, ]
-      ind_min <- which.min(tmp_df$Meas)
+      ind_min <- which.min(tmp_df$measure)
 
       res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nummod,y=.data$numAct)) +
         ggplot2::geom_point() +
@@ -987,14 +987,62 @@ plot.spar <- function(x,
 print.spar <- function(x, ...) {
   mycoef <- coef(x)
   beta <- mycoef$beta
-  Meas <- x$val_res$Meas[mycoef$nu == x$val_res$nu &
+  measure <- x$val_res$measure[mycoef$nu == x$val_res$nu &
                            mycoef$nummod == x$val_res$nummod ]
   cat(sprintf("spar object:\nSmallest validation measure (%s) of %s reached for nummod=%d,
               nu=%s leading to %d / %d active predictors.\n",
               x$measure,
-              formatC(Meas,digits = 2,format = "e"),
+              formatC(measure,digits = 2,format = "e"),
               mycoef$nummod, formatC(mycoef$nu,digits = 2,format = "e"),
               sum(beta!=0),length(beta)))
   cat("Summary of those non-zero coefficients:\n")
   print(summary(beta[beta!=0]))
 }
+
+
+
+#' Extract a specific model from a '\code{spar}' object
+#'
+#' @param object A fitted '\code{spar}' or '\code{spar.cv}'  model
+#' @param opt_par One of "best", "1se"
+#'
+#' @return A '\code{spar}'  or '\code{spar.cv}'  object where the beta and intercept elements are
+#'  the ones which correspond to the best or the 1se model.
+#' @export
+get_model <- function(object, opt_par = c("best", "1se")) {
+  stopifnot(inherits(object, "spar") || inherits(object, "spar.cv"))
+  opt_nunum <- match.arg(opt_par)
+  if (opt_nunum == "1se" & inherits(object, "spar")) {
+    stop("1se model is not available for spar objects, use spar.cv instead.")
+  }
+  # best
+  object$val_res
+  best_ind <- which.min(object$val_res$measure)
+  parbest <- object$val_res[best_ind,]
+
+  # 1se model
+  ## TODO
+  if (inherits(object, "spar.cv")) {
+    allowed_ind <- object$val_sum$mMeas<object$val_sum$mMeas[best_ind]+
+      object$val_sum$sdMeas[best_ind]
+    ind_1cv <- which.min(object$val_sum$mNumAct[allowed_ind])
+    par1se <- object$val_sum[allowed_ind,][ind_1cv,]
+  }
+
+
+  nummod <- ifelse(opt_nunum == "best", parbest$nummod, par1se$nummod)
+  nu <- ifelse(opt_nunum == "best", parbest$nu, par1se$nu)
+
+
+  final_coef <- object$betas[, seq_len(nummod), drop=FALSE]
+  final_coef[abs(final_coef) < nu] <- 0
+
+  intercepts <- object$intercepts[seq_len(nummod)]
+  object$betas <- final_coef
+  object$val_res <- object$val_res[object$val_res$nummod == nummod &
+                                     object$val_res$nu == nu, , drop = FALSE]
+
+  return(object)
+}
+
+

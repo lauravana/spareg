@@ -132,16 +132,17 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
   val_sum <- dplyr::group_by(val_res, .data$nnu, .data$nu, .data$nummod)
   suppressMessages(
     val_sum <-  dplyr::summarise(val_sum,
-                         mMeas = mean(.data$Meas,na.rm=TRUE),
-                         sdMeas = sd(.data$Meas,na.rm=TRUE),
+                         mMeas = mean(.data$measure,na.rm=TRUE),
+                         sdMeas = sd(.data$measure,na.rm=TRUE),
                          mNumAct = mean(.data$numAct,na.rm=TRUE))
   )
 
   res <- list(betas = SPARres$betas, intercepts = SPARres$intercepts,
               scr_coef = SPARres$scr_coef, inds = SPARres$inds,
               RPMs = SPARres$RPMs,
-              val_sum = val_sum, nus = SPARres$nus,
-              nummods=nummods,
+              val_res = val_res,
+              val_sum = val_sum,
+              nus = SPARres$nus, nummods=nummods,
               family = family,
               measure = measure,
               rp = rp, screencoef = screencoef,

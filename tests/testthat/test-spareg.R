@@ -134,9 +134,9 @@ test_that("Test the gaussian rp", {
   spar_g_res2 <- spar(x,y,screencoef = screen_glmnet(),
                       rp = rp_gaussian(sd = 0.1))
   ##
-  expect_equal(round(spar_g_res$val_res$Meas[1], 2), 17873.92)
-  expect_equal(round(spar_g_res2$val_res$Meas[1], 2), 17873.92)
-  expect_equal(spar_g_res$val_res$Meas[1], spar_g_res2$val_res$Meas[1])
+  expect_equal(round(spar_g_res$val_res$measure[1], 2), 17873.92)
+  expect_equal(round(spar_g_res2$val_res$measure[1], 2), 17873.92)
+  expect_equal(spar_g_res$val_res$measure[1], spar_g_res2$val_res$measure[1])
 })
 
 test_that("Test the sparse rp", {
@@ -148,9 +148,9 @@ test_that("Test the sparse rp", {
   set.seed(12345)
   spar_sparse_res2 <- spar(x,y, screencoef = screen_glmnet(),
                            rp = rp_sparse(psi = 0.01))
-  expect_equal(round(spar_sparse_res$val_res$Meas[1], 2), 19028.88)
-  expect_equal(round(spar_sparse_res2$val_res$Meas[1], 2), 19004.14)
-  expect_true(spar_sparse_res$val_res$Meas[1] != spar_sparse_res2$val_res$Meas[1])
+  expect_equal(round(spar_sparse_res$val_res$measure[1], 2), 19028.88)
+  expect_equal(round(spar_sparse_res2$val_res$measure[1], 2), 19004.14)
+  expect_true(spar_sparse_res$val_res$measure[1] != spar_sparse_res2$val_res$measure[1])
 })
 test_that("Test the CW rp", {
   x <- example_data$x
@@ -158,7 +158,7 @@ test_that("Test the CW rp", {
   set.seed(123)
   spar_cw_res <- spar(x,y, screencoef = screen_glmnet(),
                       rp = rp_cw())
-  expect_equal(round(spar_cw_res$val_res$Meas[1], 2), 16841.77)
+  expect_equal(round(spar_cw_res$val_res$measure[1], 2), 16841.77)
 })
 
 test_that("Test the screen_glm() with poisson family", {
@@ -169,7 +169,7 @@ test_that("Test the screen_glm() with poisson family", {
   spar_screen_glm <- spar(x,yval, family = poisson(),
                           screencoef = screen_marglik(),
                           rp = rp_gaussian())
-  expect_equal(round(spar_screen_glm$val_res$Meas[1], 2), 1431.17)
+  expect_equal(round(spar_screen_glm$val_res$measure[1], 2), 1431.17)
 })
 
 test_that("Get results with parallel option", {
@@ -192,14 +192,14 @@ test_that("Get results with parallel option", {
       )
     }
     parallel::stopCluster(cl)
-    expect_equal(spar_res2$val_res$Meas[1:3],  spar_res3$val_res$Meas[1:3])
+    expect_equal(spar_res2$val_res$measure[1:3],  spar_res3$val_res$measure[1:3])
   }
 })
 
 test_that("Get errors for msup > nscreen", {
   x <- matrix(rnorm(300), ncol = 30)
   y <- rnorm(10)
-  expect_message(spar(x,y,nscreen=18, msup = 20))
+  expect_message(spar(x,y,nscreen = 18, msup = 20))
 })
 
 # Tests expecting errors
