@@ -63,8 +63,8 @@
 #' plot(spar_res)
 #' plot(spar_res, plot_type = "Val_Meas", plot_along = "nummod", nu = 0)
 #' plot(spar_res, plot_type = "Val_Meas", plot_along = "nu", nummod = 10)
-#' plot(spar_res, plot_type = "Val_numAct",  plot_along = "nummod", nu = 0)
-#' plot(spar_res, plot_type = "Val_numAct",  plot_along = "nu", nummod = 10)
+#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nummod", nu = 0)
+#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nu", nummod = 10)
 #' plot(spar_res, plot_type = "res-vs-fitted",  xfit = example_data$xtest,
 #'   yfit = example_data$ytest, opt_par = "1se")
 #' plot(spar_res, "coefs", prange = c(1, 400))
@@ -369,17 +369,17 @@ predict.spar.cv <- function(object,
 #' or a plot of the estimated coefficients in each marginal model, sorted by their absolute value.
 #'
 #' @param x result of [spar.cv] function of class  \code{'spar.cv'}.
-#' @param plot_type one of  \code{c("Val_Measure","Val_numAct","res-vs-fitted","coefs")}.
+#' @param plot_type one of  \code{c("Val_Measure","val_numactive","res-vs-fitted","coefs")}.
 #' @param plot_along one of  \code{c("nu","nummod")}; ignored when  \code{plot_type="res-vs-fitted"}.
 #' @param opt_par one of  \code{c("1se","best")}, chooses whether to select the
 #'  best pair of  \code{nus} and  \code{nummods} according to CV measure, or the
 #'  sparsest solution within one sd of that optimal CV measure;
 #' ignored when  \code{nummod} and  \code{nu}, or  \code{coef} are given
 #' @param nummod fixed value for  \code{nummod} when  \code{plot_along="nu"} for
-#'  \code{plot_type="Val_Measure"} or  \code{"Val_numAct"};
+#'  \code{plot_type="Val_Measure"} or  \code{"val_numactive"};
 #'  same as for \code{\link{predict.spar.cv}} when plot_type="res-vs-fitted".
 #' @param nu fixed value for \eqn{\nu} when  \code{plot_along="nummod"}
-#' for  \code{plot_type="Val_Measure"} or  \code{"Val_numAct"}; same as for \code{\link{predict.spar.cv}} when  \code{plot_type="res-vs-fitted"}.
+#' for  \code{plot_type="Val_Measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar.cv}} when  \code{plot_type="res-vs-fitted"}.
 #' @param xfit data used for predictions in  \code{"res-vs-fitted"}.
 #' @param yfit data used for predictions in  \code{"res-vs-fitted"}.
 #' @param opt_par one of  \code{c("best","1se")}, only needed for
@@ -392,7 +392,7 @@ predict.spar.cv <- function(object,
 #' @import ggplot2
 #' @export
 plot.spar.cv <- function(x,
-                         plot_type = c("Val_Measure","Val_numAct","res-vs-fitted","coefs"),
+                         plot_type = c("Val_Measure","val_numactive","res-vs-fitted","coefs"),
                          plot_along = c("nu","nummod"),
                          nummod = NULL,
                          nu = NULL,
@@ -407,7 +407,7 @@ plot.spar.cv <- function(x,
   opt_par <- match.arg(opt_par)
   mynummod <- nummod
   my_val_sum <- compute_val_summary(spar_res$val_res)
-  colnames(my_val_sum)[match(c("mMeas", "mNumAct"),colnames(my_val_sum))] <- c("Meas", "numAct")
+  colnames(my_val_sum)[match(c("mMeas", "mNumAct"),colnames(my_val_sum))] <- c("Meas", "numactive")
 
   if (plot_type=="res-vs-fitted") {
     if (is.null(xfit) | is.null(yfit)) {
@@ -431,7 +431,7 @@ plot.spar.cv <- function(x,
       ind_min <- which.min(tmp_df$Meas)
 
       allowed_ind <- tmp_df$mMeas < (tmp_df$Meas+tmp_df$sdMeas)[ind_min]
-      ind_1se <- which.min(tmp_df$numAct[allowed_ind])
+      ind_1se <- which.min(tmp_df$numactive[allowed_ind])
 
       res <- ggplot2::ggplot(data = tmp_df,
                              ggplot2::aes(x = .data$nnu,y = .data$Meas)) +
@@ -470,7 +470,7 @@ plot.spar.cv <- function(x,
       ind_min <- which.min(tmp_df$Meas)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sdMeas[ind_min]
-      ind_1se <- which.min(tmp_df$numAct[allowed_ind])
+      ind_1se <- which.min(tmp_df$numactive[allowed_ind])
 
       res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nummod,y=.data$Meas)) +
         ggplot2::geom_point() +
@@ -492,7 +492,7 @@ plot.spar.cv <- function(x,
                           yend = tmp_df$Meas[ind_min] + tmp_df$sdMeas[ind_min],
                           color=2,linetype=2)
     }
-  } else if (plot_type=="Val_numAct") {
+  } else if (plot_type=="val_numactive") {
     if (plot_along=="nu") {
       if (is.null(nummod)) {
         mynummod <- my_val_sum$nummod[which.min(my_val_sum$Meas)]
@@ -504,9 +504,9 @@ plot.spar.cv <- function(x,
       ind_min <- which.min(tmp_df$Meas)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sdMeas[ind_min]
-      ind_1se <- which.min(tmp_df$numAct[allowed_ind])
+      ind_1se <- which.min(tmp_df$numactive[allowed_ind])
 
-      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nnu,y=.data$numAct)) +
+      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nnu,y=.data$numactive)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         # ggplot2::scale_x_continuous(breaks=seq(1,nrow(my_val_sum),1),labels=round(my_val_sum$nu,3)) +
@@ -517,7 +517,7 @@ plot.spar.cv <- function(x,
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
                             color=2,show.legend = FALSE,
                             data=data.frame(x = c(tmp_df$nnu[ind_min],tmp_df$nnu[allowed_ind][ind_1se]),
-                                            y = c(tmp_df$numAct[ind_min],tmp_df$numAct[allowed_ind][ind_1se]))) +
+                                            y = c(tmp_df$numactive[ind_min],tmp_df$numactive[allowed_ind][ind_1se]))) +
         ggplot2::ggtitle(paste0(tmp_title,mynummod))
     } else {
       if (is.null(nu)) {
@@ -530,16 +530,16 @@ plot.spar.cv <- function(x,
       ind_min <- which.min(tmp_df$Meas)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sdMeas[ind_min]
-      ind_1se <- which.min(tmp_df$numAct[allowed_ind])
+      ind_1se <- which.min(tmp_df$numactive[allowed_ind])
 
       res <- ggplot2::ggplot(data = tmp_df,
-                             ggplot2::aes(x=.data$nummod,y=.data$numAct)) +
+                             ggplot2::aes(x=.data$nummod,y=.data$numactive)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
                             color=2,show.legend = FALSE,
                             data=data.frame(x = c(tmp_df$nummod[ind_min],tmp_df$nummod[allowed_ind][ind_1se]),
-                                            y = c(tmp_df$numAct[ind_min],tmp_df$numAct[allowed_ind][ind_1se]))) +
+                                            y = c(tmp_df$numactive[ind_min],tmp_df$numactive[allowed_ind][ind_1se]))) +
         ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3))))
 
     }

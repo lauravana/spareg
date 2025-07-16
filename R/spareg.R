@@ -95,8 +95,8 @@
 #' plot(spar_res)
 #' plot(spar_res, plot_type = "Val_Meas", plot_along = "nummod", nu = 0)
 #' plot(spar_res, plot_type = "Val_Meas", plot_along = "nu", nummod = 10)
-#' plot(spar_res, plot_type = "Val_numAct",  plot_along = "nummod", nu = 0)
-#' plot(spar_res, plot_type = "Val_numAct",  plot_along = "nu", nummod = 10)
+#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nummod", nu = 0)
+#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nu", nummod = 10)
 #' plot(spar_res, plot_type = "res-vs-fitted",  xfit = example_data$xtest,
 #'   yfit = example_data$ytest)
 #' plot(spar_res, plot_type = "coefs", prange = c(1,400))
@@ -400,7 +400,7 @@ spar_algorithm <- function(x, y,
 
   ## Validation set
   val_res <- data.frame(nnu = NULL, nu = NULL,
-                        nummod = NULL,numAct = NULL, measure = NULL)
+                        nummod = NULL,numactive = NULL, measure = NULL)
   if (!is.null(yval) && !is.null(xval)) {
     val_set <- TRUE
   } else {
@@ -429,12 +429,12 @@ spar_algorithm <- function(x, y,
       c(nnu = l,
         nu = unname(thresh),
         nummod = nummod,
-        numAct = sum(tmp_beta!=0),
-        measure = val.meas(yval,eta_hat)
+        measure = val.meas(yval,eta_hat),
+        numactive = sum(tmp_beta!=0)
       )
     })
     out <- do.call("rbind", tabres)
-    colnames(out) <- c("nnu","nu","nummod","numAct","measure")
+    colnames(out) <- c("nnu","nu","nummod","measure", "numactive")
     out
   })
   val_res <- do.call("rbind.data.frame", tabnummodres)
@@ -788,13 +788,13 @@ predict.spar <- function(object,
 #' Plot values of validation measure or number of active variables over different thresholds or number of models for \code{'spar'} object, or residuals vs fitted
 #'
 #' @param x result of spar function of class  \code{'spar'}.
-#' @param plot_type one of  \code{c("Val_Measure", "Val_numAct", "res-vs-fitted", "coefs")}.
+#' @param plot_type one of  \code{c("Val_Measure", "val_numactive", "res-vs-fitted", "coefs")}.
 #' @param plot_along one of \code{c("nu","nummod")}; ignored when  \code{plot_type = "res-vs-fitted"}.
 #' @param nummod fixed value for number of models when  \code{plot_along = "nu"}
-#'               for  \code{plot_type = "Val_Measure"} or  \code{"Val_numAct"};
+#'               for  \code{plot_type = "Val_Measure"} or  \code{"val_numactive"};
 #'               same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.
 #' @param nu fixed value for \eqn{\nu} when  \code{plot_along="nummod"} for
-#'  \code{plot_type = "Val_Measure"} or  \code{"Val_numAct"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.
+#'  \code{plot_type = "Val_Measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.
 #' @param xfit data used for predictions in  \code{"res-vs-fitted"}.
 #' @param yfit data used for predictions in  \code{"res-vs-fitted"}.
 #' @param prange optional vector of length 2 for  \code{"coefs"}-plot to give
@@ -811,7 +811,7 @@ predict.spar <- function(object,
 #' @export
 #'
 plot.spar <- function(x,
-                      plot_type = c("Val_Measure","Val_numAct","res-vs-fitted","coefs"),
+                      plot_type = c("Val_Measure","val_numactive","res-vs-fitted","coefs"),
                       plot_along = c("nu","nummod"),
                       nummod = NULL,
                       nu = NULL,
@@ -877,7 +877,7 @@ plot.spar <- function(x,
                             ggplot2::aes(x=.data$x,y=.data$y),col="red")+
         ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3))))
     }
-  } else if (plot_type=="Val_numAct") {
+  } else if (plot_type=="val_numactive") {
     if (plot_along=="nu") {
       if (is.null(nummod)) {
         mynummod <- spar_res$val_res$nummod[which.min(spar_res$val_res$measure)]
@@ -888,7 +888,7 @@ plot.spar <- function(x,
       tmp_df <- spar_res$val_res[spar_res$val_res$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$measure)
 
-      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nnu,y=.data$numAct)) +
+      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nnu,y=.data$numactive)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         # ggplot2::scale_x_continuous(breaks=seq(1,nrow(spar_res$val_res),1),labels=round(spar_res$val_res$nu,3)) +
@@ -896,7 +896,7 @@ plot.spar <- function(x,
                                     labels=formatC(spar_res$val_res$nu[seq(1,nrow(spar_res$val_res),1)],
                                                    format = "e", digits = digits)) +
         ggplot2::labs(x=expression(nu)) +
-        ggplot2::geom_point(data=data.frame(x=tmp_df$nnu[ind_min],y=tmp_df$numAct[ind_min]),
+        ggplot2::geom_point(data=data.frame(x=tmp_df$nnu[ind_min],y=tmp_df$numactive[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red")+
         ggplot2::ggtitle(paste0(tmp_title,mynummod))
     } else {
@@ -909,12 +909,12 @@ plot.spar <- function(x,
       tmp_df <- spar_res$val_res[spar_res$val_res$nu==nu, ]
       ind_min <- which.min(tmp_df$measure)
 
-      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nummod,y=.data$numAct)) +
+      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nummod,y=.data$numactive)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         ggplot2::geom_point(
           data=data.frame(x=tmp_df$nummod[ind_min],
-                          y=tmp_df$numAct[ind_min]),
+                          y=tmp_df$numactive[ind_min]),
           ggplot2::aes(x = .data$x,y=.data$y),col="red")+
         ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),
                                     list(txt=tmp_title,v=round(nu,3))))
@@ -1081,22 +1081,27 @@ get_model <- function(object, opt_par = c("best", "1se")) {
 #' xval and yval are missing) and the number of active variables. For '\code{spar.cv}' objects it contains information
 #' on the average measure obtained across folds together with the standard deviation across the folds and the average number of active variables.
 #' the \code{nfolds} of the training set.
-#' @seealso [spar], [spar.cv]
+#' @examples
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#' get_measure(spar_res)
+#'
+#' @seealso [spar], [spar.cv], [get_model]
 #' @export
 get_measure <- function(object) {
   stopifnot(inherits(object, "spar") || inherits(object, "spar.cv"))
   if(inherits(object, "spar.cv")) {
     val_table <- compute_val_summary(object$val_res)
-    measure <- val_table$mMeas
-    attr(measure, "measure") <- object$measure
+    colnames(val_table)[4] <- paste0("mean_", object$measure)
+    colnames(val_table)[5] <- paste0("sd_", object$measure)
+    colnames(val_table)[6] <- "mean_numactive"
   }
   if(inherits(object, "spar")) {
     val_table <- object$val_res
-    measure <- val_table$measure
+    colnames(val_table)[4] <- object$measure
+    colnames(val_table)[5] <- "numactive"
   }
-  # attr(measure, "nu") <- val_table$nu
-  # attr(measure, "nummod") <- val_table$nummod
-  attr(val_table, "measure") <- object$measure
   val_table[, !(colnames(val_table) %in% c("nnu"))]
 }
 

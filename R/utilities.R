@@ -100,7 +100,7 @@ compute_val_summary <- function(val_res) {
   sdMeas <- aggregate(measure ~ nummod + nu + nnu,
                       val_res[val_res$fold != 0, ],
                       sd, na.rm = TRUE)
-  mNumAct <- aggregate(numAct ~ nummod + nu + nnu,
+  mNumAct <- aggregate(numactive ~ nummod + nu + nnu,
                        val_res[val_res$fold != 0, ],
                        mean, na.rm = TRUE)
 

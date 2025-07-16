@@ -1140,7 +1140,7 @@ together with further arguments:
 either a grid of \code{nu} values for a fixed number of models \code{nummod} or
 viceversa.
 
-\item \code{"Val_numAct"} plots the number of active variables for either a grid
+\item \code{"val_numactive"} plots the number of active variables for either a grid
 of \code{nu} values for a fixed number of models \code{nummod} or viceversa.
 
 \item \code{"res-vs-fitted"} produces a residuals-vs-fitted plot. The residuals
@@ -1154,7 +1154,7 @@ smallest across the marginal models and then represented in the plot using a col
 \end{itemize}
 \item \code{plot_along} -- one of \code{c("nu","nummod")}; for
 \code{plot_type = "Val_Measure"} as well as for
-\code{plot_type = "Val_numAct"} it indicates whether the
+\code{plot_type = "val_numactive"} it indicates whether the
 values of the cross-validation measure or number of active variables,
 respectively, should be shown for a grid of $\nu$ values while keeping the
 number of models \code{nummod} fixed or viceversa. This argument is ignored when
@@ -1162,11 +1162,11 @@ number of models \code{nummod} fixed or viceversa. This argument is ignored when
 
 \item \code{nummod} -- fixed value for number of models when
 \code{plot_along = "nu"} for \code{plot_type = "Val_Measure"} or
-\code{"Val_numAct"};  if \code{plot_type = "res-vs-fitted"}, it is used
+\code{"val_numactive"};  if \code{plot_type = "res-vs-fitted"}, it is used
 in the \code{predict} method, as described above.
 
 \item \code{nu} -- fixed value for  $\nu$ when \code{plot_along = "nummod"}
-for \code{plot_type = "Val_Measure"} or \code{"Val_numAct"}; if
+for \code{plot_type = "Val_Measure"} or \code{"val_numactive"}; if
 \code{plot_type = "res-vs-fitted"}, it is used in the \code{predict} method,
 as described above.
 
@@ -1193,7 +1193,7 @@ shown in Figure~\ref{fig:plot_example}.
 %
 <<eval=FALSE>>=
 plot(spar_res)
-plot(spar_res, plot_type = "Val_numAct")
+plot(spar_res, plot_type = "val_numactive")
 plot(spar_res,  plot_type = "coefs")
 plot(spar_res, plot_type = "res-vs-fitted", xfit = example_data$xtest,
   yfit = example_data$ytest)
@@ -1206,7 +1206,7 @@ plot(spar_res, plot_type = "res-vs-fitted", xfit = example_data$xtest,
 library(ggplot2)
 p1 <- plot(spar_res)+
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))
-p2 <- plot(spar_res, plot_type = "Val_numAct") +
+p2 <- plot(spar_res, plot_type = "val_numactive") +
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))
 p4 <- plot(spar_res, plot_type = "res-vs-fitted", xfit = example_data$xtest,
   yfit = example_data$ytest)
@@ -2007,7 +2007,7 @@ a grid of threshold values $\nu$, where the number of models is fixed to the val
 found to perform best in cross-validation exercise
 (see Figure~\ref{fig:darwin_activevars}).
 <<plotdarwinact, eval=FALSE>>=
-plot(spar_darwin, plot_type = "Val_numAct")
+plot(spar_darwin, plot_type = "val_numactive")
 @
 We observe again that no thresholding achieves the best measure and translates
 to almost all variables being active (some variables can be inactive at $\nu=0$
@@ -2018,9 +2018,9 @@ introduced without too much increase in the cross-validation measure.
 \begin{figure}[t!]
 \centering
 \setkeys{Gin}{width=0.8\textwidth}
-<<plotdarwinactnumAct,fig=TRUE,echo=FALSE,width=10,height=5,prefix.string=spareg>>=
+<<plotdarwinactnumactive,fig=TRUE,echo=FALSE,width=10,height=5,prefix.string=spareg>>=
 if (is_paper) {
-  p <- plot(spar_darwin, plot_type = "Val_numAct", digits=3L)
+  p <- plot(spar_darwin, plot_type = "val_numactive", digits=3L)
   p
 }
 @
