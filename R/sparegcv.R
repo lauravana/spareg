@@ -108,7 +108,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
                         parallel = parallel,
                         seed = seed)
 
-  val_res <- SPARres$val_res
+  val_res <- cbind("fold" = 0, SPARres$val_res)
   folds <- sample(cut(seq_len(n), breaks = nfolds, labels=FALSE))
   for (k in seq_len(nfolds)) {
     fold_id <- (folds == k)
@@ -126,22 +126,15 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
       measure = measure,
       parallel = parallel,
       seed = seed)
-    val_res <- rbind(val_res,foldSPARres$val_res)
+    val_res <- rbind(val_res,
+                     cbind("fold" = k, foldSPARres$val_res))
   }
 
-  val_sum <- dplyr::group_by(val_res, .data$nnu, .data$nu, .data$nummod)
-  suppressMessages(
-    val_sum <-  dplyr::summarise(val_sum,
-                         mMeas = mean(.data$measure,na.rm=TRUE),
-                         sdMeas = sd(.data$measure,na.rm=TRUE),
-                         mNumAct = mean(.data$numAct,na.rm=TRUE))
-  )
 
   res <- list(betas = SPARres$betas, intercepts = SPARres$intercepts,
               scr_coef = SPARres$scr_coef, inds = SPARres$inds,
               RPMs = SPARres$RPMs,
               val_res = val_res,
-              val_sum = val_sum,
               nus = SPARres$nus, nummods=nummods,
               family = family,
               measure = measure,
@@ -200,14 +193,15 @@ coef.spar.cv <- function(object,
   given_pars <- !is.null(nummod) & !is.null(nu)
 
   # best model
-  best_ind <- which.min(object$val_sum$mMeas)
-  parbest <- object$val_sum[best_ind,]
+  val_sum <- compute_val_summary(object$val_res)
+  best_ind <- which.min(val_sum$mMeas)
+  parbest <- val_sum[best_ind,]
 
   # 1se model
-  allowed_ind <- object$val_sum$mMeas<object$val_sum$mMeas[best_ind]+
-    object$val_sum$sdMeas[best_ind]
-  ind_1cv <- which.min(object$val_sum$mNumAct[allowed_ind])
-  par1se <- object$val_sum[allowed_ind,][ind_1cv,]
+  allowed_ind <- val_sum$mMeas<val_sum$mMeas[best_ind]+
+    val_sum$sdMeas[best_ind]
+  ind_1cv <- which.min(val_sum$mNumAct[allowed_ind])
+  par1se <- val_sum[allowed_ind,][ind_1cv,]
 
   if (is.null(nummod) & is.null(nu)) {
 
@@ -220,10 +214,10 @@ coef.spar.cv <- function(object,
     }
 
   } else if (is.null(nummod)) {
-    if (!is.null(nu) & !nu %in% object$val_sum$nu) {
+    if (!is.null(nu) & !nu %in% val_sum$nu) {
       stop("nu needs to be among the previously considered values when nummod is not provided!")
     }
-    tmp_val_sum <- object$val_sum[object$val_sum$nu==nu,]
+    tmp_val_sum <- val_sum[val_sum$nu==nu,]
     if (opt_nunum=="1se") {
       allowed_ind <- tmp_val_sum$mMeas<tmp_val_sum$mMeas[best_ind]+tmp_val_sum$sdMeas[best_ind]
       ind_1cv <- which.min(tmp_val_sum$mNumAct[allowed_ind])
@@ -236,7 +230,7 @@ coef.spar.cv <- function(object,
     if (!is.null(nummod) & !nummod %in% object$val_res$nummod) {
       stop("Number of models needs to be among the previously considered values when nu is not provided!")
     }
-    tmp_val_sum <- object$val_sum[object$val_sum$nummod==nummod,]
+    tmp_val_sum <- val_sum[val_sum$nummod==nummod,]
     if (opt_nunum=="1se") {
       allowed_ind <- tmp_val_sum$mMeas<tmp_val_sum$mMeas[best_ind]+tmp_val_sum$sdMeas[best_ind]
       ind_1cv <- which.min(tmp_val_sum$mNumAct[allowed_ind])
@@ -411,7 +405,7 @@ plot.spar.cv <- function(x,
   plot_along <- match.arg(plot_along)
   opt_par <- match.arg(opt_par)
   mynummod <- nummod
-  my_val_sum <- spar_res$val_sum
+  my_val_sum <- compute_val_summary(spar_res$val_res)
   colnames(my_val_sum)[match(c("mMeas", "mNumAct"),colnames(my_val_sum))] <- c("Meas", "numAct")
 
   if (plot_type=="res-vs-fitted") {
@@ -432,10 +426,10 @@ plot.spar.cv <- function(x,
         tmp_title <- "Fixed given nummod="
       }
       nu_1se <- coef(spar_res, opt_par = "1se")$nu
-      tmp_df <- subset(my_val_sum,nummod==mynummod)
+      tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$Meas)
 
-      allowed_ind <- tmp_df$Meas < (tmp_df$Meas+tmp_df$sdMeas)[ind_min]
+      allowed_ind <- tmp_df$mMeas < (tmp_df$Meas+tmp_df$sdMeas)[ind_min]
       ind_1se <- which.min(tmp_df$numAct[allowed_ind])
 
       res <- ggplot2::ggplot(data = tmp_df,
@@ -471,7 +465,7 @@ plot.spar.cv <- function(x,
       } else {
         tmp_title <- "Fixed given "
       }
-      tmp_df <- subset(my_val_sum,nu==nu)
+      tmp_df <- my_val_sum[my_val_sum$nu == nu, ]
       ind_min <- which.min(tmp_df$Meas)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sdMeas[ind_min]
@@ -505,7 +499,7 @@ plot.spar.cv <- function(x,
       } else {
         tmp_title <- "Fixed given nummod="
       }
-      tmp_df <- subset(my_val_sum,nummod==mynummod)
+      tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$Meas)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sdMeas[ind_min]
@@ -531,7 +525,7 @@ plot.spar.cv <- function(x,
       } else {
         tmp_title <- "Fixed given "
       }
-      tmp_df <- subset(my_val_sum,nu==nu)
+      tmp_df <- my_val_sum[my_val_sum$nu==nu, ]
       ind_min <- which.min(tmp_df$Meas)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sdMeas[ind_min]
@@ -602,11 +596,12 @@ print.spar.cv <- function(x, ...) {
   spar_res <- x
   mycoef_best <- coef(spar_res,opt_par = "best")
   mycoef_1se <- coef(spar_res,opt_par = "1se")
+  val_sum <- compute_val_summary(spar_res$val_res)
   cat(sprintf(
   "spar.cv object:\nSmallest CV measure (%s) %.1f reached for nummod=%d, nu=%s leading
   to %d / %d active predictors.\n",
               spar_res$measure,
-              min(spar_res$val_sum$mMeas),mycoef_best$nummod,
+              min(val_sum$mMeas),mycoef_best$nummod,
               formatC(mycoef_best$nu,digits = 2,format = "e"),
               sum(mycoef_best$beta!=0),length(mycoef_best$beta)))
   cat("Summary of those non-zero coefficients:\n")
@@ -620,8 +615,8 @@ print.spar.cv <- function(x, ...) {
               formatC(mycoef_1se$nu,digits = 2,format = "e"),
               sum(mycoef_1se$beta!=0),length(mycoef_1se$beta),
               spar_res$measure,
-              spar_res$val_sum$mMeas[spar_res$val_sum$nummod==mycoef_1se$nummod
-                                     & spar_res$val_sum$nu==mycoef_1se$nu]))
+              val_sum$mMeas[val_sum$nummod==mycoef_1se$nummod
+                                     & val_sum$nu==mycoef_1se$nu]))
   cat("Summary of those non-zero coefficients:\n")
   print(summary(mycoef_1se$beta[mycoef_1se$beta!=0]))
 }

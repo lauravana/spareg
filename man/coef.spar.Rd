@@ -16,10 +16,10 @@
 \item{object}{result of \link{spar} function of class \code{'spar'}.}
 
 \item{nummod}{number of models used to form coefficients; value with minimal
-validation \code{Meas} is used if not provided.}
+validation \code{measure} is used if not provided.}
 
 \item{nu}{threshold level used to form coefficients; value with minimal
-validation \code{Meas} is used if not provided.}
+validation \code{measure} is used if not provided.}
 
 \item{aggregate}{character one of c("mean", "median", "none"). If set to "none"
 the coefficients are not aggregated over the marginal models, otherwise

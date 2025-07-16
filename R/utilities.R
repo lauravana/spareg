@@ -91,3 +91,28 @@ get_val_measure_function <- function(measure, family) {
   )
   return(val.meas)
 }
+
+compute_val_summary <- function(val_res) {
+  # Compute mean and sd separately
+  mMeas <- aggregate(measure ~ nummod + nu + nnu,
+                     val_res[val_res$fold != 0, ],
+                     mean, na.rm = TRUE)
+  sdMeas <- aggregate(measure ~ nummod + nu + nnu,
+                      val_res[val_res$fold != 0, ],
+                      sd, na.rm = TRUE)
+  mNumAct <- aggregate(measure ~ nummod + nu + nnu,
+                       val_res[val_res$fold != 0, ],
+                       mean, na.rm = TRUE)
+
+  # Rename
+  names(mMeas)[4] <- "mMeas"
+  names(sdMeas)[4] <- "sdMeas"
+  names(mNumAct)[4] <- "mNumAct"
+
+  # Merge all
+  val_sum <- Reduce(function(x, y) merge(x, y, by = c("nnu", "nu", "nummod")),
+                    list(mMeas, sdMeas, mNumAct))
+  val_sum <- val_sum[order(val_sum$"nnu", val_sum$"nu", val_sum$"nummod"), ]
+
+  return(val_sum)
+}

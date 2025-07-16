@@ -107,7 +107,7 @@
 #'
 #' @import methods
 #' @importFrom stats median reshape glm.fit coef fitted gaussian predict rnorm quantile
-#'  residuals sd var cor glm
+#'  residuals sd var cor glm aggregate
 #' @importFrom utils head
 #' @importFrom Matrix Matrix solve crossprod tcrossprod rowMeans
 #' @importFrom Rdpack reprompt

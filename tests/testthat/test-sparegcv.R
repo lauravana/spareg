@@ -30,7 +30,7 @@ test_that("Validated nu values are same as the ones for initial SPAR fit", {
   y <- rnorm(10)
   spar_res <- spar.cv(x,y,screencoef = screen_glmnet(),
                       nummods=c(10,15), model = spar_glm())
-  expect_equal(unique(spar_res$val_sum$nu),as.numeric(spar_res$nus))
+  expect_equal(unique(spar_res$val_res$nu),as.numeric(spar_res$nus))
 })
 
 test_that("Validated nummod values are same as the ones for initial SPAR fit", {
@@ -38,7 +38,7 @@ test_that("Validated nummod values are same as the ones for initial SPAR fit", {
   y <- rnorm(10)
   spar_res <- spar.cv(x,y,screencoef = screen_glmnet(),
                       nummods=c(10,15), model = spar_glm())
-  expect_equal(unique(spar_res$val_sum$nummod),as.numeric(spar_res$nummods))
+  expect_equal(unique(spar_res$val_res$nummod),as.numeric(spar_res$nummods))
 })
 
 test_that("Columns with zero sd get coefficient 0", {

@@ -29,7 +29,6 @@ Description: A flexible framework combining
   Parzer et al (2024b) <doi:10.48550/arXiv.2410.00971>.
 License: GPL-3
 Imports: 
-    dplyr,
     Matrix,
     ROCR,
     Rdpack,
