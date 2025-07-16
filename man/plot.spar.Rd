@@ -6,7 +6,7 @@
 \usage{
 \method{plot}{spar}(
   x,
-  plot_type = c("Val_Measure", "Val_numAct", "res-vs-fitted", "coefs"),
+  plot_type = c("val_measure", "val_numactive", "res_vs_fitted", "coefs"),
   plot_along = c("nu", "nummod"),
   nummod = NULL,
   nu = NULL,
@@ -21,20 +21,20 @@
 \arguments{
 \item{x}{result of spar function of class  \code{'spar'}.}
 
-\item{plot_type}{one of  \code{c("Val_Measure", "Val_numAct", "res-vs-fitted", "coefs")}.}
+\item{plot_type}{one of  \code{c("val_measure", "val_numactive", "res_vs_fitted", "coefs")}.}
 
-\item{plot_along}{one of \code{c("nu","nummod")}; ignored when  \code{plot_type = "res-vs-fitted"}.}
+\item{plot_along}{one of \code{c("nu","nummod")}; ignored when  \code{plot_type = "res_vs_fitted"}.}
 
 \item{nummod}{fixed value for number of models when  \code{plot_along = "nu"}
-for  \code{plot_type = "Val_Measure"} or  \code{"Val_numAct"};
-same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.}
+for  \code{plot_type = "val_measure"} or  \code{"val_numactive"};
+same as for \code{\link{predict.spar}} when  \code{plot_type="res_vs_fitted"}.}
 
 \item{nu}{fixed value for \eqn{\nu} when  \code{plot_along="nummod"} for
-\code{plot_type = "Val_Measure"} or  \code{"Val_numAct"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res-vs-fitted"}.}
+\code{plot_type = "val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res_vs_fitted"}.}
 
-\item{xfit}{data used for predictions in  \code{"res-vs-fitted"}.}
+\item{xfit}{data used for predictions in  \code{"res_vs_fitted"}.}
 
-\item{yfit}{data used for predictions in  \code{"res-vs-fitted"}.}
+\item{yfit}{data used for predictions in  \code{"res_vs_fitted"}.}
 
 \item{prange}{optional vector of length 2 for  \code{"coefs"}-plot to give
 the limits of the predictors' plot range; defaults to  \code{c(1, p)}.}
