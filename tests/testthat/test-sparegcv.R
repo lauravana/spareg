@@ -51,6 +51,33 @@ test_that("Columns with zero sd get coefficient 0", {
   expect_equal(unname(sparcoef$beta[c(1,11,111)]),c(0,0,0))
 })
 
+
+test_that("Test get_model() extractor", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar.cv(x, y, nfolds = 2L, seed = 123)
+  a <- get_model(spar_res, "best")
+  b <- get_model(spar_res, "1se")
+  expect_equal(nrow(a$val_res), 3)
+  expect_equal(nrow(b$val_res), 3)
+})
+
+test_that("Test get_measure() extractor", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar.cv(x, y, nfolds = 2L, seed = 123)
+  a <- get_model(spar_res, "best")
+  b <- get_model(spar_res, "1se")
+  expect_equal(nrow(get_measure(a)), 1)
+  expect_equal(nrow(get_measure(b)), 1)
+  expect_equal(get_measure(a)$mean_deviance, 29221.83, tolerance = 1e-5)
+  expect_equal(get_measure(a)$sd_deviance, 2496.486, tolerance = 1e-5)
+  expect_equal(get_measure(a)$mean_numactive, 1383, tolerance = 1e-5)
+  expect_equal(get_measure(b)$mean_deviance, 31582.36, tolerance = 1e-5)
+  expect_equal(get_measure(b)$sd_deviance, 2669.17, tolerance = 1e-5)
+  expect_equal(get_measure(b)$mean_numactive, 958.5, tolerance = 1e-5)
+})
+
 # Tests expecting errors
 
 test_that("Get errors for input x not data.frame or matrix", {
@@ -86,6 +113,7 @@ test_that("Get errors for classification validation measure for non-binomial fam
   y <- example_data$y
   expect_error(spar.cv(x,y,measure = "1-auc",model = spar_glm()))
 })
+
 
 
 

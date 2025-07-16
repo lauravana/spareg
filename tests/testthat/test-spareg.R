@@ -172,6 +172,25 @@ test_that("Test the screen_glm() with poisson family", {
   expect_equal(round(spar_screen_glm$val_res$measure[1], 2), 1431.17)
 })
 
+test_that("Test get_model() extractor", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar(x, y)
+  a <- get_model(spar_res, "best")
+  expect_equal(nrow(a$val_res), 1)
+})
+
+test_that("Test get_measure() extractor", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar(x, y, seed = 123)
+  a <- get_model(spar_res, "best")
+  expect_equal(nrow(get_measure(a)), 1)
+  expect_equal(get_measure(a)$deviance, 17.39507, tolerance = 1e-5)
+  expect_equal(get_measure(a)$numactive, 2000, tolerance = 1e-5)
+})
+
+
 test_that("Get results with parallel option", {
   x <- example_data$x
   y <- example_data$y

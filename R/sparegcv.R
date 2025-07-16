@@ -195,13 +195,13 @@ coef.spar.cv <- function(object,
 
   # best model
   val_sum <- compute_val_summary(object$val_res)
-  best_ind <- which.min(val_sum$mMeas)
+  best_ind <- which.min(val_sum$mean_measure)
   parbest <- val_sum[best_ind,]
 
   # 1se model
-  allowed_ind <- val_sum$mMeas<val_sum$mMeas[best_ind]+
-    val_sum$sdMeas[best_ind]
-  ind_1cv <- which.min(val_sum$mNumAct[allowed_ind])
+  allowed_ind <- val_sum$mean_measure<val_sum$mean_measure[best_ind]+
+    val_sum$sd_measure[best_ind]
+  ind_1cv <- which.min(val_sum$mean_numactive[allowed_ind])
   par1se <- val_sum[allowed_ind,][ind_1cv,]
 
   if (is.null(nummod) & is.null(nu)) {
@@ -220,11 +220,11 @@ coef.spar.cv <- function(object,
     }
     tmp_val_sum <- val_sum[val_sum$nu==nu,]
     if (opt_nunum=="1se") {
-      allowed_ind <- tmp_val_sum$mMeas<tmp_val_sum$mMeas[best_ind]+tmp_val_sum$sdMeas[best_ind]
-      ind_1cv <- which.min(tmp_val_sum$mNumAct[allowed_ind])
+      allowed_ind <- tmp_val_sum$mean_measure<tmp_val_sum$mean_measure[best_ind]+tmp_val_sum$sd_measure[best_ind]
+      ind_1cv <- which.min(tmp_val_sum$mean_numactive[allowed_ind])
       par <- tmp_val_sum[allowed_ind,][ind_1cv,]
     } else {
-      par <- tmp_val_sum[which.min(tmp_val_sum$mMeas),]
+      par <- tmp_val_sum[which.min(tmp_val_sum$mean_measure),]
     }
     nummod <- par$nummod
   } else if (is.null(nu)) {
@@ -233,11 +233,11 @@ coef.spar.cv <- function(object,
     }
     tmp_val_sum <- val_sum[val_sum$nummod==nummod,]
     if (opt_nunum=="1se") {
-      allowed_ind <- tmp_val_sum$mMeas<tmp_val_sum$mMeas[best_ind]+tmp_val_sum$sdMeas[best_ind]
-      ind_1cv <- which.min(tmp_val_sum$mNumAct[allowed_ind])
+      allowed_ind <- tmp_val_sum$mean_measure<tmp_val_sum$mean_measure[best_ind]+tmp_val_sum$sd_measure[best_ind]
+      ind_1cv <- which.min(tmp_val_sum$mean_numactive[allowed_ind])
       par <- tmp_val_sum[allowed_ind,][ind_1cv,]
     } else {
-      par <- tmp_val_sum[which.min(tmp_val_sum$mMeas),]
+      par <- tmp_val_sum[which.min(tmp_val_sum$mean_measure),]
     }
     nu <- par$nu
   } else {
@@ -407,7 +407,7 @@ plot.spar.cv <- function(x,
   opt_par <- match.arg(opt_par)
   mynummod <- nummod
   my_val_sum <- compute_val_summary(spar_res$val_res)
-  colnames(my_val_sum)[match(c("mMeas", "mNumAct"),colnames(my_val_sum))] <- c("Meas", "numactive")
+  colnames(my_val_sum)[match(c("mean_measure", "mean_numactive"),colnames(my_val_sum))] <- c("Meas", "numactive")
 
   if (plot_type=="res_vs_fitted") {
     if (is.null(xfit) | is.null(yfit)) {
@@ -430,7 +430,7 @@ plot.spar.cv <- function(x,
       tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$Meas)
 
-      allowed_ind <- tmp_df$mMeas < (tmp_df$Meas+tmp_df$sdMeas)[ind_min]
+      allowed_ind <- tmp_df$mean_measure < (tmp_df$Meas+tmp_df$sd_measure)[ind_min]
       ind_1se <- which.min(tmp_df$numactive[allowed_ind])
 
       res <- ggplot2::ggplot(data = tmp_df,
@@ -447,17 +447,17 @@ plot.spar.cv <- function(x,
                                             y=tmp_df$Meas[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red") +
         ggplot2::ggtitle(paste0(tmp_title,mynummod)) +
-        ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$Meas-.data$sdMeas,
-                                          ymax=.data$Meas+.data$sdMeas),
+        ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$Meas-.data$sd_measure,
+                                          ymax=.data$Meas+.data$sd_measure),
                              alpha=0.2,linetype=2,show.legend = FALSE) +
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
                             color="red",show.legend = FALSE,
                             data=data.frame(x = c(tmp_df$nnu[ind_min],tmp_df$nnu[tmp_df$nu==nu_1se]),
                                             y = c(tmp_df$Meas[ind_min],tmp_df$Meas[tmp_df$nu==nu_1se])))
       # ggplot2::annotate("segment",x = tmp_df$nnu[ind_min],
-      #                   y = tmp_df$Meas[ind_min] + tmp_df$sdMeas[ind_min],
+      #                   y = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
       #                   xend = tmp_df$nnu[allowed_ind][ind_1se],
-      #                   yend = tmp_df$Meas[ind_min] + tmp_df$sdMeas[ind_min],
+      #                   yend = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
       #                   color=2,linetype=2)
     } else {
       if (is.null(nu)) {
@@ -469,7 +469,7 @@ plot.spar.cv <- function(x,
       tmp_df <- my_val_sum[my_val_sum$nu == nu, ]
       ind_min <- which.min(tmp_df$Meas)
 
-      allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sdMeas[ind_min]
+      allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sd_measure[ind_min]
       ind_1se <- which.min(tmp_df$numactive[allowed_ind])
 
       res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nummod,y=.data$Meas)) +
@@ -479,17 +479,17 @@ plot.spar.cv <- function(x,
         ggplot2::geom_point(data=data.frame(x=tmp_df$nummod[ind_min],y=tmp_df$Meas[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red")+
         ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3)))) +
-        ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$Meas-.data$sdMeas,
-                                          ymax=.data$Meas+.data$sdMeas),
+        ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$Meas-.data$sd_measure,
+                                          ymax=.data$Meas+.data$sd_measure),
                              alpha=0.2,linetype=2,show.legend = FALSE)+
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
                             color="red",show.legend = FALSE,
                             data=data.frame(x = c(tmp_df$nummod[ind_min],tmp_df$nummod[allowed_ind][ind_1se]),
                                             y = c(tmp_df$Meas[ind_min],tmp_df$Meas[allowed_ind][ind_1se]))) +
         ggplot2::annotate("segment",x = tmp_df$nummod[ind_min],
-                          y = tmp_df$Meas[ind_min] + tmp_df$sdMeas[ind_min],
+                          y = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
                           xend = tmp_df$nummod[allowed_ind][ind_1se],
-                          yend = tmp_df$Meas[ind_min] + tmp_df$sdMeas[ind_min],
+                          yend = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
                           color=2,linetype=2)
     }
   } else if (plot_type=="val_numactive") {
@@ -503,7 +503,7 @@ plot.spar.cv <- function(x,
       tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$Meas)
 
-      allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sdMeas[ind_min]
+      allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sd_measure[ind_min]
       ind_1se <- which.min(tmp_df$numactive[allowed_ind])
 
       res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nnu,y=.data$numactive)) +
@@ -529,7 +529,7 @@ plot.spar.cv <- function(x,
       tmp_df <- my_val_sum[my_val_sum$nu==nu, ]
       ind_min <- which.min(tmp_df$Meas)
 
-      allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sdMeas[ind_min]
+      allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sd_measure[ind_min]
       ind_1se <- which.min(tmp_df$numactive[allowed_ind])
 
       res <- ggplot2::ggplot(data = tmp_df,
@@ -602,7 +602,7 @@ print.spar.cv <- function(x, ...) {
       "spar.cv object: \nCV measure (%s) %.1f reached for nummod=%d, nu=%s leading
   to %d / %d active predictors.\n",
       x$measure,
-      min(val_sum$mMeas),mycoef_best$nummod,
+      min(val_sum$mean_measure),mycoef_best$nummod,
       formatC(mycoef_best$nu,digits = 2,format = "e"),
       sum(mycoef_best$beta!=0),length(mycoef_best$beta)))
     cat("Summary of those non-zero coefficients:\n")
@@ -612,7 +612,7 @@ print.spar.cv <- function(x, ...) {
       "spar.cv object:\nSmallest CV measure (%s) %.1f reached for nummod=%d, nu=%s leading
   to %d / %d active predictors.\n",
       x$measure,
-      min(val_sum$mMeas),mycoef_best$nummod,
+      min(val_sum$mean_measure),mycoef_best$nummod,
       formatC(mycoef_best$nu,digits = 2,format = "e"),
       sum(mycoef_best$beta!=0),length(mycoef_best$beta)))
     cat("Summary of those non-zero coefficients:\n")
@@ -626,7 +626,7 @@ print.spar.cv <- function(x, ...) {
       formatC(mycoef_1se$nu,digits = 2,format = "e"),
       sum(mycoef_1se$beta!=0),length(mycoef_1se$beta),
       x$measure,
-      val_sum$mMeas[val_sum$nummod==mycoef_1se$nummod
+      val_sum$mean_measure[val_sum$nummod==mycoef_1se$nummod
                     & val_sum$nu==mycoef_1se$nu]))
     cat("Summary of those non-zero coefficients:\n")
     print(summary(mycoef_1se$beta[mycoef_1se$beta!=0]))

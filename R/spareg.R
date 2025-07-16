@@ -1042,7 +1042,7 @@ get_model <- function(object, opt_par = c("best", "1se")) {
   # best
   if(inherits(object, "spar.cv")) {
     val_table <- compute_val_summary(object$val_res)
-    best_ind <- which.min(val_table$mMeas)
+    best_ind <- which.min(val_table$mean_measure)
   }
   if(inherits(object, "spar")) {
     val_table <- object$val_res
@@ -1054,10 +1054,10 @@ get_model <- function(object, opt_par = c("best", "1se")) {
 
   # 1se model
   if (inherits(object, "spar.cv")) {
-    allowed_ind <- val_table$mMeas <
-      (val_table$mMeas + val_table$sdMeas)[best_ind]
+    allowed_ind <- val_table$mean_measure <
+      (val_table$mean_measure + val_table$sd_measure)[best_ind]
 
-    ind_1cv <- which.min(val_table$mNumAct[allowed_ind])
+    ind_1cv <- which.min(val_table$mean_numactive[allowed_ind])
     par1se <- val_table[allowed_ind,][ind_1cv,]
   }
 
