@@ -172,6 +172,15 @@ test_that("Test the screen_glm() with poisson family", {
   expect_equal(round(spar_screen_glm$val_res$measure[1], 2), 1431.17)
 })
 
+test_that("Test get_intercept() and get_coef() extractor", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar(x, y, seed = 123)
+  cf <- coef(spar_res, opt_par = "best")
+  expect_equal(unname(get_intercept(cf)), 2.484463, tolerance = 1e-5)
+  expect_equal(unname(get_coef(cf)[1]), 0.06769493, tolerance = 1e-5)
+})
+
 test_that("Test get_model() extractor", {
   x <- example_data$x
   y <- example_data$y

@@ -15,6 +15,15 @@ test_that("Coef returns vector of correct length", {
   expect_equal(length(sparcoef$beta),30)
 })
 
+test_that("Test get_intercept() and get_coef() extractor", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar.cv(x, y, nfolds = 2L, seed = 123)
+  cf <- coef(spar_res, opt_par = "best")
+  expect_equal(unname(get_intercept(cf)), 2.544998, tolerance = 1e-5)
+  expect_equal(unname(get_coef(cf)[1]), 0.04608643, tolerance = 1e-5)
+})
+
 test_that("Coef is more sparse for 1se rule", {
   x <- matrix(rnorm(300), ncol = 30)
   y <- rnorm(10)
