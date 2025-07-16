@@ -1136,14 +1136,14 @@ together with further arguments:
 \begin{itemize}
 \item \code{plot\_type} -- one of:
 \begin{itemize}
-\item \code{"Val_Measure"} plots the (cross-)validation \code{measure} for
+\item \code{"val_measure"} plots the (cross-)validation \code{measure} for
 either a grid of \code{nu} values for a fixed number of models \code{nummod} or
 viceversa.
 
 \item \code{"val_numactive"} plots the number of active variables for either a grid
 of \code{nu} values for a fixed number of models \code{nummod} or viceversa.
 
-\item \code{"res-vs-fitted"} produces a residuals-vs-fitted plot. The residuals
+\item \code{"res_vs_fitted"} produces a residuals-vs-fitted plot. The residuals
 are computed as $r_i=y_i- \widehat y_i$, where $\widehat y_i$ is the prediction computed
 on response level.
 
@@ -1153,29 +1153,29 @@ For each predictor, the values of the coefficients are sorted from largest to
 smallest across the marginal models and then represented in the plot using a color scale.
 \end{itemize}
 \item \code{plot_along} -- one of \code{c("nu","nummod")}; for
-\code{plot_type = "Val_Measure"} as well as for
+\code{plot_type = "val_measure"} as well as for
 \code{plot_type = "val_numactive"} it indicates whether the
 values of the cross-validation measure or number of active variables,
 respectively, should be shown for a grid of $\nu$ values while keeping the
 number of models \code{nummod} fixed or viceversa. This argument is ignored when
-\code{plot_type = "res-vs-fitted"} or \code{plot_type = "coefs"}.
+\code{plot_type = "res_vs_fitted"} or \code{plot_type = "coefs"}.
 
 \item \code{nummod} -- fixed value for number of models when
-\code{plot_along = "nu"} for \code{plot_type = "Val_Measure"} or
-\code{"val_numactive"};  if \code{plot_type = "res-vs-fitted"}, it is used
+\code{plot_along = "nu"} for \code{plot_type = "val_measure"} or
+\code{"val_numactive"};  if \code{plot_type = "res_vs_fitted"}, it is used
 in the \code{predict} method, as described above.
 
 \item \code{nu} -- fixed value for  $\nu$ when \code{plot_along = "nummod"}
-for \code{plot_type = "Val_Measure"} or \code{"val_numactive"}; if
-\code{plot_type = "res-vs-fitted"}, it is used in the \code{predict} method,
+for \code{plot_type = "val_measure"} or \code{"val_numactive"}; if
+\code{plot_type = "res_vs_fitted"}, it is used in the \code{predict} method,
 as described above.
 
-\item \code{xfit} -- if \code{plot_type = "res-vs-fitted"}, it is the matrix of
+\item \code{xfit} -- if \code{plot_type = "res_vs_fitted"}, it is the matrix of
 predictors used in computing the fitted values. This argument must be
 provided for the plot of residuals and fitted values, as the `\code{spar}' or
 `\code{spar.cv}' objects do not store the original data.
 
-\item \code{yfit} -- if \code{plot_type = "res-vs-fitted"}, vector of
+\item \code{yfit} -- if \code{plot_type = "res_vs_fitted"}, vector of
 responses used in computing the residuals. This argument must be
 provided for the plot of residuals and fitted values, as the `\code{spar}' or
 `\code{spar.cv}' objects do not store the original data.
@@ -1195,7 +1195,7 @@ shown in Figure~\ref{fig:plot_example}.
 plot(spar_res)
 plot(spar_res, plot_type = "val_numactive")
 plot(spar_res,  plot_type = "coefs")
-plot(spar_res, plot_type = "res-vs-fitted", xfit = example_data$xtest,
+plot(spar_res, plot_type = "res_vs_fitted", xfit = example_data$xtest,
   yfit = example_data$ytest)
 @
 %
@@ -1208,7 +1208,7 @@ p1 <- plot(spar_res)+
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))
 p2 <- plot(spar_res, plot_type = "val_numactive") +
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))
-p4 <- plot(spar_res, plot_type = "res-vs-fitted", xfit = example_data$xtest,
+p4 <- plot(spar_res, plot_type = "res_vs_fitted", xfit = example_data$xtest,
   yfit = example_data$ytest)
 p3 <- plot(spar_res,  plot_type = "coefs")
 p <- ggpubr::ggarrange(p1, p2, p3, p4,
@@ -1223,7 +1223,7 @@ of models $M=5$.
 %
 For class `\code{spar.cv}' there is the extra argument
 \code{opt_par = c("best", "1se")} which is only used for
-\code{plot_type = "res-vs-fitted"} and indicates whether the predictions
+\code{plot_type = "res_vs_fitted"} and indicates whether the predictions
 should be based on coefficients using the best $(\nu, M)$ combination or
 using the combination which delivers the sparsest
 $\beta$ having validation measure within one standard deviation from the minimum.

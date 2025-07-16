@@ -61,11 +61,11 @@
 #' coefs <- coef(spar_res)
 #' pred <- predict(spar_res, example_data$x)
 #' plot(spar_res)
-#' plot(spar_res, plot_type = "Val_Meas", plot_along = "nummod", nu = 0)
-#' plot(spar_res, plot_type = "Val_Meas", plot_along = "nu", nummod = 10)
+#' plot(spar_res, plot_type = "val_measure", plot_along = "nummod", nu = 0)
+#' plot(spar_res, plot_type = "val_measure", plot_along = "nu", nummod = 10)
 #' plot(spar_res, plot_type = "val_numactive",  plot_along = "nummod", nu = 0)
 #' plot(spar_res, plot_type = "val_numactive",  plot_along = "nu", nummod = 10)
-#' plot(spar_res, plot_type = "res-vs-fitted",  xfit = example_data$xtest,
+#' plot(spar_res, plot_type = "res_vs_fitted",  xfit = example_data$xtest,
 #'   yfit = example_data$ytest, opt_par = "1se")
 #' plot(spar_res, "coefs", prange = c(1, 400))
 #' }
@@ -369,21 +369,21 @@ predict.spar.cv <- function(object,
 #' or a plot of the estimated coefficients in each marginal model, sorted by their absolute value.
 #'
 #' @param x result of [spar.cv] function of class  \code{'spar.cv'}.
-#' @param plot_type one of  \code{c("Val_Measure","val_numactive","res-vs-fitted","coefs")}.
-#' @param plot_along one of  \code{c("nu","nummod")}; ignored when  \code{plot_type="res-vs-fitted"}.
+#' @param plot_type one of  \code{c("val_measure","val_numactive","res_vs_fitted","coefs")}.
+#' @param plot_along one of  \code{c("nu","nummod")}; ignored when  \code{plot_type="res_vs_fitted"}.
 #' @param opt_par one of  \code{c("1se","best")}, chooses whether to select the
 #'  best pair of  \code{nus} and  \code{nummods} according to CV measure, or the
 #'  sparsest solution within one sd of that optimal CV measure;
 #' ignored when  \code{nummod} and  \code{nu}, or  \code{coef} are given
 #' @param nummod fixed value for  \code{nummod} when  \code{plot_along="nu"} for
-#'  \code{plot_type="Val_Measure"} or  \code{"val_numactive"};
-#'  same as for \code{\link{predict.spar.cv}} when plot_type="res-vs-fitted".
+#'  \code{plot_type="val_measure"} or  \code{"val_numactive"};
+#'  same as for \code{\link{predict.spar.cv}} when plot_type="res_vs_fitted".
 #' @param nu fixed value for \eqn{\nu} when  \code{plot_along="nummod"}
-#' for  \code{plot_type="Val_Measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar.cv}} when  \code{plot_type="res-vs-fitted"}.
-#' @param xfit data used for predictions in  \code{"res-vs-fitted"}.
-#' @param yfit data used for predictions in  \code{"res-vs-fitted"}.
+#' for  \code{plot_type="val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar.cv}} when  \code{plot_type="res_vs_fitted"}.
+#' @param xfit data used for predictions in  \code{"res_vs_fitted"}.
+#' @param yfit data used for predictions in  \code{"res_vs_fitted"}.
 #' @param opt_par one of  \code{c("best","1se")}, only needed for
-#'  \code{plot_type="res-vs-fitted"} to set type of predictions, see \code{\link{predict.spar.cv}}.
+#'  \code{plot_type="res_vs_fitted"} to set type of predictions, see \code{\link{predict.spar.cv}}.
 #' @param prange optional vector of length 2 for  \code{"coefs"}-plot to give the limits of the predictors' plot range; defaults to  \code{c(1, p)}.
 #' @param coef_order optional index vector of length p for \code{"coefs"}-plot to give the order of the predictors; defaults to  \code{1 : p}.
 #' @param digits number of significant digits to be displayed in the axis; defaults to 2L.
@@ -392,7 +392,7 @@ predict.spar.cv <- function(object,
 #' @import ggplot2
 #' @export
 plot.spar.cv <- function(x,
-                         plot_type = c("Val_Measure","val_numactive","res-vs-fitted","coefs"),
+                         plot_type = c("val_measure","val_numactive","res_vs_fitted","coefs"),
                          plot_along = c("nu","nummod"),
                          nummod = NULL,
                          nu = NULL,
@@ -409,16 +409,16 @@ plot.spar.cv <- function(x,
   my_val_sum <- compute_val_summary(spar_res$val_res)
   colnames(my_val_sum)[match(c("mMeas", "mNumAct"),colnames(my_val_sum))] <- c("Meas", "numactive")
 
-  if (plot_type=="res-vs-fitted") {
+  if (plot_type=="res_vs_fitted") {
     if (is.null(xfit) | is.null(yfit)) {
-      stop("xfit and yfit need to be provided for res-vs-fitted plot!")
+      stop("xfit and yfit need to be provided for res_vs_fitted plot!")
     }
     pred <- predict(spar_res,xfit,opt_par=opt_par,nummod=nummod,nu=nu)
     res <- ggplot2::ggplot(data = data.frame(fitted=pred,residuals=yfit-pred),
                            ggplot2::aes(x=.data$fitted,y=.data$residuals)) +
       ggplot2::geom_point() +
       ggplot2::geom_hline(yintercept = 0,linetype=2,linewidth=0.5)
-  } else if (plot_type=="Val_Measure") {
+  } else if (plot_type=="val_measure") {
     if (plot_along=="nu") {
       if (is.null(nummod)) {
         mynummod <- my_val_sum$nummod[which.min(my_val_sum$Meas)]
