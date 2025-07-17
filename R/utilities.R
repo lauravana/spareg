@@ -61,28 +61,43 @@ check_and_set_args <- function(args, x, y, family, model, screencoef, rp,  measu
 
 get_val_measure_function <- function(measure, family) {
   val.meas <- switch(measure,
-                     "deviance" = function(yval, eta_hat) {
-                       sum(family$dev.resids(yval, family$linkinv(eta_hat), 1))
+                     "deviance" = function(yval, eta_hat = NULL, y_hat = NULL) {
+                       if (is.null(y_hat)) {
+                         y_hat <- family$linkinv(eta_hat)
+                       }
+                       sum(family$dev.resids(yval, y_hat, 1))
                      },
-                     "mse" = function(yval, eta_hat) {
-                       mean((yval - family$linkinv(eta_hat))^2)
+                     "mse" = function(yval, eta_hat = NULL, y_hat = NULL) {
+                       if (is.null(y_hat)) {
+                         y_hat <- family$linkinv(eta_hat)
+                       }
+                       mean((yval - y_hat)^2)
                      },
-                     "mae" = function(yval, eta_hat) {
-                       mean(abs(yval - family$linkinv(eta_hat)))
+                     "mae" = function(yval, eta_hat = NULL, y_hat = NULL) {
+                       if (is.null(y_hat)) {
+                         y_hat <- family$linkinv(eta_hat)
+                       }
+                       mean(abs(yval - y_hat))
                      },
                      "class" = {
                        stopifnot(family$family == "binomial")
-                       function(yval, eta_hat) {
-                         mean(yval != round(family$linkinv(eta_hat)))
+                       function(yval, eta_hat = NULL, y_hat = NULL) {
+                         if (is.null(y_hat)) {
+                           y_hat <- family$linkinv(eta_hat)
+                         }
+                         mean(yval != round(y_hat))
                        }
                      },
                      "1-auc" = {
                        stopifnot(family$family == "binomial")
-                       function(yval, eta_hat) {
+                       function(yval, eta_hat = NULL, y_hat = NULL) {
                          if (var(yval) == 0) {
                            NA
                          } else {
-                           phat <- prediction(family$linkinv(eta_hat), yval)
+                           if (is.null(y_hat)) {
+                             y_hat <- family$linkinv(eta_hat)
+                           }
+                           phat <- prediction(y_hat, yval)
                            1 - performance(phat, measure = "auc")@y.values[[1]]
                          }
                        }

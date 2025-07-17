@@ -1,4 +1,4 @@
-# spareg 1.0.1
+# spareg 1.1.0
 
 * Enhance `print` method with type of measure being used for choosing $M$ and $\nu$
 * Allow for cases where $p < n$.
@@ -15,6 +15,8 @@ the `coef` method.
 * Added extractor functions `get_intercept()` and `get_coef()`
 to extract the intercept and coefficients (non-standardized) from the 
 `coefspar` objects.
+* Added `avg_type` i.e., type of averaging the marginal models to `spar()`. This
+argument is used in computing the validation measure.
 
 # spareg 1.0.0
 

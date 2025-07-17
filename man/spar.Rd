@@ -18,6 +18,7 @@ spar(
   nus = NULL,
   nummods = c(20),
   measure = c("deviance", "mse", "mae", "class", "1-auc"),
+  avg_type = c("link", "response"),
   parallel = FALSE,
   inds = NULL,
   RPMs = NULL,
@@ -38,6 +39,7 @@ spareg(
   nus = NULL,
   nummods = c(20),
   measure = c("deviance", "mse", "mae", "class", "1-auc"),
+  avg_type = c("link", "response"),
   parallel = FALSE,
   inds = NULL,
   RPMs = NULL,
@@ -86,6 +88,9 @@ available for all families. Other options are \code{"mse"} or \code{"mae"}
 \code{"class"} (misclassification error) and
 \code{"1-auc"} (one minus area under the ROC curve) both just for
 binomial family.}
+
+\item{avg_type}{type of averaging the marginal models; either on link (default)
+or on response level. This is used in computing the validation measure.}
 
 \item{parallel}{assuming a parallel backend is loaded and available, a
 logical indicating whether the function should use it in parallelizing the

@@ -40,6 +40,8 @@
 #'         \code{"class"} (misclassification error) and
 #'         \code{"1-auc"} (one minus area under the ROC curve) both just for
 #'         binomial family.
+#' @param avg_type type of averaging the marginal models; either on link (default)
+#'        or on response level. This is used in computing the validation measure.
 #' @param parallel assuming a parallel backend is loaded and available, a
 #'        logical indicating whether the function should use it in parallelizing the
 #'        estimation of the marginal models. Defaults to FALSE.
@@ -64,12 +66,15 @@
 #'   and number of active variables) for each element of \code{nus} and \code{nummods}
 #'  \item \code{val_set} logical flag, whether validation data were provided;
 #'  if \code{FALSE}, training data were used for validation
+#'  \item \code{family}  a \link[stats]{family}  object used for the marginal generalized linear model
 #'  \item \code{nus} vector of \eqn{\nu}'s considered for thresholding
 #'  \item \code{nummods} vector of numbers of marginal models considered for validation
 #'  \item \code{ycenter} empirical mean of initial response vector
 #'  \item \code{yscale} empirical standard deviation of initial response vector
 #'  \item \code{xcenter} p-vector of empirical means of initial predictor variables
 #'  \item \code{xscale} p-vector of empirical standard deviations of initial predictor variables
+#'  \item \code{avg_type} character, averaging type for computing the validation measure
+#'  \item \code{measure} character, type of validation measure used
 #'  \item \code{rp} an object of class \code{"randomprojection"}
 #'  \item \code{screencoef} an object of class \code{"screeningcoef"}
 #' }
@@ -109,7 +114,7 @@
 #' @importFrom stats median reshape glm.fit coef fitted gaussian predict rnorm quantile
 #'  residuals sd var cor glm aggregate
 #' @importFrom utils head
-#' @importFrom Matrix Matrix solve crossprod tcrossprod rowMeans
+#' @importFrom Matrix Matrix solve crossprod tcrossprod rowMeans rowSums
 #' @importFrom Rdpack reprompt
 #' @importFrom rlang list2
 #' @importFrom glmnet glmnet
@@ -118,6 +123,7 @@
 spar <- function(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
                  screencoef = NULL, xval = NULL, yval = NULL, nnu = 20, nus = NULL,
                  nummods = c(20), measure = c("deviance","mse","mae","class","1-auc"),
+                 avg_type = c("link", "response"),
                  parallel = FALSE, inds = NULL, RPMs = NULL, seed = NULL, ...) {
   # Set up and checks ----
   measure <- match.arg(measure)
@@ -129,6 +135,7 @@ spar <- function(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
                                  screencoef, rp,  measure)
   model <- arg_list$model; rp <- arg_list$rp
   screencoef <- arg_list$screencoef; measure <- arg_list$measure
+  avg_type <- match.arg(avg_type)
 
   # Call SPAR algorithm ----
   res <- spar_algorithm(x = x, y = y,
@@ -138,6 +145,7 @@ spar <- function(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
                         nnu = nnu, nus = nus,
                         nummods = nummods,
                         measure = measure,
+                        avg_type = avg_type,
                         inds = inds, RPMs = RPMs,
                         parallel = parallel,
                         seed = seed)
@@ -159,6 +167,7 @@ spar_algorithm <- function(x, y,
                            xval = NULL, yval = NULL,
                            nnu, nus,
                            nummods, measure,
+                           avg_type,
                            inds = NULL, RPMs = NULL,
                            parallel = FALSE,
                            seed = NULL){
@@ -398,9 +407,9 @@ spar_algorithm <- function(x, y,
     nnu <- length(nus)
   }
 
-  ## Validation set
+  ## Validation set ----
   val_res <- data.frame(nnu = NULL, nu = NULL,
-                        nummod = NULL,numactive = NULL, measure = NULL)
+                        nummod = NULL, numactive = NULL, measure = NULL)
   if (!is.null(yval) && !is.null(xval)) {
     val_set <- TRUE
   } else {
@@ -412,26 +421,33 @@ spar_algorithm <- function(x, y,
   val.meas <- get_val_measure_function(measure, family)
 
   tabnummodres <- lapply(nummods,  function(nummod) {
-    coef <- betas_std[,seq_len(nummod),drop=FALSE]
-    abscoef <- abs(coef)
+    coefs <- betas_std[,seq_len(nummod), drop=FALSE]
     tabres <- lapply(seq_len(nnu), function(l){
       thresh <- nus[l]
-      tmp_coef <- coef
-      tmp_coef[abscoef<thresh] <- 0
-
-      avg_coef <- rowMeans(tmp_coef)
-      tmp_beta <- numeric(p)
-      tmp_beta[xscale>0] <- yscale*avg_coef/(xscale[xscale>0])
-      tmp_intercept <- mean(intercepts[seq_len(nummod)]) +
-        drop(ycenter - sum(xcenter*tmp_beta) )
-      eta_hat <- (xval %*% tmp_beta) + tmp_intercept
-
-      c(nnu = l,
-        nu = unname(thresh),
-        nummod = nummod,
-        measure = val.meas(yval,eta_hat),
-        numactive = sum(tmp_beta!=0)
-      )
+      tmp_coef <- coefs
+      tmp_coef[abs(tmp_coef) < thresh] <- 0
+      if (avg_type == "link") {
+        avg_coef <- rowMeans(tmp_coef)
+        tmp_beta <- numeric(p)
+        tmp_beta[xscale > 0] <- yscale * avg_coef/(xscale[xscale > 0])
+        tmp_intercept <- mean(intercepts[seq_len(nummod)]) +
+          drop(ycenter - sum(xcenter * tmp_beta))
+        eta_hat <- (xval %*% tmp_beta) + tmp_intercept
+        val_measure <- val.meas(yval, eta_hat = eta_hat)
+        numactive <- sum(tmp_beta!=0)
+      } else {
+        tmp_beta <- Matrix(0, nrow = p, ncol = nummod)
+        tmp_beta[xscale > 0, ] <- yscale * tmp_coef/(xscale[xscale > 0])
+        tmp_intercept <- intercepts[seq_len(nummod)] +
+          drop(ycenter - crossprod(xcenter, tmp_beta))
+        eta_hat <- sweep((xval %*% tmp_beta), tmp_intercept,
+                         MARGIN = 2, FUN = "+")
+        y_hat <- rowMeans(family$linkinv(as.matrix(eta_hat)))
+        val_measure <- val.meas(yval, y_hat = y_hat)
+        numactive <- sum(rowSums(tmp_beta != 0) > 0)
+      }
+      c(nnu = l, nu = unname(thresh), nummod = nummod,
+        measure = val_measure, numactive = numactive)
     })
     out <- do.call("rbind", tabres)
     colnames(out) <- c("nnu","nu","nummod","measure", "numactive")
@@ -456,6 +472,7 @@ spar_algorithm <- function(x, y,
               xcenter = xcenter, xscale = xscale,
               family = family_str,
               measure = measure,
+              avg_type = avg_type,
               rp = rp,
               screencoef = screencoef,
               model = model
@@ -520,7 +537,7 @@ coef.spar <- function(object,
   }
 
   if (nummod > ncol(object$betas)) {
-    warning("Number of models is too high, maximum of fitted is used instead!")
+    warning("Number of models is too high, maximum of number of models use to fit the models is used instead!")
     nummod <- ncol(object$betas)
   }
 
@@ -546,7 +563,7 @@ coef.spar <- function(object,
     beta <- numeric(p)
     beta_std <- apply(final_coef, 1, avg_fun)
     beta[object$xscale>0] <- object$yscale * beta_std/(object$xscale[object$xscale>0])
-    names(beta) <- rownames(final_coef)
+    names(beta) <- rownames(object$betas)
     intercept <- object$ycenter + avg_fun(object$intercepts[seq_len(nummod)]) - sum(object$xcenter*beta)
     names(intercept) <- "(Intercept)"
   }
@@ -743,12 +760,21 @@ summary.coefspar <- function(object, digits = 4L, ...) {
 #' @export
 
 predict.spar <- function(object,
-                         xnew,
-                         type = c("response","link"),
-                         avg_type = c("link","response"),
-                         nummod = NULL,
-                         nu = NULL,
+                         xnew = NULL,
+                         type     = c("response", "link"), # OK
+                         avg_type = c("link","response"), # OK
+                         nummod   = NULL,
+                         nu       = NULL,
                          coef = NULL, ...) {
+  ## TODO: IF we give predict(res), we need to save the fitted values, otherwise
+  ## we cannot predict in sample. But what if we do not want to average the beta?
+  ## fitted values for each (nu, M) combination
+  ## predict(res)
+  ## predict(res, xnew) -> if res is only for one (nu, M) combination, then
+  ## return predictions
+  if (is.null(xnew)) {
+    stop("No 'xnew' provided. This 'spar' object does not retain training data. ",
+         "Please provide xnew explicitly.")  }
   if (ncol(xnew)!=length(object$xscale)) {
     stop("xnew must have same number of columns as initial x!")
   }

@@ -6,7 +6,7 @@
 \usage{
 \method{predict}{spar}(
   object,
-  xnew,
+  xnew = NULL,
   type = c("response", "link"),
   avg_type = c("link", "response"),
   nummod = NULL,

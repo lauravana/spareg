@@ -92,7 +92,7 @@ test_that("Columns with zero sd get ceofficient 0", {
   y <- example_data$y
   spar_res <- spar(x,y)
   sparcoef <- coef(spar_res)
-  expect_equal(sparcoef$beta[c(1,11,111)],c("V1"=0,"V11"=0,"V111"=0))
+  expect_equal(sparcoef$beta[c(1, 11, 111)], c("V1" = 0,"V11" = 0,"V111" = 0))
 })
 
 test_that("Thresholding can be avoided ", {
@@ -199,6 +199,23 @@ test_that("Test get_measure() extractor", {
   expect_equal(get_measure(a)$numactive, 2000, tolerance = 1e-5)
 })
 
+test_that("Test avg_type for validation", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar(x, y, nus = 0, seed = 123)
+  spar_res2 <- spar(x, y,nus = 0,  avg_type = "response", seed = 123)
+  spar_res3 <- spar(x, abs(round(y)), family = poisson(),
+                    nus = 0, seed = 123)
+  spar_res4 <- spar(x, abs(round(y)), family = poisson(),
+                    nus = 0,  avg_type = "response", seed = 123)
+  spar_res5 <- spar(x, as.numeric(y > 0), family = binomial(),
+                    nus = 0, seed = 123)
+  spar_res6 <- spar(x, as.numeric(y > 0), family = binomial(),
+                    nus = 0,  avg_type = "response", seed = 123)
+  expect_equal(spar_res$val_res$measure, spar_res2$val_res$measure)
+  expect_lt(spar_res3$val_res$measure, spar_res4$val_res$measure)
+  expect_lt(spar_res5$val_res$measure, spar_res6$val_res$measure)
+})
 
 test_that("Get results with parallel option", {
   x <- example_data$x
