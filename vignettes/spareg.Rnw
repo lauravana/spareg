@@ -215,7 +215,7 @@ GLM estimation on the projected predictors (both classical and penalized)
 Since the recent integration of the \proglang{H2O} machine learning models
 \citep{h2o} in \proglang{Stata} \citep{Stata}, it is also possible to build
 ensembles of
-machine learning models (including GLMs) via stacking, boosting or bagging \proglang{Stata}, but random subspace sampling or similar approaches to
+machine learning models (including GLMs) via stacking, boosting or bagging \proglang{Stata}, but random subspace methods or similar approaches to
 dimensionality reduction are not implemented at the time of writing.
 
 %
