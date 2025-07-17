@@ -190,7 +190,7 @@ While, to the best of our knowledge, \pkg{spareg} offers the first implementatio
 described algorithm and no
 other package offers the same functionality for GLMs,
 few other \proglang{R} packages
-focus on building ensembles where the  dimensionality of the predictors is reduced.
+focus on building ensembles where the dimensionality of the predictors is reduced.
 Most notably, package \pkg{RPEnsemble}  \citep{RPEnsembleR}
 implements the procedure in \cite{cannings2017random}, where
 ``carefully-selected'' random projections are used for projecting the predictors
@@ -200,6 +200,23 @@ On the other hand, package \pkg{RaSEn} \citep{pkg:RaSEn} implements an
 algorithm for ensemble classification and regression problems, where random
 subspaces are generated and the optimal one is chosen to train a weak learner
 on the basis of some criterion.
+Similarly, package \pkg{randomGLM} \citep{pkg:randomGLM} implements
+an ensemble predictor based on bootstrap aggregation (bagging) of GLMs
+whose covariates are first randomly selected and then further reduced
+using forward regression according to AIC criterion.
+For \proglang{Python} \citep{Python}, a similar workflow could be set up
+by building ensembles using the
+package \pkg{pycobra} \citep{pkg:pycobra} by integrating \pkg{scikit-learn}
+models \citep{pedregosa2011scikit}. Random projection tools
+are implemented in \pkg{sklearn.random\_projection} while
+GLM estimation on the projected predictors (both classical and penalized)
+ can be done using
+\pkg{sklearn.linear\_model} module.
+Since the recent integration of the \proglang{H2O} machine learning models
+\citep{h2o} in \proglang{Stata} \citep{Stata}, it is also possible to build
+ensembles of
+machine learning models (including GLMs) via stacking, boosting or bagging \proglang{Stata}, but random subspace sampling or similar approaches to
+dimensionality reduction are not implemented at the time of writing.
 
 %
 The rest of the paper is organized as follows:
