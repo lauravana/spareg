@@ -71,6 +71,7 @@ test_that("Test get_model() extractor", {
   expect_equal(nrow(b$val_res), 3)
 })
 
+
 test_that("Test get_measure() extractor", {
   x <- example_data$x
   y <- example_data$y
@@ -85,6 +86,21 @@ test_that("Test get_measure() extractor", {
   expect_equal(get_measure(b)$mean_deviance, 31582.36, tolerance = 1e-5)
   expect_equal(get_measure(b)$sd_deviance, 2669.17, tolerance = 1e-5)
   expect_equal(get_measure(b)$mean_numactive, 958.5, tolerance = 1e-5)
+})
+
+test_that("Test predictions", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar.cv(x,y, nfolds = 3L, model = spar_glm())
+  xnew <- example_data$xtest
+  pred  <- predict(spar_res,xnew = xnew)
+  pred2 <- predict(spar_res,xnew = xnew, opt_par = "best")
+  pred3 <- predict(spar_res, xnew = xnew, opt_par = "1se")
+  pred4 <- predict(spar_res, xnew = xnew, opt_par = "1se", avg_type = "link")
+  expect_equal(length(pred), nrow(xnew))
+  expect_equal(pred[1], pred2[1], tolerance = 1e-5)
+  expect_equal(pred3[1], pred4[1], tolerance = 1e-5)
+  expect_lt(pred3[1], pred2[1])
 })
 
 # Tests expecting errors

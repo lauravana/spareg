@@ -11,7 +11,7 @@
   avg_type = c("link", "response"),
   nummod = NULL,
   nu = NULL,
-  coef = NULL,
+  aggregate = c("mean", "median"),
   ...
 )
 }
@@ -28,9 +28,9 @@
 
 \item{nu}{threshold level used to form coefficients; value with minimal validation measure is used if not provided.}
 
-\item{coef}{optional; result of \link{coef.spar} can be used.}
-
 \item{...}{further arguments passed to or from other methods}
+
+\item{coef}{optional; result of \link{coef.spar} can be used.}
 }
 \value{
 Vector of predictions

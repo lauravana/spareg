@@ -6,13 +6,13 @@
 \usage{
 \method{predict}{spar.cv}(
   object,
-  xnew,
+  xnew = NULL,
   type = c("response", "link"),
   avg_type = c("link", "response"),
   opt_par = c("best", "1se"),
   nummod = NULL,
   nu = NULL,
-  coefs = NULL,
+  aggregate = c("mean", "median"),
   ...
 )
 }
@@ -35,8 +35,6 @@ minimal validation  \code{Meas} is used if not provided.}
 
 \item{nu}{threshold level used to form coefficients; value with minimal
 validation  \code{Meas} is used if not provided.}
-
-\item{coefs}{optional; result of \code{\link{coef.spar.cv}} can be used.}
 
 \item{...}{further arguments passed to or from other methods}
 }

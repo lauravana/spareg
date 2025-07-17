@@ -47,13 +47,23 @@ test_that("Returned coef and preds are correct for fixed screening and projectio
                    nummods=c(2),
                    inds = list(1:(2*nrow(x)),
                                500+1:(2*nrow(x))),
-                   RPMs = list(RP1,RP2))
+                   RPMs = list(RP1,RP2),seed=123)
   sparcoef <- coef(spar_res)
   pred     <- predict(spar_res,xnew=xnew)
+  pred_median   <- predict(spar_res,xnew=xnew, aggregate = "median")
+  pred2     <- predict(spar_res,xnew=xnew, nu=0.004406174,nummod=2)
+  pred3     <- predict(spar_res,xnew=xnew, nu=0.004406174,nummod=2, avg_type = "response")
+  pred4     <- predict(spar_res,xnew=xnew, nu=0.004406174,nummod=2, type = "link")
+
+  expect_error(predict(spar_res))
   expect_equal(sparcoef$nu,0.002285171,tolerance = 1e-6)
   expect_equal(sparcoef$beta[53],c("V53"=0))
   expect_equal(sparcoef$beta[1],c("V1"=0.125971), tolerance = 1e-6)
   expect_equal(pred[1],20.44922,tolerance = 1e-5)
+  expect_equal(pred2[1],20.6775893,tolerance = 1e-5)
+  expect_equal(pred2[1],pred3[1],tolerance = 1e-5)
+  expect_equal(pred2[1],pred4[1],tolerance = 1e-5)
+  expect_equal(pred_median[1],pred[1],tolerance = 1e-5) ## as we have 2 models only
 })
 
 test_that("Returned coef and preds are correct for fixed screening and projections for binomial(logit)", {
@@ -73,10 +83,10 @@ test_that("Returned coef and preds are correct for fixed screening and projectio
   RP2@i <- as.integer(c(rep(m:1,each=nsc%/%m),rep(1,nsc%%m))-1)
   RP2@p <- 0:nsc
   RP2@x <- (-1)^(1:nsc)
-
   spar_res <- spar(x,y,nummods=c(2),
                    inds = list(1:(2*nrow(x)),500+1:(2*nrow(x))),
-                   RPMs = list(RP1,RP2),family = binomial(logit))
+                   RPMs = list(RP1,RP2),family = binomial(logit),
+                   seed = 123)
   sparcoef <- coef(spar_res)
   pred <- predict(spar_res,xnew=xnew)
   expect_equal(sparcoef$nu,0.009850679 ,tolerance = 1e-6)
@@ -213,8 +223,11 @@ test_that("Test avg_type for validation", {
   spar_res6 <- spar(x, as.numeric(y > 0), family = binomial(),
                     nus = 0,  avg_type = "response", seed = 123)
   expect_equal(spar_res$val_res$measure, spar_res2$val_res$measure)
+  expect_equal(spar_res$val_res$numactive, spar_res2$val_res$numactive)
   expect_lt(spar_res3$val_res$measure, spar_res4$val_res$measure)
   expect_lt(spar_res5$val_res$measure, spar_res6$val_res$measure)
+  expect_warning(predict(spar_res5, xnew=example_data$xtest,
+                      avg_type = "response"))
 })
 
 test_that("Get results with parallel option", {

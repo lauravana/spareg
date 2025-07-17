@@ -122,14 +122,21 @@ standardized coefficients from each marginal model
 and number of active variables) for each element of \code{nus} and \code{nummods}
 \item \code{val_set} logical flag, whether validation data were provided;
 if \code{FALSE}, training data were used for validation
+\item \code{family}  a character corresponding to \link[stats]{family}  object used for the marginal generalized linear model e.g.,
+\code{"gaussian(identity)"}
 \item \code{nus} vector of \eqn{\nu}'s considered for thresholding
 \item \code{nummods} vector of numbers of marginal models considered for validation
 \item \code{ycenter} empirical mean of initial response vector
 \item \code{yscale} empirical standard deviation of initial response vector
 \item \code{xcenter} p-vector of empirical means of initial predictor variables
 \item \code{xscale} p-vector of empirical standard deviations of initial predictor variables
+\item \code{avg_type} character, averaging type for computing the validation measure
+\item \code{measure} character, type of validation measure used
 \item \code{rp} an object of class \code{"randomprojection"}
 \item \code{screencoef} an object of class \code{"screeningcoef"}
+\item \code{x_rows_for_fitting_marginal_models} vector of row indicators from
+\code{x} which were used for fitting the marginal models, if screening was performed
+using \code{screencoef} with \code{split_data_prop} argument. Is \code{NULL} otherwise.
 }
 If a parallel backend is registered and \code{parallel = TRUE},
 the \link[foreach]{foreach} function

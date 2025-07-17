@@ -17,6 +17,8 @@ to extract the intercept and coefficients (non-standardized) from the
 `coefspar` objects.
 * Added `avg_type` i.e., type of averaging the marginal models to `spar()`. This
 argument is used in computing the validation measure.
+* Removed `coef` argument from `predict` method.
+* Added `aggregate = c("mean", "median")` argument for `predict` method.
 
 # spareg 1.0.0
 

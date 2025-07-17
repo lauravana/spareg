@@ -66,7 +66,8 @@
 #'   and number of active variables) for each element of \code{nus} and \code{nummods}
 #'  \item \code{val_set} logical flag, whether validation data were provided;
 #'  if \code{FALSE}, training data were used for validation
-#'  \item \code{family}  a \link[stats]{family}  object used for the marginal generalized linear model
+#'  \item \code{family}  a character corresponding to \link[stats]{family}  object used for the marginal generalized linear model e.g.,
+#'  \code{"gaussian(identity)"}
 #'  \item \code{nus} vector of \eqn{\nu}'s considered for thresholding
 #'  \item \code{nummods} vector of numbers of marginal models considered for validation
 #'  \item \code{ycenter} empirical mean of initial response vector
@@ -77,6 +78,9 @@
 #'  \item \code{measure} character, type of validation measure used
 #'  \item \code{rp} an object of class \code{"randomprojection"}
 #'  \item \code{screencoef} an object of class \code{"screeningcoef"}
+#'  \item \code{x_rows_for_fitting_marginal_models} vector of row indicators from
+#'  \code{x} which were used for fitting the marginal models, if screening was performed
+#'  using \code{screencoef} with \code{split_data_prop} argument. Is \code{NULL} otherwise.
 #' }
 #' If a parallel backend is registered and \code{parallel = TRUE},
 #' the \link[foreach]{foreach} function
@@ -420,41 +424,35 @@ spar_algorithm <- function(x, y,
 
   val.meas <- get_val_measure_function(measure, family)
 
+  ## Fitted values ----
   tabnummodres <- lapply(nummods,  function(nummod) {
-    coefs <- betas_std[,seq_len(nummod), drop=FALSE]
     tabres <- lapply(seq_len(nnu), function(l){
       thresh <- nus[l]
-      tmp_coef <- coefs
+      tmp_coef <- betas_std[, seq_len(nummod), drop = FALSE]
       tmp_coef[abs(tmp_coef) < thresh] <- 0
+      tmp_beta <- Matrix(0, nrow = p, ncol = nummod)
+      tmp_beta[xscale > 0, ] <- yscale * tmp_coef/(xscale[xscale > 0])
+      tmp_intercept <- intercepts[seq_len(nummod)] +
+        drop(ycenter - crossprod(xcenter, tmp_beta))
+      eta_hat <- sweep((xval %*% tmp_beta), tmp_intercept,
+                       MARGIN = 2, FUN = "+")
       if (avg_type == "link") {
-        avg_coef <- rowMeans(tmp_coef)
-        tmp_beta <- numeric(p)
-        tmp_beta[xscale > 0] <- yscale * avg_coef/(xscale[xscale > 0])
-        tmp_intercept <- mean(intercepts[seq_len(nummod)]) +
-          drop(ycenter - sum(xcenter * tmp_beta))
-        eta_hat <- (xval %*% tmp_beta) + tmp_intercept
-        val_measure <- val.meas(yval, eta_hat = eta_hat)
-        numactive <- sum(tmp_beta!=0)
+        val_measure <- val.meas(yval, eta_hat = rowMeans(eta_hat))
+        numactive <- sum(rowMeans(tmp_beta)!=0)
       } else {
-        tmp_beta <- Matrix(0, nrow = p, ncol = nummod)
-        tmp_beta[xscale > 0, ] <- yscale * tmp_coef/(xscale[xscale > 0])
-        tmp_intercept <- intercepts[seq_len(nummod)] +
-          drop(ycenter - crossprod(xcenter, tmp_beta))
-        eta_hat <- sweep((xval %*% tmp_beta), tmp_intercept,
-                         MARGIN = 2, FUN = "+")
         y_hat <- rowMeans(family$linkinv(as.matrix(eta_hat)))
         val_measure <- val.meas(yval, y_hat = y_hat)
         numactive <- sum(rowSums(tmp_beta != 0) > 0)
       }
-      c(nnu = l, nu = unname(thresh), nummod = nummod,
-        measure = val_measure, numactive = numactive)
+      list(tab = c(nnu = l, nu = unname(nus[l]), nummod = nummod,
+                   measure = val_measure, numactive = numactive))
     })
-    out <- do.call("rbind", tabres)
+    out <- do.call("rbind", lapply(tabres, "[[", 1))
     colnames(out) <- c("nnu","nu","nummod","measure", "numactive")
     out
   })
   val_res <- do.call("rbind.data.frame", tabnummodres)
-  betas <- Matrix(data=c(0),p,max_num_mod,sparse = TRUE)
+  betas <- Matrix(0, p, max_num_mod, sparse = TRUE)
   betas[xscale>0,] <- betas_std
   if (is.null(colnames(x))) {
     rownames(betas) <- paste0("V", seq_len(ncol(x)))
@@ -475,7 +473,9 @@ spar_algorithm <- function(x, y,
               avg_type = avg_type,
               rp = rp,
               screencoef = screencoef,
-              model = model
+              model = model,
+              x_rows_for_fitting_marginal_models =
+                if (!is.null(attr(screencoef, "split_data_prop"))) mar_inds else NULL
   )
 
   attr(res,"class") <- "spar"
@@ -758,14 +758,14 @@ summary.coefspar <- function(object, digits = 4L, ...) {
 #' @param ... further arguments passed to or from other methods
 #' @return Vector of predictions
 #' @export
-
 predict.spar <- function(object,
                          xnew = NULL,
-                         type     = c("response", "link"), # OK
-                         avg_type = c("link","response"), # OK
+                         type     = c("response", "link"),
+                         avg_type = c("link","response"),
                          nummod   = NULL,
                          nu       = NULL,
-                         coef = NULL, ...) {
+                         aggregate = c("mean", "median"),
+                         ...) {
   ## TODO: IF we give predict(res), we need to save the fitted values, otherwise
   ## we cannot predict in sample. But what if we do not want to average the beta?
   ## fitted values for each (nu, M) combination
@@ -773,41 +773,41 @@ predict.spar <- function(object,
   ## predict(res, xnew) -> if res is only for one (nu, M) combination, then
   ## return predictions
   if (is.null(xnew)) {
-    stop("No 'xnew' provided. This 'spar' object does not retain training data. ",
-         "Please provide xnew explicitly.")  }
-  if (ncol(xnew)!=length(object$xscale)) {
+    stop("No 'xnew' provided. This 'spar' object does not retain training data.",
+         "Please provide xnew explicitly.",
+         "If you want to predict in-sample, use the original data used for fitting the model as xnew.\n")
+  }
+
+  if (ncol(xnew) != length(object$xscale)) {
     stop("xnew must have same number of columns as initial x!")
   }
   type <- match.arg(type)
   avg_type <- match.arg(avg_type)
-  if (is.null(coef)) {
-    coef <- coef(object,nummod,nu)
-  }
+  aggregate <- match.arg(aggregate)
   object$family <- eval(parse(text = object$family))
-  if (avg_type=="link") {
-    if (type=="link") {
-      res <- as.numeric(xnew%*%coef$beta + coef$intercept)
-    } else {
-      eta <- as.numeric(xnew%*%coef$beta + coef$intercept)
-      res <- object$family$linkinv(eta)
-    }
-  } else {
-    if (type=="link") {
-      res <- as.numeric(xnew%*%coef$beta + coef$intercept)
-    } else {
-      # do diff averaging
-      final_coef <- object$betas[object$xscale>0,1:coef$nummod,drop=FALSE]
-      final_coef[abs(final_coef)<coef$nu] <- 0
 
-      preds <- sapply(1:coef$nummod,function(j){
-        tmp_coef <- final_coef[,j]
-        beta <- numeric(length(object$xscale))
-        beta[object$xscale>0] <- object$yscale*tmp_coef/(object$xscale[object$xscale>0])
-        intercept <- object$ycenter + object$intercepts[j]  - sum(object$xcenter*beta)
-        eta <- as.numeric(xnew%*%beta + coef$intercept)
-        object$family$linkinv(eta)
-      })
-      res <- rowMeans(preds)
+  if (avg_type != object$avg_type && object$family$link != "identity") {
+    warning("The best model combination was selected for ",
+            paste0(object$avg_type, " averaging, but avg_type = ", avg_type,
+                   " is used for prediction. This may lead to suboptimal results."))
+  }
+
+  coefs_avg <- coef(object, nummod, nu, aggregate = aggregate)
+  eta <- as.numeric(xnew %*% coefs_avg$beta + coefs_avg$intercept)
+  if (avg_type == "link") {
+    res <- ifelse(type == "link",  eta, object$family$linkinv(eta))
+  } else {
+    if (type == "link") {
+      res <- eta
+    } else {
+      avg_fun <- switch(aggregate,
+                        "mean" = function(x) mean(x, na.rm = TRUE),
+                        "median" = function(x) median(x, na.rm = TRUE),
+                        "Aggregration method not implemented.")
+      coefs_all <- coef(object, nummod, nu, aggregate = "none")
+      eta_all <- sweep(xnew %*% coefs_all$beta, coefs_all$intercept, MARGIN = 2, FUN = "+")
+      preds <- object$family$linkinv(eta_all)
+      res <- apply(preds, 1, avg_fun)
     }
   }
   return(res)

@@ -49,7 +49,8 @@
 #'  \item \code{val_res} a \code{data.frame} with CV results for each fold and for each element of nus and nummods
 #'  \item \code{nus} vector of \eqn{\nu}'s considered for thresholding
 #'  \item \code{nummods} vector of numbers of marginal models considered for validation
-#'  \item \code{family}  a \link[stats]{family}  object used for the marginal generalized linear model
+#'  \item \code{family}  a character corresponding to \link[stats]{family}  object used for the marginal generalized linear model e.g.,
+#'  \code{"gaussian(identity)"}
 #'  \item \code{measure} character, type of validation measure used
 #'  \item \code{avg_type} character, averaging type for computing the validation measure
 #'  \item \code{rp} an object of class \code{'randomprojection'}
@@ -148,10 +149,11 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
               RPMs = SPARres$RPMs,
               val_res = val_res,
               nus = SPARres$nus, nummods=nummods,
-              family = family,
+              family = SPARres$family,
               measure = measure, avg_type = avg_type,
               rp = rp, screencoef = screencoef,
               model = model,
+              x_rows_for_fitting_marginal_models = SPARres$x_rows_for_fitting_marginal_models,
               ycenter = SPARres$ycenter, yscale = SPARres$yscale,
               xcenter = SPARres$xcenter, xscale = SPARres$xscale)
 
@@ -323,53 +325,55 @@ coef.spar.cv <- function(object,
 #' minimal validation  \code{Meas} is used if not provided.
 #' @param nu threshold level used to form coefficients; value with minimal
 #'  validation  \code{Meas} is used if not provided.
-#' @param coefs optional; result of \code{\link{coef.spar.cv}} can be used.
 #' @param ... further arguments passed to or from other methods
 #' @return Vector of predictions
 #' @export
 predict.spar.cv <- function(object,
-                            xnew,
+                            xnew = NULL,
                             type = c("response","link"),
                             avg_type = c("link","response"),
                             opt_par = c("best","1se"),
                             nummod = NULL,
                             nu = NULL,
-                            coefs = NULL, ...) {
+                            aggregate = c("mean", "median"),
+                            ...) {
+  if (is.null(xnew)) {
+    stop("No 'xnew' provided. This 'spar.cv' object does not retain training data. ",
+         "Please provide xnew explicitly. ",
+         "If you want to predict in-sample, use the original data used for fitting the model as xnew.")
+    }
+
   if (ncol(xnew)!=length(object$xscale)) {
     stop("xnew must have same number of columns as initial x!")
   }
   type <- match.arg(type)
   avg_type <- match.arg(avg_type)
-  if (is.null(coefs)) {
-    coefs <- coef(object,opt_par = opt_par,
-                  nummod = nummod, nu = nu)
-  }
-  if (avg_type=="link") {
-    if (type=="link") {
-      res <- as.numeric(xnew %*% coefs$beta + coefs$intercept)
-    } else {
-      eta <- as.numeric(xnew %*% coefs$beta + coefs$intercept)
-      res <- object$family$linkinv(eta)
-    }
-  } else {
-    if (type=="link") {
-      res <- as.numeric(xnew%*%coefs$beta + coef$intercept)
-    } else {
-      # do diff averaging
-      final_coef <- object$betas[,1:coefs$nummod,drop=FALSE]
-      final_coef[abs(final_coef)<coefs$nu] <- 0
+  aggregate <- match.arg(aggregate)
+  opt_par <- match.arg(opt_par)
 
-      preds <- sapply(1:coefs$nummod,function(j){
-        tmp_coef <- final_coef[object$xscale>0,j]
-        beta <- numeric(length(object$xscale))
-        beta[object$xscale>0] <- object$yscale*tmp_coef/(object$xscale[object$xscale>0])
-        intercept <- object$ycenter + object$intercepts[j]  - sum(object$xcenter*beta)
-        eta <- as.numeric(xnew%*%beta + coefs$intercept)
-        object$family$linkinv(eta)
-      })
-      res <- rowMeans(preds)
+  object$family <- eval(parse(text = object$family))
+
+  coefs_avg <- coef(object, nummod, nu, opt_par = opt_par,
+                    aggregate = aggregate)
+  eta <- as.numeric(xnew %*% coefs_avg$beta + coefs_avg$intercept)
+  if (avg_type == "link") {
+    res <- if (type == "link") eta else object$family$linkinv(eta)
+  } else {
+    if (type == "link") {
+      res <- eta
+    } else {
+      avg_fun <- switch(aggregate,
+                        "mean" = function(x) mean(x, na.rm = TRUE),
+                        "median" = function(x) median(x, na.rm = TRUE),
+                        "Aggregration method not implemented.")
+      coefs_all <- coef(object, nummod, nu, aggregate = "none")
+      eta_all <- sweep(xnew %*% coefs_all$beta, coefs_all$intercept,
+                       MARGIN = 2, FUN = "+")
+      preds <- object$family$linkinv(eta_all)
+      res <- apply(preds, 1, avg_fun)
     }
   }
+
   return(res)
 }
 

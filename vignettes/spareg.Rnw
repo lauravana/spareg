@@ -648,7 +648,8 @@ The two main functions for fitting the SPAR algorithm are:
 spar(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
   screencoef = NULL, xval = NULL, yval = NULL, nnu = 20, nus = NULL,
   nummods = c(20), measure = c("deviance", "mse", "mae", "class", "1-auc"),
-  parallel = FALSE, inds = NULL, RPMs = NULL, seed = NULL, ...)
+  avg_type = c("link", "response"), parallel = FALSE, inds = NULL, RPMs = NULL,
+  seed = NULL, ...)
 \end{Code}
 %
 which implements the algorithm in Section~\ref{sec-algo} without
@@ -659,7 +660,7 @@ and
 spar.cv(x, y, family = gaussian("identity"), model = NULL,
   rp = NULL, screencoef = NULL, nfolds = 10, nnu = 20, nus = NULL,
   nummods = c(20), measure = c("deviance", "mse", "mae", "class", "1-auc"),
-  parallel = FALSE, seed = NULL, ...)
+  avg_type = c("link", "response"), parallel = FALSE, seed = NULL, ...)
 \end{Code}
 %
 which implements the cross-validated procedure and returns an object of
@@ -715,6 +716,9 @@ mean squared error \code{"mse"} or mean absolute error \code{"mae"}
 (between responses and predicted conditional means, for all families),
 \code{"class"} (misclassification error) and \code{"1-auc"} (one minus area
 under the ROC curve) both just for binomial family.
+%
+\item \code{avg_type} specifies the averaging type for computing the validation
+measure $K(\nu, M)$. It can be either on \code{"link"} or \code{"response"} level.
 %
 \item \code{parallel} assuming a parallel backend is loaded and available,
 a logical indicating whether the function should use it for parallelizing the estimation of the marginal models.
@@ -1151,32 +1155,13 @@ as well as extractor functions \code{get_intercept} and \code{get_coef} which re
 get_intercept(coef(spar_res, nummod = 10, aggregate = "none"))
 @
 %
-<<eval=FALSE, echo=FALSE>>=
-print(coef(spar_res), show = 10)
-coef(spar_res, aggregate = "none")
-coef(spar_res, nummod = 30, aggregate = "none")
-summary(coef(spar_res, aggregate = "none"))
-summary(coef(spar_res, aggregate = "median"))
-summary(coef(spar_res,  nummod = 30,aggregate = "median"))
-get_intercept(coef(spar_res))
-get_intercept(coef(spar_res, aggregate = "none"))
-get_intercept(coef(spar_res, aggregate = "median"))
-coef(spar_cv, aggregate = "none")
-coef(spar_cv, opt_par = "1se", aggregate = "none")
-coef(spar_cv, opt_par = "best", aggregate = "none")
-coef(spar_cv, nummod = 20, nu = 0.0049,
-     opt_par = "best", aggregate = "none")
-
-
-@
-%
 \subsubsection[predict]{\code{predict}}
 Functionality for computing predictions is provided through the method
 \code{predict} which takes a `\code{spar}' or `\code{spar.cv}' object,
 together with
 \begin{itemize}
 \item \code{xnew} --	matrix of new predictor variables; must have same number
-of columns as \code{x}.
+of columns as \code{x}. Defaults to \code{NULL}
 %
 \item \code{type} --	the type of required predictions; either on
 \code{"response"} level (default) or on \code{"link"} level.
@@ -1191,13 +1176,19 @@ if not provided.
 \item \code{nu} -- threshold level used to compute the averaged coefficients;
 value with minimal  \code{measure} is used if not provided.
 %
-\item \code{coefs} --	optional vector of coefficients to be used directly in
-the prediction.
+\item \code{aggregate} -- one of \code{c("mean", "median")} to be used in
+aggregating over the \code{nummod} marginal models.
+Defaults to mean aggregation.
+%
 \end{itemize}
 Additionally, for class `\code{spar.cv}', argument \code{opt_par} is available
 and used in the computation of the
 coefficients to be used for prediction (see above description of method \code{coef}).
 %
+<<eval=FALSE>>=
+pred <- predict(spar_res, xnew = example_data$xtest)
+pred_cv <- predict(spar_cv, xnew = example_data$xtest, opt_par = "1se")
+@
 %
 \subsubsection[plot]{\code{plot}}
 %
@@ -1844,7 +1835,7 @@ Confidence bands represent one standard deviation in the measures across
 the number of folds. \label{fig:facesplot_valmeasure}}
 \end{figure}
 %
-We observe that the combination $(M=20, \nu=0)$ 
+We observe that the combination $(M=20, \nu=0)$
  delivers the lowest MSE while the one-standard-error rule chooses $(M=5, \nu=0.00424)$, with small differences in performance.
 
 The coefficients of the different variables (in this example pixels) obtained by
@@ -1876,17 +1867,17 @@ if (is_paper) {
 }
 @
 %
-The \code{predict()} function can be applied to the `\code{spar.cv}' object.
-We will employ the sparser solution chosen by the \code{opt_par = "1se"} rule:
-<<predictfaces,echo=FALSE>>=
-if (is_paper) {
-  ynew <- predict(spar_faces, xnew = xtest, coef = face_coef_1se)
-}
-@
-<<predictfaces,eval=FALSE>>=
-ynew <- predict(spar_faces, xnew = xtest, coef = face_coef_1se)
-@
-We can easily compare the predictive performance of the estimated version of the SPAR algorithm
+% The \code{predict()} function can be applied to the `\code{spar.cv}' object.
+% We will employ the sparser solution chosen by the \code{opt_par = "1se"} rule:
+% <<predictfaces,echo=FALSE>>=
+% if (is_paper) {
+%   ynew <- predict(spar_faces, xnew = xtest, opt_par = "1se")
+% }
+% @
+% <<predictfaces,eval=FALSE>>=
+% ynew <- predict(spar_faces, xnew = xtest, opt_par = "1se")
+% @
+We can easily compare the performance of the estimated version of the SPAR algorithm
 with another version proposed in \cite{Dunson2020TargRandProj}, where the sparse
 random projection in \cite{ACHLIOPTAS2003JL} is combined with
 probabilistic marginal correlation screening.
@@ -1897,8 +1888,6 @@ tarp_faces <-  spar.cv(xtrain, ytrain,
   screencoef = screen_cor(),
   rp = rp_sparse(psi = 1/3),
   nummods = c(5, 10, 20, 50), measure = "mse")
-ynew_tarp <- predict(tarp_faces, xnew = xtest,
-  coef = coef(tarp_faces, opt_par = "1se"))
 @
 <<tarp_comparison_true,echo=FALSE>>=
 if(is_paper) {
@@ -1906,8 +1895,7 @@ if(is_paper) {
                          model = spar_glm(),
                          screencoef = screen_cor(), rp = rp_sparse(psi = 1/3),
                          nummods = c(5, 10, 20, 50), measure = "mse")
-  ynew_tarp <- predict(tarp_faces, xnew = xtest,
-                       coef = coef(tarp_faces, opt_par = "1se"))
+  ynew_tarp <- predict(tarp_faces, xnew = xtest, opt_par = "1se")
 }
 @
 We can assess the predictive performance of the two approaches on the training data, by first extracting the model using
@@ -1933,18 +1921,23 @@ if (is_paper){
   get_measure(tarp_faces_1se)
 }
 @
-The predictive performance on the test data is given by:
+The predictive performance on the test data can be assessed by employing
+the \code{predict()} method on the `\code{spar.cv}' object.
+We will use the sparser solution chosen by the \code{opt_par = "1se"} rule
+for the predictions:
 <<test_tarp_comparison_false,eval=FALSE>>=
-c("SPAR" = mean((ytest - ynew)^2),
+ynew_spar <- predict(spar_faces_1se, xnew = xtest)
+ynew_tarp <- predict(tarp_faces_1se, xnew = xtest)
+c("SPAR" = mean((ytest - ynew_spar)^2),
   "TARP" = mean((ytest - ynew_tarp)^2))
 @
 <<test_tarp_comparison_true,echo=FALSE>>=
 if(is_paper) {
-  c("SPAR" = mean((ytest-ynew)^2),  "TARP" = mean((ytest-ynew_tarp)^2))
-}
+  ynew_spar <- predict(spar_faces_1se, xnew = xtest)
+  ynew_tarp <- predict(tarp_faces_1se, xnew = xtest)
+  c("SPAR" = mean((ytest - ynew_spar)^2),
+    "TARP" = mean((ytest - ynew_tarp)^2))}
 @
-
-
 Finally,  for this data set, one can visualize $\hat\beta^\text{1se}_j x^\text{new}_{i,j}$, the effect of each pixel
 in predicting the face orientation in a given image. The contribution of each pixel in predicting the orientation of
 the face in the left panel of Figure~\ref{fig:faces_predictions} can be visualized in the right panel of Figure~\ref{fig:faces_predictions}. We observe that the face contour and the hairline are most informative for the prediction.
@@ -2013,10 +2006,10 @@ if (is_paper) {
 @
 <<readdarwinzip,eval=FALSE>>=
 unzip(zipfile = file.path(tmpdir, "darwin.zip"),
-      files = "data.csv",
-      exdir = file.path(tmpdir))
+  files = "data.csv",
+  exdir = file.path(tmpdir))
 darwin_tmp <- read.csv(file.path(tmpdir, "data.csv"),
-                       stringsAsFactors = TRUE)
+  stringsAsFactors = TRUE)
 @
 Before proceeding with the analysis, the data is screened for
 multivariate outliers using the DDC algorithm in package \pkg{cellWise}
