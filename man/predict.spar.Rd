@@ -28,9 +28,11 @@
 
 \item{nu}{threshold level used to form coefficients; value with minimal validation measure is used if not provided.}
 
-\item{...}{further arguments passed to or from other methods}
+\item{aggregate}{character one of c("mean", "median");
+the aggregation over the ensembles is done using the specified method (mean or median).
+Defaults to mean aggregation.}
 
-\item{coef}{optional; result of \link{coef.spar} can be used.}
+\item{...}{further arguments passed to or from other methods}
 }
 \value{
 Vector of predictions

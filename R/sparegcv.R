@@ -63,8 +63,8 @@
 #' }
 #' @examples
 #' \donttest{
-#' example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
-#' spar_res <- spar.cv(example_data$x, example_data$y,
+#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
 #'   nummods = c(5, 10, 15, 20, 25, 30))
 #' spar_res
 #' coefs <- coef(spar_res)
@@ -325,6 +325,9 @@ coef.spar.cv <- function(object,
 #' minimal validation  \code{Meas} is used if not provided.
 #' @param nu threshold level used to form coefficients; value with minimal
 #'  validation  \code{Meas} is used if not provided.
+#' @param aggregate character one of c("mean", "median");
+#'        the aggregation over the ensembles is done using the specified method (mean or median).
+#'        Defaults to mean aggregation.
 #' @param ... further arguments passed to or from other methods
 #' @return Vector of predictions
 #' @export
