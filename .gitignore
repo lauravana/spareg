@@ -9,3 +9,4 @@ vignettes/.DS_Store
 vignettes/Figures/.DS_Store
 vignettes/*.rda
 .DS_Store
+vignettes/spareg.tex
