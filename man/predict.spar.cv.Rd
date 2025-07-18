@@ -36,6 +36,10 @@ minimal validation  \code{Meas} is used if not provided.}
 \item{nu}{threshold level used to form coefficients; value with minimal
 validation  \code{Meas} is used if not provided.}
 
+\item{aggregate}{character one of c("mean", "median");
+the aggregation over the ensembles is done using the specified method (mean or median).
+Defaults to mean aggregation.}
+
 \item{...}{further arguments passed to or from other methods}
 }
 \value{

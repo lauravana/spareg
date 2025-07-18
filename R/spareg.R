@@ -96,7 +96,7 @@
 #'   \insertRef{ACHLIOPTAS2003JL}{spareg}
 #' }
 #' @examples
-#' example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
 #'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
 #' coefs <- coef(spar_res)
@@ -754,7 +754,9 @@ summary.coefspar <- function(object, digits = 4L, ...) {
 #' @param avg_type type of averaging the marginal models; either on link (default) or on response level
 #' @param nummod number of models used to form coefficients; value with minimal validation measure is used if not provided.
 #' @param nu threshold level used to form coefficients; value with minimal validation measure is used if not provided.
-#' @param coef optional; result of [coef.spar] can be used.
+#' @param aggregate character one of c("mean", "median");
+#'        the aggregation over the ensembles is done using the specified method (mean or median).
+#'        Defaults to mean aggregation.
 #' @param ... further arguments passed to or from other methods
 #' @return Vector of predictions
 #' @export

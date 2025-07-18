@@ -152,7 +152,7 @@ and a grid of the number of marginal models to be employed in the ensemble.
 This function is also used in the cross-validated procedure \link{spar.cv}.
 }
 \examples{
-example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
 spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
 coefs <- coef(spar_res)
