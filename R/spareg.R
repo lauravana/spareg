@@ -801,7 +801,7 @@ predict.spar <- function(object,
   coefs_avg <- coef(object, nummod, nu, aggregate = aggregate)
   eta <- as.numeric(xnew %*% coefs_avg$beta + coefs_avg$intercept)
   if (avg_type == "link") {
-    res <- ifelse(type == "link",  eta, object$family$linkinv(eta))
+    res <- if (type == "link") eta else object$family$linkinv(eta)
   } else {
     if (type == "link") {
       res <- eta
