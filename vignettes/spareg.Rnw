@@ -1987,7 +1987,7 @@ if (is_paper) {
     geom_tile() +
     theme_void() +
     scale_fill_gradient2() +
-    ggtitle(bquote(hat(y) == .(round(ynew[id]))), ) +
+    ggtitle(bquote(hat(y) == .(round(ynew_spar[id]))), ) +
     theme(plot.title = element_text(hjust = 0.5))
   p4
 }
