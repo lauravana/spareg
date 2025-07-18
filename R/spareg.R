@@ -432,22 +432,26 @@ spar_algorithm <- function(x, y,
       tmp_coef[abs(tmp_coef) < thresh] <- 0
       tmp_beta <- Matrix(0, nrow = p, ncol = nummod)
       tmp_beta[xscale > 0, ] <- yscale * tmp_coef/(xscale[xscale > 0])
-      tmp_intercept <- intercepts[seq_len(nummod)] +
-        drop(ycenter - crossprod(xcenter, tmp_beta))
-      eta_hat <- sweep((xval %*% tmp_beta), tmp_intercept,
-                       MARGIN = 2, FUN = "+")
       if (avg_type == "link") {
-        val_measure <- val.meas(yval, eta_hat = rowMeans(eta_hat))
-        numactive <- sum(rowMeans(tmp_beta)!=0)
+        beta_hat <- rowMeans(tmp_beta)
+        alpha_hat <- mean(intercepts[seq_len(nummod)]) +
+          (ycenter - sum(xcenter * beta_hat))
+        eta_hat <- xval %*% beta_hat + alpha_hat
+        val_measure <- val.meas(yval, eta_hat = eta_hat)
+        numactive <- sum(beta_hat != 0)
       } else {
+        tmp_intercept <- intercepts[seq_len(nummod)] +
+           drop(ycenter - crossprod(xcenter, tmp_beta))
+        eta_hat <- sweep((xval %*% tmp_beta), tmp_intercept,
+                       MARGIN = 2, FUN = "+")
         y_hat <- rowMeans(family$linkinv(as.matrix(eta_hat)))
         val_measure <- val.meas(yval, y_hat = y_hat)
         numactive <- sum(rowSums(tmp_beta != 0) > 0)
       }
-      list(tab = c(nnu = l, nu = unname(nus[l]), nummod = nummod,
-                   measure = val_measure, numactive = numactive))
+      c(nnu = l, nu = unname(thresh), nummod = nummod,
+        measure = val_measure, numactive = numactive)
     })
-    out <- do.call("rbind", lapply(tabres, "[[", 1))
+    out <- do.call("rbind", tabres)
     colnames(out) <- c("nnu","nu","nummod","measure", "numactive")
     out
   })
