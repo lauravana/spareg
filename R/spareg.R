@@ -772,12 +772,6 @@ predict.spar <- function(object,
                          nu       = NULL,
                          aggregate = c("mean", "median"),
                          ...) {
-  ## TODO: IF we give predict(res), we need to save the fitted values, otherwise
-  ## we cannot predict in sample. But what if we do not want to average the beta?
-  ## fitted values for each (nu, M) combination
-  ## predict(res)
-  ## predict(res, xnew) -> if res is only for one (nu, M) combination, then
-  ## return predictions
   if (is.null(xnew)) {
     stop("No 'xnew' provided. This 'spar' object does not retain training data.",
          "Please provide xnew explicitly.",
@@ -865,7 +859,8 @@ plot.spar <- function(x,
     if (is.null(xfit) | is.null(yfit)) {
       stop("xfit and yfit need to be provided for res_vs_fitted plot!")
     }
-    pred <- predict(spar_res, xfit, nummod, nu, type = "response")
+    pred <- predict(spar_res, xnew = xfit, nummod = nummod, nu = nu,
+                    type = "response")
     res <- ggplot2::ggplot(data = data.frame(fitted=pred,
                                              residuals=yfit-pred),
                            ggplot2::aes(x=.data$fitted,y=.data$residuals)) +
