@@ -211,12 +211,14 @@ models \citep{pedregosa2011scikit}. Random projection tools
 are implemented in \pkg{sklearn.random\_projection} while
 GLM estimation on the projected predictors (both classical and penalized)
  can be done using
-\pkg{sklearn.linear\_model} module.
+\pkg{sklearn.linear\_model} module. Alternatively, ensembles can be built
+by using native stacking.
 Since the recent integration of the \proglang{H2O} machine learning models
 \citep{h2o} in \proglang{Stata} \citep{Stata}, it is also possible to build
 ensembles of
-machine learning models (including GLMs) via stacking, boosting or bagging \proglang{Stata}, but random subspace methods or similar approaches to
-dimensionality reduction are not implemented at the time of writing.
+machine learning models (including GLMs) via stacking, boosting or bagging, 
+but random subspace methods or similar approaches to
+dimensionality reduction in GLMs are not implemented at the time of writing.
 
 %
 The rest of the paper is organized as follows:
@@ -2218,7 +2220,7 @@ sessionInfo()
 \section*{Acknowledgments}
 
 
-Roman Parzer and Laura Vana-Gür acknowledge funding from the Austrian
+Roman Parzer and Laura Vana-G\"ur acknowledge funding from the Austrian
 Science Fund (FWF) for the project ``High-dimensional statistical
 learning: New methods to advance economic and sustainability policies''
 (ZK 35), jointly carried out by WU Vienna University of Economics and
