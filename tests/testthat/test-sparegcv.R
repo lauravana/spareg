@@ -15,6 +15,15 @@ test_that("Coef returns vector of correct length", {
   expect_equal(length(sparcoef$beta),30)
 })
 
+test_that("Test get_intercept() and get_coef() extractor", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar.cv(x, y, nfolds = 2L, seed = 123)
+  cf <- coef(spar_res, opt_par = "best")
+  expect_equal(unname(get_intercept(cf)), 2.544998, tolerance = 1e-5)
+  expect_equal(unname(get_coef(cf)[1]), 0.04608643, tolerance = 1e-5)
+})
+
 test_that("Coef is more sparse for 1se rule", {
   x <- matrix(rnorm(300), ncol = 30)
   y <- rnorm(10)
@@ -30,7 +39,7 @@ test_that("Validated nu values are same as the ones for initial SPAR fit", {
   y <- rnorm(10)
   spar_res <- spar.cv(x,y,screencoef = screen_glmnet(),
                       nummods=c(10,15), model = spar_glm())
-  expect_equal(unique(spar_res$val_sum$nu),as.numeric(spar_res$nus))
+  expect_equal(unique(spar_res$val_res$nu),as.numeric(spar_res$nus))
 })
 
 test_that("Validated nummod values are same as the ones for initial SPAR fit", {
@@ -38,7 +47,7 @@ test_that("Validated nummod values are same as the ones for initial SPAR fit", {
   y <- rnorm(10)
   spar_res <- spar.cv(x,y,screencoef = screen_glmnet(),
                       nummods=c(10,15), model = spar_glm())
-  expect_equal(unique(spar_res$val_sum$nummod),as.numeric(spar_res$nummods))
+  expect_equal(unique(spar_res$val_res$nummod),as.numeric(spar_res$nummods))
 })
 
 test_that("Columns with zero sd get coefficient 0", {
@@ -48,7 +57,50 @@ test_that("Columns with zero sd get coefficient 0", {
   spar_res <- spar.cv(x, y, screencoef = screen_glmnet(),
                       measure = "mae", model = spar_glm())
   sparcoef <- coef(spar_res)
-  expect_equal(sparcoef$beta[c(1,11,111)],c(0,0,0))
+  expect_equal(unname(sparcoef$beta[c(1,11,111)]),c(0,0,0))
+})
+
+
+test_that("Test get_model() extractor", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar.cv(x, y, nfolds = 2L, seed = 123)
+  a <- get_model(spar_res, "best")
+  b <- get_model(spar_res, "1se")
+  expect_equal(nrow(a$val_res), 3)
+  expect_equal(nrow(b$val_res), 3)
+})
+
+
+test_that("Test get_measure() extractor", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar.cv(x, y, nfolds = 2L, seed = 123)
+  a <- get_model(spar_res, "best")
+  b <- get_model(spar_res, "1se")
+  expect_equal(nrow(get_measure(a)), 1)
+  expect_equal(nrow(get_measure(b)), 1)
+  expect_equal(get_measure(a)$mean_deviance, 29221.83, tolerance = 1e-5)
+  expect_equal(get_measure(a)$sd_deviance, 2496.486, tolerance = 1e-5)
+  expect_equal(get_measure(a)$mean_numactive, 1383, tolerance = 1e-5)
+  expect_equal(get_measure(b)$mean_deviance, 31582.36, tolerance = 1e-5)
+  expect_equal(get_measure(b)$sd_deviance, 2669.17, tolerance = 1e-5)
+  expect_equal(get_measure(b)$mean_numactive, 958.5, tolerance = 1e-5)
+})
+
+test_that("Test predictions", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar.cv(x,y, nfolds = 3L, model = spar_glm())
+  xnew <- example_data$xtest
+  pred  <- predict(spar_res,xnew = xnew)
+  pred2 <- predict(spar_res,xnew = xnew, opt_par = "best")
+  pred3 <- predict(spar_res, xnew = xnew, opt_par = "1se")
+  pred4 <- predict(spar_res, xnew = xnew, opt_par = "1se", avg_type = "link")
+  expect_equal(length(pred), nrow(xnew))
+  expect_equal(pred[1], pred2[1], tolerance = 1e-5)
+  expect_equal(pred3[1], pred4[1], tolerance = 1e-5)
+  expect_lt(pred3[1], pred2[1])
 })
 
 # Tests expecting errors
@@ -86,6 +138,7 @@ test_that("Get errors for classification validation measure for non-binomial fam
   y <- example_data$y
   expect_error(spar.cv(x,y,measure = "1-auc",model = spar_glm()))
 })
+
 
 
 

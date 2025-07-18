@@ -1,7 +1,7 @@
 Type: Package
 Package: spareg
 Title: Sparse Projected Averaged Regression
-Version: 1.0.1
+Version: 1.1.0
 Authors@R:
     c(person(given = "Laura",
              family = "Vana-Gür",
@@ -29,7 +29,6 @@ Description: A flexible framework combining
   Parzer et al (2024b) <doi:10.48550/arXiv.2410.00971>.
 License: GPL-3
 Imports: 
-    dplyr,
     Matrix,
     ROCR,
     Rdpack,
@@ -47,6 +46,7 @@ Suggests:
     testthat (>= 3.0.0),
     foreach,
     doParallel,
+    doRNG,
     robustbase,
     cellWise,
     VariableScreening,

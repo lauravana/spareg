@@ -47,13 +47,23 @@ test_that("Returned coef and preds are correct for fixed screening and projectio
                    nummods=c(2),
                    inds = list(1:(2*nrow(x)),
                                500+1:(2*nrow(x))),
-                   RPMs = list(RP1,RP2))
+                   RPMs = list(RP1,RP2),seed=123)
   sparcoef <- coef(spar_res)
   pred     <- predict(spar_res,xnew=xnew)
+  pred_median   <- predict(spar_res,xnew=xnew, aggregate = "median")
+  pred2     <- predict(spar_res,xnew=xnew, nu=0.004406174,nummod=2)
+  pred3     <- predict(spar_res,xnew=xnew, nu=0.004406174,nummod=2, avg_type = "response")
+  pred4     <- predict(spar_res,xnew=xnew, nu=0.004406174,nummod=2, type = "link")
+
+  expect_error(predict(spar_res))
   expect_equal(sparcoef$nu,0.002285171,tolerance = 1e-6)
-  expect_equal(sparcoef$beta[53],0)
-  expect_equal(sparcoef$beta[1],0.125971, tolerance = 1e-6)
+  expect_equal(sparcoef$beta[53],c("V53"=0))
+  expect_equal(sparcoef$beta[1],c("V1"=0.125971), tolerance = 1e-6)
   expect_equal(pred[1],20.44922,tolerance = 1e-5)
+  expect_equal(pred2[1],20.6775893,tolerance = 1e-5)
+  expect_equal(pred2[1],pred3[1],tolerance = 1e-5)
+  expect_equal(pred2[1],pred4[1],tolerance = 1e-5)
+  expect_equal(pred_median[1],pred[1],tolerance = 1e-5) ## as we have 2 models only
 })
 
 test_that("Returned coef and preds are correct for fixed screening and projections for binomial(logit)", {
@@ -73,15 +83,15 @@ test_that("Returned coef and preds are correct for fixed screening and projectio
   RP2@i <- as.integer(c(rep(m:1,each=nsc%/%m),rep(1,nsc%%m))-1)
   RP2@p <- 0:nsc
   RP2@x <- (-1)^(1:nsc)
-
   spar_res <- spar(x,y,nummods=c(2),
                    inds = list(1:(2*nrow(x)),500+1:(2*nrow(x))),
-                   RPMs = list(RP1,RP2),family = binomial(logit))
+                   RPMs = list(RP1,RP2),family = binomial(logit),
+                   seed = 123)
   sparcoef <- coef(spar_res)
   pred <- predict(spar_res,xnew=xnew)
   expect_equal(sparcoef$nu,0.009850679 ,tolerance = 1e-6)
-  expect_equal(sparcoef$beta[11],0)
-  expect_equal(sparcoef$beta[1],0.04795905,tolerance = 1e-6)
+  expect_equal(sparcoef$beta[11],c("V11"=0))
+  expect_equal(sparcoef$beta[1],c("V1"= 0.04795905),tolerance = 1e-6)
   expect_equal(pred[1],0.9749038,tolerance = 1e-5)
 
 })
@@ -92,7 +102,7 @@ test_that("Columns with zero sd get ceofficient 0", {
   y <- example_data$y
   spar_res <- spar(x,y)
   sparcoef <- coef(spar_res)
-  expect_equal(sparcoef$beta[c(1,11,111)],c(0,0,0))
+  expect_equal(sparcoef$beta[c(1, 11, 111)], c("V1" = 0,"V11" = 0,"V111" = 0))
 })
 
 test_that("Thresholding can be avoided ", {
@@ -102,7 +112,7 @@ test_that("Thresholding can be avoided ", {
   spar_res <- spar(x, y, screencoef = screen_glmnet(),
                    nus = 0, model = spar_glm())
   sparcoef <- coef(spar_res)
-  expect_equal(sparcoef$beta[c(4,10)],c(0,0))
+  expect_equal(unname(sparcoef$beta[c(4,10)]),c(0,0))
 })
 
 test_that("Data splitting delivers different results", {
@@ -134,9 +144,9 @@ test_that("Test the gaussian rp", {
   spar_g_res2 <- spar(x,y,screencoef = screen_glmnet(),
                       rp = rp_gaussian(sd = 0.1))
   ##
-  expect_equal(round(spar_g_res$val_res$Meas[1], 2), 17873.92)
-  expect_equal(round(spar_g_res2$val_res$Meas[1], 2), 17873.92)
-  expect_equal(spar_g_res$val_res$Meas[1], spar_g_res2$val_res$Meas[1])
+  expect_equal(round(spar_g_res$val_res$measure[1], 2), 17873.92)
+  expect_equal(round(spar_g_res2$val_res$measure[1], 2), 17873.92)
+  expect_equal(spar_g_res$val_res$measure[1], spar_g_res2$val_res$measure[1])
 })
 
 test_that("Test the sparse rp", {
@@ -148,9 +158,9 @@ test_that("Test the sparse rp", {
   set.seed(12345)
   spar_sparse_res2 <- spar(x,y, screencoef = screen_glmnet(),
                            rp = rp_sparse(psi = 0.01))
-  expect_equal(round(spar_sparse_res$val_res$Meas[1], 2), 19028.88)
-  expect_equal(round(spar_sparse_res2$val_res$Meas[1], 2), 19004.14)
-  expect_true(spar_sparse_res$val_res$Meas[1] != spar_sparse_res2$val_res$Meas[1])
+  expect_equal(round(spar_sparse_res$val_res$measure[1], 2), 19028.88)
+  expect_equal(round(spar_sparse_res2$val_res$measure[1], 2), 19004.14)
+  expect_true(spar_sparse_res$val_res$measure[1] != spar_sparse_res2$val_res$measure[1])
 })
 test_that("Test the CW rp", {
   x <- example_data$x
@@ -158,7 +168,7 @@ test_that("Test the CW rp", {
   set.seed(123)
   spar_cw_res <- spar(x,y, screencoef = screen_glmnet(),
                       rp = rp_cw())
-  expect_equal(round(spar_cw_res$val_res$Meas[1], 2), 16841.77)
+  expect_equal(round(spar_cw_res$val_res$measure[1], 2), 16841.77)
 })
 
 test_that("Test the screen_glm() with poisson family", {
@@ -169,26 +179,86 @@ test_that("Test the screen_glm() with poisson family", {
   spar_screen_glm <- spar(x,yval, family = poisson(),
                           screencoef = screen_marglik(),
                           rp = rp_gaussian())
-  expect_equal(round(spar_screen_glm$val_res$Meas[1], 2), 1431.17)
+  expect_equal(round(spar_screen_glm$val_res$measure[1], 2), 1431.17)
 })
 
-test_that("Get same results with parallel option", {
+test_that("Test get_intercept() and get_coef() extractor", {
   x <- example_data$x
   y <- example_data$y
-  set.seed(123)
-  spar_res <- spar(x, y, screencoef = screen_cor(), rp = rp_gaussian(),
-                   seed = 123, set.seed.iteration = TRUE)
+  spar_res <- spar(x, y, seed = 123)
+  cf <- coef(spar_res, opt_par = "best")
+  expect_equal(unname(get_intercept(cf)), 2.484463, tolerance = 1e-5)
+  expect_equal(unname(get_coef(cf)[1]), 0.06769493, tolerance = 1e-5)
+})
+
+test_that("Test get_model() extractor", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar(x, y)
+  a <- get_model(spar_res, "best")
+  expect_equal(nrow(a$val_res), 1)
+})
+
+test_that("Test get_measure() extractor", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar(x, y, seed = 123)
+  a <- get_model(spar_res, "best")
+  expect_equal(nrow(get_measure(a)), 1)
+  expect_equal(get_measure(a)$deviance, 17.39507, tolerance = 1e-5)
+  expect_equal(get_measure(a)$numactive, 2000, tolerance = 1e-5)
+})
+
+test_that("Test avg_type for validation", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar(x, y, nus = 0, seed = 123)
+  spar_res2 <- spar(x, y,nus = 0,  avg_type = "response", seed = 123)
+  spar_res3 <- spar(x, abs(round(y)), family = poisson(),
+                    nus = 0, seed = 123)
+  spar_res4 <- spar(x, abs(round(y)), family = poisson(),
+                    nus = 0,  avg_type = "response", seed = 123)
+  spar_res5 <- spar(x, as.numeric(y > 0), family = binomial(),
+                    nus = 0, seed = 123)
+  spar_res6 <- spar(x, as.numeric(y > 0), family = binomial(),
+                    nus = 0,  avg_type = "response", seed = 123)
+  expect_equal(spar_res$val_res$measure, spar_res2$val_res$measure)
+  expect_equal(spar_res$val_res$numactive, spar_res2$val_res$numactive)
+  expect_lt(spar_res3$val_res$measure, spar_res4$val_res$measure)
+  expect_lt(spar_res5$val_res$measure, spar_res6$val_res$measure)
+  expect_warning(predict(spar_res5, xnew=example_data$xtest,
+                      avg_type = "response"))
+})
+
+test_that("Get results with parallel option", {
+  x <- example_data$x
+  y <- example_data$y
   if (requireNamespace("doParallel", quietly = TRUE)) {
     cl <- parallel::makeCluster(2, "PSOCK")
     doParallel::registerDoParallel(cl)
-    suppressMessages(
-      spar_res2 <- spar(x, y, screencoef = screen_cor(), rp = rp_gaussian(),
-                        parallel = TRUE, set.seed.iteration = TRUE, seed = 123))
+    if (requireNamespace("doRNG", quietly = TRUE)) {
+      doRNG::registerDoRNG(seed = 123)
+      suppressMessages(
+        spar_res2 <- spar(x, y, screencoef = screen_cor(),
+                          rp = rp_gaussian(),
+                          parallel = TRUE)
+      )
+      suppressMessages(
+        spar_res3 <- spar(x, y, screencoef = screen_cor(),
+                          rp = rp_gaussian(),
+                          parallel = TRUE, seed = 123)
+      )
+    }
     parallel::stopCluster(cl)
-    expect_equal(spar_res$betas[1:10],  spar_res2$betas[1:10])
+    expect_equal(spar_res2$val_res$measure[1:3],  spar_res3$val_res$measure[1:3])
   }
 })
 
+test_that("Get errors for msup > nscreen", {
+  x <- matrix(rnorm(300), ncol = 30)
+  y <- rnorm(10)
+  expect_message(spar(x,y,nscreen = 18, msup = 20))
+})
 
 # Tests expecting errors
 
@@ -210,11 +280,6 @@ test_that("Get errors for mslow > msup", {
   expect_error(spar(x,y,mslow = 15,msup = 10))
 })
 
-test_that("Get errors for msup > nscreen", {
-  x <- matrix(rnorm(300), ncol = 30)
-  y <- rnorm(10)
-  expect_error(spar(x,y,nscreen=18, msup = 20))
-})
 
 test_that("Get errors for to small length of inds and RPMs lists", {
   x <- example_data$x
@@ -250,3 +315,4 @@ test_that("Get errors for classification validation measure for non-binomial fam
   y <- example_data$y
   expect_error(spar(x,y,measure = "1-auc"))
 })
+

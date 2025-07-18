@@ -18,11 +18,11 @@ spar(
   nus = NULL,
   nummods = c(20),
   measure = c("deviance", "mse", "mae", "class", "1-auc"),
+  avg_type = c("link", "response"),
   parallel = FALSE,
   inds = NULL,
   RPMs = NULL,
   seed = NULL,
-  set.seed.iteration = FALSE,
   ...
 )
 
@@ -39,11 +39,11 @@ spareg(
   nus = NULL,
   nummods = c(20),
   measure = c("deviance", "mse", "mae", "class", "1-auc"),
+  avg_type = c("link", "response"),
   parallel = FALSE,
   inds = NULL,
   RPMs = NULL,
   seed = NULL,
-  set.seed.iteration = FALSE,
   ...
 )
 }
@@ -89,6 +89,9 @@ available for all families. Other options are \code{"mse"} or \code{"mae"}
 \code{"1-auc"} (one minus area under the ROC curve) both just for
 binomial family.}
 
+\item{avg_type}{type of averaging the marginal models; either on link (default)
+or on response level. This is used in computing the validation measure.}
+
 \item{parallel}{assuming a parallel backend is loaded and available, a
 logical indicating whether the function should use it in parallelizing the
 estimation of the marginal models. Defaults to FALSE.}
@@ -102,9 +105,6 @@ marginal model of length \code{max(nummods)}, diagonal elements will be
 overwritten with a coefficient only depending on the given \code{x} and \code{y}.}
 
 \item{seed}{integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.}
-
-\item{set.seed.iteration}{a boolean indicating whether a different seed should be set in each marginal model \code{i}.
-Defaults to \code{FALSE}. If \code{TRUE}, seed will be set to  \code{seed + i} in each marginal model i.}
 
 \item{...}{further arguments mainly to ensure back-compatibility}
 }
@@ -122,14 +122,21 @@ standardized coefficients from each marginal model
 and number of active variables) for each element of \code{nus} and \code{nummods}
 \item \code{val_set} logical flag, whether validation data were provided;
 if \code{FALSE}, training data were used for validation
+\item \code{family}  a character corresponding to \link[stats]{family}  object used for the marginal generalized linear model e.g.,
+\code{"gaussian(identity)"}
 \item \code{nus} vector of \eqn{\nu}'s considered for thresholding
 \item \code{nummods} vector of numbers of marginal models considered for validation
 \item \code{ycenter} empirical mean of initial response vector
 \item \code{yscale} empirical standard deviation of initial response vector
 \item \code{xcenter} p-vector of empirical means of initial predictor variables
 \item \code{xscale} p-vector of empirical standard deviations of initial predictor variables
+\item \code{avg_type} character, averaging type for computing the validation measure
+\item \code{measure} character, type of validation measure used
 \item \code{rp} an object of class \code{"randomprojection"}
 \item \code{screencoef} an object of class \code{"screeningcoef"}
+\item \code{x_rows_for_fitting_marginal_models} vector of row indicators from
+\code{x} which were used for fitting the marginal models, if screening was performed
+using \code{screencoef} with \code{split_data_prop} argument. Is \code{NULL} otherwise.
 }
 If a parallel backend is registered and \code{parallel = TRUE},
 the \link[foreach]{foreach} function
@@ -151,11 +158,11 @@ spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
 coefs <- coef(spar_res)
 pred <- predict(spar_res, xnew = example_data$x)
 plot(spar_res)
-plot(spar_res, plot_type = "Val_Meas", plot_along = "nummod", nu = 0)
-plot(spar_res, plot_type = "Val_Meas", plot_along = "nu", nummod = 10)
-plot(spar_res, plot_type = "Val_numAct",  plot_along = "nummod", nu = 0)
-plot(spar_res, plot_type = "Val_numAct",  plot_along = "nu", nummod = 10)
-plot(spar_res, plot_type = "res-vs-fitted",  xfit = example_data$xtest,
+plot(spar_res, plot_type = "val_measure", plot_along = "nummod", nu = 0)
+plot(spar_res, plot_type = "val_measure", plot_along = "nu", nummod = 10)
+plot(spar_res, plot_type = "val_numactive",  plot_along = "nummod", nu = 0)
+plot(spar_res, plot_type = "val_numactive",  plot_along = "nu", nummod = 10)
+plot(spar_res, plot_type = "res_vs_fitted",  xfit = example_data$xtest,
   yfit = example_data$ytest)
 plot(spar_res, plot_type = "coefs", prange = c(1,400))
 
@@ -174,5 +181,5 @@ spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
 }
 }
 \seealso{
-\link{spar.cv},\link{coef.spar},\link{predict.spar},\link{plot.spar},\link{print.spar}
+\link{spar.cv}, \link{coef.spar}, \link{predict.spar}, \link{plot.spar}, \link{print.spar}
 }

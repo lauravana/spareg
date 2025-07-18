@@ -61,28 +61,43 @@ check_and_set_args <- function(args, x, y, family, model, screencoef, rp,  measu
 
 get_val_measure_function <- function(measure, family) {
   val.meas <- switch(measure,
-                     "deviance" = function(yval, eta_hat) {
-                       sum(family$dev.resids(yval, family$linkinv(eta_hat), 1))
+                     "deviance" = function(yval, eta_hat = NULL, y_hat = NULL) {
+                       if (is.null(y_hat)) {
+                         y_hat <- family$linkinv(eta_hat)
+                       }
+                       sum(family$dev.resids(yval, y_hat, 1))
                      },
-                     "mse" = function(yval, eta_hat) {
-                       mean((yval - family$linkinv(eta_hat))^2)
+                     "mse" = function(yval, eta_hat = NULL, y_hat = NULL) {
+                       if (is.null(y_hat)) {
+                         y_hat <- family$linkinv(eta_hat)
+                       }
+                       mean((yval - y_hat)^2)
                      },
-                     "mae" = function(yval, eta_hat) {
-                       mean(abs(yval - family$linkinv(eta_hat)))
+                     "mae" = function(yval, eta_hat = NULL, y_hat = NULL) {
+                       if (is.null(y_hat)) {
+                         y_hat <- family$linkinv(eta_hat)
+                       }
+                       mean(abs(yval - y_hat))
                      },
                      "class" = {
                        stopifnot(family$family == "binomial")
-                       function(yval, eta_hat) {
-                         mean(yval != round(family$linkinv(eta_hat)))
+                       function(yval, eta_hat = NULL, y_hat = NULL) {
+                         if (is.null(y_hat)) {
+                           y_hat <- family$linkinv(eta_hat)
+                         }
+                         mean(yval != round(y_hat))
                        }
                      },
                      "1-auc" = {
                        stopifnot(family$family == "binomial")
-                       function(yval, eta_hat) {
+                       function(yval, eta_hat = NULL, y_hat = NULL) {
                          if (var(yval) == 0) {
                            NA
                          } else {
-                           phat <- prediction(family$linkinv(eta_hat), yval)
+                           if (is.null(y_hat)) {
+                             y_hat <- family$linkinv(eta_hat)
+                           }
+                           phat <- prediction(y_hat, yval)
                            1 - performance(phat, measure = "auc")@y.values[[1]]
                          }
                        }
@@ -90,4 +105,29 @@ get_val_measure_function <- function(measure, family) {
                      stop("Invalid measure")
   )
   return(val.meas)
+}
+
+compute_val_summary <- function(val_res) {
+  # Compute mean and sd separately
+  mMeas <- aggregate(measure ~  nnu + nu + nummod,
+                     val_res[val_res$fold != 0, ],
+                     mean, na.rm = TRUE)
+  sdMeas <- aggregate(measure ~ nnu + nu + nummod,
+                      val_res[val_res$fold != 0, ],
+                      sd, na.rm = TRUE)
+  mNumAct <- aggregate(numactive ~  nnu + nu + nummod,
+                       val_res[val_res$fold != 0, ],
+                       mean, na.rm = TRUE)
+
+  # Rename
+  names(mMeas)[4] <- "mean_measure"
+  names(sdMeas)[4] <- "sd_measure"
+  names(mNumAct)[4] <- "mean_numactive"
+
+  # Merge all
+  val_sum <- Reduce(function(x, y) merge(x, y, by = c("nnu", "nu", "nummod")),
+                    list(mMeas, sdMeas, mNumAct))
+  val_sum <- val_sum[order(val_sum$"nummod",val_sum$"nu"), ]
+
+  return(val_sum)
 }

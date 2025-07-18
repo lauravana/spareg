@@ -6,12 +6,12 @@
 \usage{
 \method{predict}{spar}(
   object,
-  xnew,
+  xnew = NULL,
   type = c("response", "link"),
   avg_type = c("link", "response"),
   nummod = NULL,
   nu = NULL,
-  coef = NULL,
+  aggregate = c("mean", "median"),
   ...
 )
 }
@@ -24,13 +24,13 @@
 
 \item{avg_type}{type of averaging the marginal models; either on link (default) or on response level}
 
-\item{nummod}{number of models used to form coefficients; value with minimal validation Meas is used if not provided.}
+\item{nummod}{number of models used to form coefficients; value with minimal validation measure is used if not provided.}
 
-\item{nu}{threshold level used to form coefficients; value with minimal validation Meas is used if not provided.}
-
-\item{coef}{optional; result of \link{coef.spar} can be used.}
+\item{nu}{threshold level used to form coefficients; value with minimal validation measure is used if not provided.}
 
 \item{...}{further arguments passed to or from other methods}
+
+\item{coef}{optional; result of \link{coef.spar} can be used.}
 }
 \value{
 Vector of predictions
