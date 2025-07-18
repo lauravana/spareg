@@ -1127,6 +1127,7 @@ spar_res
 For `\code{spar.cv}' it also provides the same information for the $(\nu, M)$
 combination chosen by the one-standard-error rule.
 <<first_example_cv>>=
+set.seed(12)
 spar_cv <- spar.cv(example_data$x, example_data$y,
   nummods = c(5, 10, 15, 20, 25, 30))
 spar_cv
