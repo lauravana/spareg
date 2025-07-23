@@ -2,7 +2,7 @@
 % Please edit documentation in R/sparegcv.R
 \name{plot.spar.cv}
 \alias{plot.spar.cv}
-\title{plot.spar.cv}
+\title{Plot Method for \code{'spar.cv'} Object}
 \usage{
 \method{plot}{spar.cv}(
   x,

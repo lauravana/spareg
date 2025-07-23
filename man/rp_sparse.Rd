@@ -2,7 +2,7 @@
 % Please edit documentation in R/rp_classes.R
 \name{rp_sparse}
 \alias{rp_sparse}
-\title{Sparse random projection matrix}
+\title{Sparse Random Projection Matrix}
 \usage{
 rp_sparse(..., control = list())
 }

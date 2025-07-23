@@ -1,4 +1,4 @@
-#' Constructor function for building \code{'sparmodel'} objects
+#' Constructor Function for Building \code{'sparmodel'} Object
 #'
 #' Creates an object of class \code{'sparmodel'} using arguments passed by user.
 #' @param name character
@@ -39,7 +39,7 @@ constructor_sparmodel <- function(name, model_fun, update_fun = NULL) {
   }
 }
 #'
-#' Penalized GLM marginal models
+#' Penalized  GLM Marginal  \code{'sparmodel'}
 #'
 #' @description
 #' Creates an object class \code{'sparmodel'} using arguments passed by user.
@@ -117,7 +117,7 @@ model_glmnet <- function(y, z, object) {
   list(gammas = gammas, intercept = intercept)
 }
 
-#' GLM marginal models
+#' GLM Marginal \code{'sparmodel'}
 #'
 #' @description
 #' Creates an object class \code{'sparmodel'} using arguments passed by user.

@@ -3,7 +3,7 @@
 \name{spar.cv}
 \alias{spar.cv}
 \alias{spareg.cv}
-\title{Sparse Projected Averaged Regression}
+\title{Sparse Projected Averaged Regression with Cross-Validation}
 \usage{
 spar.cv(
   x,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/screening_classes.R
 \name{screen_glmnet}
 \alias{screen_glmnet}
-\title{Screening coefficient based  on glmnet coefficients}
+\title{Screening Coefficient Based on \link[glmnet]{glmnet} Coefficients}
 \usage{
 screen_glmnet(..., control = list())
 }

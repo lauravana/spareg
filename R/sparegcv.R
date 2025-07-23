@@ -1,4 +1,4 @@
-#' Sparse Projected Averaged Regression
+#' Sparse Projected Averaged Regression with Cross-Validation
 #'
 #' Apply Sparse Projected Averaged Regression to High-Dimensional Data, where the
 #' number of models and the threshold parameter is chosen using a cross-validation
@@ -171,7 +171,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
 #' @export
 spareg.cv <- spar.cv
 
-#' coef.spar.cv
+#' Coef Method for \code{'spar.cv'} Object
 #'
 #' Extract coefficients from \code{'spar.cv'} object
 #' @param object result of [spar.cv] function of class \code{'spar.cv'}.
@@ -310,7 +310,7 @@ coef.spar.cv <- function(object,
 }
 
 
-#' predict.spar.cv
+#' Predict Method for \code{'spar.cv'} Object
 #'
 #' Predict responses for new predictors from \code{'spar.cv'} object
 #' @param object result of spar function of class \code{'spar.cv'}.
@@ -380,7 +380,8 @@ predict.spar.cv <- function(object,
   return(res)
 }
 
-#' plot.spar.cv
+#' Plot Method for \code{'spar.cv'} Object
+#'
 #' @description
 #' Plot cross-validation measure or number of active variables over different thresholds or number
 #' of models of \code{'spar.cv'} object, produce a residuals vs fitted plot,
@@ -604,7 +605,7 @@ plot.spar.cv <- function(x,
 }
 
 
-#' print.spar.cv
+#' Print Method for \code{'spar.cv'} Object
 #'
 #' Print summary of \code{'spar.cv'} object
 #' @param x result of  [spar.cv] function of class  \code{'spar.cv'}.

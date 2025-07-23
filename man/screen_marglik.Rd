@@ -2,7 +2,7 @@
 % Please edit documentation in R/screening_classes.R
 \name{screen_marglik}
 \alias{screen_marglik}
-\title{Screening coefficient based on marginal GLMs}
+\title{Screening Coefficient Based on Marginal GLMs}
 \usage{
 screen_marglik(..., control = list())
 }

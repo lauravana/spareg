@@ -9,7 +9,7 @@ update_rp <- function(...) {
 }
 
 
-#' Constructor function for building \code{'randomprojection'} objects
+#' Constructor Function for Building \code{'randomprojection'} Object
 #'
 #' Creates an object class \code{'randomprojection'} using arguments passed by user.
 #' @param name character
@@ -69,7 +69,7 @@ constructor_randomprojection <- function(name,
 
 
 #'
-#' Gaussian random projection matrix
+#' Gaussian Random Projection Matrix
 #'
 #' @param rp object of class  \code{'randomprojection'}
 #' @param m goal dimension, which will be randomly sampled in the SPAR algorithm
@@ -95,7 +95,7 @@ generate_gaussian <- function(rp, m, included_vector, x = NULL, y = NULL) {
   return(RM)
 }
 #'
-#' Gaussian random projection matrix
+#' Gaussian Random Projection Matrix
 #'
 #' @description
 #' Creates an object class \code{'randomprojection'} using arguments passed by
@@ -137,7 +137,7 @@ rp_gaussian <- constructor_randomprojection(
 )
 
 #'
-#' Sparse random projection matrix
+#' Sparse Random Projection Matrix
 #'
 #' @param rp object of class  \code{'randomprojection'}
 #' @param m goal dimension, which will be randomly sampled in the SPAR algorithm
@@ -164,7 +164,7 @@ generate_sparse <- function(rp, m, included_vector, x = NULL, y = NULL) {
 }
 
 #'
-#' Sparse random projection matrix
+#' Sparse Random Projection Matrix
 #'
 #' @description
 #' Creates an object class \code{'randomprojection'} using arguments passed by
@@ -215,7 +215,7 @@ rp_sparse <- constructor_randomprojection(
 
 
 #'
-#' Sparse embedding matrix
+#' Sparse Embedding Matrix
 #'
 #' @param m goal dimension, which will be randomly sampled in the SPAR algorithm
 #' @param included_vector integer vector of column indices for the variables to be
@@ -322,7 +322,7 @@ update_rpm_w_data_cw <- function(rpm, rp, included_vector) {
 
 
 #'
-#' Sparse embedding matrix
+#' Sparse Embedding Matrix
 #'
 #' @description
 #' Creates an object class \code{'randomprojection'} using arguments passed by
@@ -369,7 +369,7 @@ rp_cw <- constructor_randomprojection(
   update_rpm_w_data = update_rpm_w_data_cw
 )
 
-#' print.randomprojection
+#' Print Method for a \code{'randomprojection'} Object
 #'
 #' Print method for a \code{'randomprojection'} object
 #' @param x object of class \code{'randomprojection'}

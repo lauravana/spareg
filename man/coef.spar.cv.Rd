@@ -2,7 +2,7 @@
 % Please edit documentation in R/sparegcv.R
 \name{coef.spar.cv}
 \alias{coef.spar.cv}
-\title{coef.spar.cv}
+\title{Coef Method for \code{'spar.cv'} Object}
 \usage{
 \method{coef}{spar.cv}(
   object,

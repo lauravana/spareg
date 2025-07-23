@@ -2,7 +2,7 @@
 % Please edit documentation in R/spareg.R
 \name{predict.spar}
 \alias{predict.spar}
-\title{predict.spar}
+\title{Predict Method for \code{'spar.cv'} Object}
 \usage{
 \method{predict}{spar}(
   object,

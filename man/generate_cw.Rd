@@ -2,7 +2,7 @@
 % Please edit documentation in R/rp_classes.R
 \name{generate_cw}
 \alias{generate_cw}
-\title{Sparse embedding matrix}
+\title{Sparse Embedding Matrix}
 \usage{
 generate_cw(rp, m, included_vector, x = NULL, y = NULL)
 }
@@ -22,6 +22,6 @@ screening step of the SPAR algorithm.}
 \code{length(included_vector)} columns.
 }
 \description{
-Sparse embedding matrix
+Sparse Embedding Matrix
 }
 \keyword{internal}

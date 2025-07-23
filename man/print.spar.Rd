@@ -2,7 +2,7 @@
 % Please edit documentation in R/spareg.R
 \name{print.spar}
 \alias{print.spar}
-\title{print.spar}
+\title{Summary of \code{'spar'} Object}
 \usage{
 \method{print}{spar}(x, ...)
 }

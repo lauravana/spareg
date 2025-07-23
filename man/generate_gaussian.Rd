@@ -2,7 +2,7 @@
 % Please edit documentation in R/rp_classes.R
 \name{generate_gaussian}
 \alias{generate_gaussian}
-\title{Gaussian random projection matrix}
+\title{Gaussian Random Projection Matrix}
 \usage{
 generate_gaussian(rp, m, included_vector, x = NULL, y = NULL)
 }
@@ -24,6 +24,6 @@ matrix with m rows and
 \code{length(included_vector)} columns sampled from the normal distribution.
 }
 \description{
-Gaussian random projection matrix
+Gaussian Random Projection Matrix
 }
 \keyword{internal}

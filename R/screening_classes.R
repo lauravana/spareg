@@ -1,4 +1,4 @@
-#' Constructor function for building \code{'screencoef'} objects
+#' Constructor Function for Building \code{'screencoef'} Objects
 #'
 #' Creates an object class \code{'screencoef'} using arguments passed by user.
 #' @param name character
@@ -64,7 +64,7 @@ generate_scrcoef_marglik <- function(y, x, object) {
   })
   coefs
 }
-#' Screening coefficient based on marginal GLMs
+#' Screening Coefficient Based on Marginal GLMs
 #'
 #' @param ... includes arguments which can be passed as attributes to the
 #' \code{'screencoef'} object
@@ -136,7 +136,7 @@ generate_scrcoef_cor <- function(y, x, object) {
   })
   coefs
 }
-#' Screening coefficient based  on correlation
+#' Screening Coefficient Based on Correlation
 #'
 #' Creates an object class \code{'screencoef'} using arguments passed by user.
 #' @param ... includes arguments which can be passed as attributes to the
@@ -236,7 +236,7 @@ generate_scrcoef_glmnet <- function(y, x, object) {
 }
 
 #'
-#' Screening coefficient based  on glmnet coefficients
+#' Screening Coefficient Based on \link[glmnet]{glmnet} Coefficients
 #'
 #' Creates an object class \code{'screencoef'} using arguments passed by user.
 #' @param ... includes arguments which can be passed as attributes to the
@@ -293,7 +293,7 @@ screen_glmnet <- constructor_screencoef(
   generate_fun = generate_scrcoef_glmnet)
 
 
-#' print.screencoef
+#' Print Method for \code{'screencoef'} Object
 #'
 #' Print method for a \code{'screencoef'} object
 #' @param x description

@@ -2,7 +2,7 @@
 % Please edit documentation in R/spareg.R
 \name{summary.coefspar}
 \alias{summary.coefspar}
-\title{Summary method for coefspar objects}
+\title{Summary Method for \code{'coefspar'} Object}
 \usage{
 \method{summary}{coefspar}(object, digits = 4L, ...)
 }

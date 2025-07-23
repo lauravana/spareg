@@ -2,7 +2,7 @@
 % Please edit documentation in R/spareg.R
 \name{print.coefspar}
 \alias{print.coefspar}
-\title{Print method for coefspar objects}
+\title{Print Method for \code{'coefspar'} Object}
 \usage{
 \method{print}{coefspar}(x, digits = 4L, show = 6L, ...)
 }

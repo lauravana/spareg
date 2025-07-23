@@ -1,5 +1,9 @@
 # spareg 1.1.0
 
+* Improved man pages.
+
+# spareg 1.1.1
+
 * Enhance `print` method with type of measure being used for choosing $M$ and $\nu$
 * Allow for cases where $p < n$.
 * Allow specification of possible beta values in `simulate_spareg_data()`.

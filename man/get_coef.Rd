@@ -2,7 +2,7 @@
 % Please edit documentation in R/spareg.R
 \name{get_coef}
 \alias{get_coef}
-\title{Extractor for model coefficients from `\code{coefspar}' object}
+\title{Extractor for Model Coefficients from \code{'coefspar'} Object}
 \usage{
 get_coef(x)
 }
@@ -13,7 +13,7 @@ get_coef(x)
 A numeric vector or matrix of coefficients.
 }
 \description{
-Extractor for model coefficients from `\code{coefspar}' object
+Extractor for Model Coefficients from \code{'coefspar'} Object
 }
 \seealso{
 \link{coef.spar}, \link{coef.spar.cv}, \link{print.coefspar}, \link{summary.coefspar}

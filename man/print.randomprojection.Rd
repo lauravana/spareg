@@ -2,7 +2,7 @@
 % Please edit documentation in R/rp_classes.R
 \name{print.randomprojection}
 \alias{print.randomprojection}
-\title{print.randomprojection}
+\title{Print Method for a \code{'randomprojection'} Object}
 \usage{
 \method{print}{randomprojection}(x, ...)
 }

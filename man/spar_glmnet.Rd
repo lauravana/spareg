@@ -2,7 +2,7 @@
 % Please edit documentation in R/sparmodel_classes.R
 \name{spar_glmnet}
 \alias{spar_glmnet}
-\title{Penalized GLM marginal models}
+\title{Penalized  GLM Marginal  \code{'sparmodel'}}
 \usage{
 spar_glmnet(..., control = list())
 }

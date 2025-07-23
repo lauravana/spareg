@@ -2,7 +2,7 @@
 % Please edit documentation in R/rp_classes.R
 \name{generate_sparse}
 \alias{generate_sparse}
-\title{Sparse random projection matrix}
+\title{Sparse Random Projection Matrix}
 \usage{
 generate_sparse(rp, m, included_vector, x = NULL, y = NULL)
 }
@@ -24,6 +24,6 @@ screening step of the SPAR algorithm.}
 \code{length(included_vector)} columns.
 }
 \description{
-Sparse random projection matrix
+Sparse Random Projection Matrix
 }
 \keyword{internal}

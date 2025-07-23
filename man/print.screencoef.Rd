@@ -2,7 +2,7 @@
 % Please edit documentation in R/screening_classes.R
 \name{print.screencoef}
 \alias{print.screencoef}
-\title{print.screencoef}
+\title{Print Method for \code{'screencoef'} Object}
 \usage{
 \method{print}{screencoef}(x, ...)
 }

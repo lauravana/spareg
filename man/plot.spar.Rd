@@ -2,7 +2,7 @@
 % Please edit documentation in R/spareg.R
 \name{plot.spar}
 \alias{plot.spar}
-\title{plot.spar}
+\title{Plot Method for \code{'spar'} Object}
 \usage{
 \method{plot}{spar}(
   x,

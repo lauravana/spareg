@@ -2,7 +2,7 @@
 % Please edit documentation in R/sparegcv.R
 \name{predict.spar.cv}
 \alias{predict.spar.cv}
-\title{predict.spar.cv}
+\title{Predict Method for \code{'spar.cv'} Object}
 \usage{
 \method{predict}{spar.cv}(
   object,

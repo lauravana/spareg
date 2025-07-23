@@ -2,7 +2,7 @@
 % Please edit documentation in R/rp_classes.R
 \name{rp_gaussian}
 \alias{rp_gaussian}
-\title{Gaussian random projection matrix}
+\title{Gaussian Random Projection Matrix}
 \usage{
 rp_gaussian(..., control = list())
 }

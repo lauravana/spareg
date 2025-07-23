@@ -2,7 +2,7 @@
 % Please edit documentation in R/rp_classes.R
 \name{constructor_randomprojection}
 \alias{constructor_randomprojection}
-\title{Constructor function for building \code{'randomprojection'} objects}
+\title{Constructor Function for Building \code{'randomprojection'} Object}
 \usage{
 constructor_randomprojection(
   name,

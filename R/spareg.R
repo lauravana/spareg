@@ -488,9 +488,9 @@ spar_algorithm <- function(x, y,
 }
 
 
-#' coef.spar
+#' Coef Method for \code{'spar'} Object
 #'
-#' Extract coefficients from \code{'spar'} object
+#' Extracts coefficients from \code{'spar'} bbject
 #' @param object result of [spar] function of class \code{'spar'}.
 #' @param nummod number of models used to form coefficients; value with minimal
 #'        validation \code{measure} is used if not provided.
@@ -587,7 +587,7 @@ coef.spar <- function(object,
   return(res)
 }
 
-#' Print method for coefspar objects
+#' Print Method for \code{'coefspar'} Object
 #'
 #' Print method showing the basic components of a  \code{'coefspar'} object.
 #'
@@ -684,7 +684,7 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
   invisible(x)
 }
 
-#' Summary method for coefspar objects
+#' Summary Method for \code{'coefspar'} Object
 #'
 #' Provides a summary of a \code{coefspar} object.
 #'
@@ -749,7 +749,7 @@ summary.coefspar <- function(object, digits = 4L, ...) {
 
 
 
-#' predict.spar
+#' Predict Method for \code{'spar.cv'} Object
 #'
 #' Predict responses for new predictors from \code{'spar'} object
 #' @param object result of spar function of class  \code{'spar'}.
@@ -813,7 +813,7 @@ predict.spar <- function(object,
   return(res)
 }
 #'
-#' plot.spar
+#' Plot Method for \code{'spar'} Object
 #'
 #' @description
 #' Plot values of validation measure or number of active variables over different thresholds or number of models for \code{'spar'} object, or residuals vs fitted
@@ -990,7 +990,7 @@ plot.spar <- function(x,
   return(res)
 }
 
-#' print.spar
+#' Summary of \code{'spar'} Object
 #'
 #' Print summary of \code{'spar'} object
 #' @param x result of [spar] function of class  \code{'spar'}.
@@ -1022,7 +1022,7 @@ print.spar <- function(x, ...) {
 }
 
 
-#' Extractor for model coefficients from `\code{coefspar}' object
+#' Extractor for Model Coefficients from \code{'coefspar'} Object
 #' @param x A `\code{coefspar}' object.
 #' @return A numeric vector or matrix of coefficients.
 #' @seealso [coef.spar], [coef.spar.cv], [print.coefspar], [summary.coefspar]
@@ -1032,7 +1032,7 @@ get_coef <- function(x) {
   x$beta
 }
 
-#' Extractor for model intercept from `\code{coefspar}' object
+#' Extractor for Model Intercept from \code{'coefspar'} Object
 #' @param x A `\code{coefspar}' object.
 #' @return Intercept (numeric or vector).
 #' @export
@@ -1041,7 +1041,7 @@ get_intercept <- function(x) {
   x$intercept
 }
 
-#' Extractor of model from a '\code{spar}' or '\code{spar.cv}' object
+#' Extractor of Specific Model from \code{'spar'} and \code{'spar.cv'} Object
 #'
 #' @param object A fitted '\code{spar}' or '\code{spar.cv}'  model
 #' @param opt_par One of "best", "1se"
@@ -1106,7 +1106,8 @@ get_model <- function(object, opt_par = c("best", "1se")) {
   return(object)
 }
 
-#' Extractor for (cross-)validation measure from '\code{spar}' or '\code{spar.cv}' object
+#' Extractor for (Cross-)Validation Measure from '\code{spar}' or '\code{spar.cv}' Object
+#'
 #' @param object A fitted '\code{spar}' or '\code{spar.cv}'  model
 #' @return data.frame containing the (cross-)validation measure for the considered threshold and number of model combinations.
 #' For '\code{spar}' objects it contains information about the measure  calculated on the validation set (or on the training sample if

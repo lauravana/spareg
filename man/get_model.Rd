@@ -2,7 +2,7 @@
 % Please edit documentation in R/spareg.R
 \name{get_model}
 \alias{get_model}
-\title{Extractor of model from a '\code{spar}' or '\code{spar.cv}' object}
+\title{Extractor of Specific Model from \code{'spar'} and \code{'spar.cv'} Object}
 \usage{
 get_model(object, opt_par = c("best", "1se"))
 }
@@ -16,7 +16,7 @@ A '\code{spar}'  or '\code{spar.cv}'  object where the beta and intercept elemen
 the ones which correspond to the best or the 1se model.
 }
 \description{
-Extractor of model from a '\code{spar}' or '\code{spar.cv}' object
+Extractor of Specific Model from \code{'spar'} and \code{'spar.cv'} Object
 }
 \examples{
 example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)

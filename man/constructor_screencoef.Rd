@@ -2,7 +2,7 @@
 % Please edit documentation in R/screening_classes.R
 \name{constructor_screencoef}
 \alias{constructor_screencoef}
-\title{Constructor function for building \code{'screencoef'} objects}
+\title{Constructor Function for Building \code{'screencoef'} Objects}
 \usage{
 constructor_screencoef(name, generate_fun)
 }

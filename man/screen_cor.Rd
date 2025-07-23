@@ -2,7 +2,7 @@
 % Please edit documentation in R/screening_classes.R
 \name{screen_cor}
 \alias{screen_cor}
-\title{Screening coefficient based  on correlation}
+\title{Screening Coefficient Based on Correlation}
 \usage{
 screen_cor(..., control = list())
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/sparmodel_classes.R
 \name{constructor_sparmodel}
 \alias{constructor_sparmodel}
-\title{Constructor function for building \code{'sparmodel'} objects}
+\title{Constructor Function for Building \code{'sparmodel'} Object}
 \usage{
 constructor_sparmodel(name, model_fun, update_fun = NULL)
 }

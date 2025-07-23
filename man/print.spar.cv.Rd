@@ -2,7 +2,7 @@
 % Please edit documentation in R/sparegcv.R
 \name{print.spar.cv}
 \alias{print.spar.cv}
-\title{print.spar.cv}
+\title{Print Method for \code{'spar.cv'} Object}
 \usage{
 \method{print}{spar.cv}(x, ...)
 }

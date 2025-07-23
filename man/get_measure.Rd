@@ -2,7 +2,7 @@
 % Please edit documentation in R/spareg.R
 \name{get_measure}
 \alias{get_measure}
-\title{Extractor for (cross-)validation measure from '\code{spar}' or '\code{spar.cv}' object}
+\title{Extractor for (Cross-)Validation Measure from '\code{spar}' or '\code{spar.cv}' Object}
 \usage{
 get_measure(object)
 }
@@ -17,7 +17,7 @@ on the average measure obtained across folds together with the standard deviatio
 the \code{nfolds} of the training set.
 }
 \description{
-Extractor for (cross-)validation measure from '\code{spar}' or '\code{spar.cv}' object
+Extractor for (Cross-)Validation Measure from '\code{spar}' or '\code{spar.cv}' Object
 }
 \examples{
 example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)

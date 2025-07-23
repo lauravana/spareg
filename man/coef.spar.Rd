@@ -2,7 +2,7 @@
 % Please edit documentation in R/spareg.R
 \name{coef.spar}
 \alias{coef.spar}
-\title{coef.spar}
+\title{Coef Method for \code{'spar'} Object}
 \usage{
 \method{coef}{spar}(
   object,
@@ -38,7 +38,7 @@ object of class  \code{'coefspar'} which is a list with elements
 }
 }
 \description{
-Extract coefficients from \code{'spar'} object
+Extracts coefficients from \code{'spar'} bbject
 }
 \seealso{
 \link{print.coefspar}, \link{summary.coefspar}

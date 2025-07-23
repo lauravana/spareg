@@ -2,7 +2,7 @@
 % Please edit documentation in R/rp_classes.R
 \name{rp_cw}
 \alias{rp_cw}
-\title{Sparse embedding matrix}
+\title{Sparse Embedding Matrix}
 \usage{
 rp_cw(..., control = list())
 }
