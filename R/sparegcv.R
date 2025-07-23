@@ -194,6 +194,12 @@ spareg.cv <- spar.cv
 #'  \item \code{nummod} number of models based on which the coefficient is computed
 #'  \item \code{nu}  threshold based on which the coefficient is computed
 #' }
+##' \donttest{
+#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
+#'   nummods = c(5, 10, 15, 20, 25, 30))
+#' coef(spar_res)
+#' }
 #' @export
 
 coef.spar.cv <- function(object,
@@ -330,6 +336,12 @@ coef.spar.cv <- function(object,
 #'        Defaults to mean aggregation.
 #' @param ... further arguments passed to or from other methods
 #' @return Vector of predictions
+#' @examples
+#' \donttest{
+#' spar_res <- spareg.cv(example_data$x, example_data$y,
+#'   nummods=c(5, 10))
+#' pred <- predict(spar_res, example_data$x)
+#' }
 #' @export
 predict.spar.cv <- function(object,
                             xnew = NULL,
@@ -409,6 +421,20 @@ predict.spar.cv <- function(object,
 #' @param ... further arguments passed to or from other methods
 #' @return \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
 #' @import ggplot2
+#' @examples
+#' \donttest{
+#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
+#'   nummods = c(5, 10))
+#' plot(spar_res)
+#' plot(spar_res, plot_type = "val_measure", plot_along = "nummod", nu = 0)
+#' plot(spar_res, plot_type = "val_measure", plot_along = "nu", nummod = 10)
+#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nummod", nu = 0)
+#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nu", nummod = 10)
+#' plot(spar_res, plot_type = "res_vs_fitted",  xfit = example_data$xtest,
+#'   yfit = example_data$ytest, opt_par = "1se")
+#' plot(spar_res, "coefs", prange = c(1, 400))
+#' }
 #' @export
 plot.spar.cv <- function(x,
                          plot_type = c("val_measure","val_numactive","res_vs_fitted","coefs"),
@@ -611,6 +637,12 @@ plot.spar.cv <- function(x,
 #' @param x result of  [spar.cv] function of class  \code{'spar.cv'}.
 #' @param ... further arguments passed to or from other methods
 #' @return text summary
+#' @examples
+#' \donttest{
+#' spar_res <- spareg.cv(example_data$x, example_data$y,
+#'   nummods=c(5, 10))
+#' print(spar_res)
+#' }
 #' @export
 print.spar.cv <- function(x, ...) {
   mycoef_best <- coef(x,opt_par = "best")

@@ -15,6 +15,24 @@
 #' @description
 #' The created function will return a object of class \code{'sparmodel'} which
 #' constitutes of a list.
+#' @examples
+#' model_glmrob <- function(y, z, object) {
+#'   requireNamespace("robustbase")
+#'   fam <- object$control$family
+#'   glmrob_res <- do.call(function(...)
+#'     robustbase::glmrob(y ~ as.matrix(z), ...),
+#'     object$control)
+#'   intercept <- coef(glmrob_res)[1]
+#'   gammas <- coef(glmrob_res)[-1]
+#'   list(gammas = gammas, intercept = intercept)
+#' }
+#' spar_glmrob <- constructor_sparmodel(name = "glmrob",
+#'   model_fun = model_glmrob)
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+#'   yval = example_data$ytest,
+#'   model = spar_glmrob())
+#' spar_res
 #' @export
 constructor_sparmodel <- function(name, model_fun, update_fun = NULL) {
   ## Checks
@@ -62,6 +80,11 @@ constructor_sparmodel <- function(name, model_fun, update_fun = NULL) {
 #' }
 #' @details
 #' Relies on \link[glmnet]{glmnet}.
+#' @examples
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' spar_res <- spar(example_data$x, example_data$y,
+#'   xval = example_data$xtest, yval = example_data$ytest,
+#'   model = spar_glmnet(alpha = 0.1))
 #'
 #' @export
 #'
@@ -137,7 +160,11 @@ model_glmnet <- function(y, z, object) {
 #' }
 #' @details
 #' Relies on \link[stats]{glm}.
-#'
+#' @examples
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' spar_res <- spar(example_data$x, example_data$y,
+#'   xval = example_data$xtest, yval = example_data$ytest,
+#'   model = spar_glm())
 #' @export
 #'
 spar_glm <- function(..., control = list()) {

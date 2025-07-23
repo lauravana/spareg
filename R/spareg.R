@@ -509,6 +509,14 @@ spar_algorithm <- function(x, y,
 #'  \item \code{nu}  threshold based on which the coefficient is computed
 #' }
 #' @seealso [print.coefspar], [summary.coefspar]
+#' @examples
+#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#' coef(spar_res)
+#' coef(spar_res, aggregate = "median")
+#' coef(spar_res, aggregate = "none")
+#' coef(spar_res, nummod = 5, nu = 0)
 #' @export
 #' @method coef spar
 coef.spar <- function(object,
@@ -763,6 +771,11 @@ summary.coefspar <- function(object, digits = 4L, ...) {
 #'        Defaults to mean aggregation.
 #' @param ... further arguments passed to or from other methods
 #' @return Vector of predictions
+#' @examples
+#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#' pred <- predict(spar_res, xnew = example_data$xtest)
 #' @export
 predict.spar <- function(object,
                          xnew = NULL,
@@ -838,7 +851,19 @@ predict.spar <- function(object,
 #' @return \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
 #'
 #' @import ggplot2
-#'
+#' @examples
+#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#' plot(spar_res)
+#' plot(spar_res, plot_type = "val_measure", plot_along = "nummod", nu = 0)
+#' plot(spar_res, plot_type = "val_measure", plot_along = "nu", nummod = 10)
+#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nummod", nu = 0)
+#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nu", nummod = 10)
+#' plot(spar_res, plot_type = "res_vs_fitted",  xfit = example_data$xtest,
+#'   yfit = example_data$ytest)
+#' plot(spar_res, plot_type = "coefs", prange = c(1,400))
+#
 #' @export
 #'
 plot.spar <- function(x,
@@ -996,6 +1021,11 @@ plot.spar <- function(x,
 #' @param x result of [spar] function of class  \code{'spar'}.
 #' @param ... further arguments passed to or from other methods
 #' @return text summary
+#' @examples
+#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#' print(spar_res)
 #' @export
 print.spar <- function(x, ...) {
   mycoef <- coef(x)
@@ -1026,6 +1056,13 @@ print.spar <- function(x, ...) {
 #' @param x A `\code{coefspar}' object.
 #' @return A numeric vector or matrix of coefficients.
 #' @seealso [coef.spar], [coef.spar.cv], [print.coefspar], [summary.coefspar]
+#' @examples
+#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#' coefs <- coef(spar_res)
+#' get_coef(coefs)
+#
 #' @export
 get_coef <- function(x) {
   stopifnot(inherits(x, "coefspar"))
@@ -1035,6 +1072,12 @@ get_coef <- function(x) {
 #' Extractor for Model Intercept from \code{'coefspar'} Object
 #' @param x A `\code{coefspar}' object.
 #' @return Intercept (numeric or vector).
+#' @examples
+#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#' coefs <- coef(spar_res)
+#' get_coef(coefs)
 #' @export
 get_intercept <- function(x) {
   stopifnot(inherits(x, "coefspar"))

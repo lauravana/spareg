@@ -34,7 +34,23 @@ update_rp <- function(...) {
 #' maximum dimension for the projection defaults to
 #' \code{list(mslow = NULL, msup = NULL)}
 #' @return a function which in turn creates an object of class \code{'randomprojection'}
-#'
+#' @examples
+#' generate_cauchy <- function(rp, m, included_vector, x = NULL, y = NULL) {
+#'   p <- length(included_vector)
+#'   control_rcauchy <- c(rp$control[names(rp$control) %in% names(formals(rcauchy))],
+#'     attributes(rp)[names(attributes(rp)) %in% names(formals(rcauchy))])
+#'   control_rcauchy <-  control_rcauchy[!duplicated(names(control_rcauchy))]
+#' vals <- do.call(function(...)
+#'   rcauchy(m * p, ...), control_rcauchy)
+#'  RM <- matrix(vals, nrow = m, ncol = p)
+#'  return(RM)
+#' }
+#' rp_cauchy <- constructor_randomprojection("rp_cauchy",
+#'   generate_fun = generate_cauchy)
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+#'   yval = example_data$ytest, rp = rp_cauchy(scale = 1/400))
+#' spar_res
 #' @export
 constructor_randomprojection <- function(name,
                                          generate_fun,

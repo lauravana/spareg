@@ -56,3 +56,18 @@ Plot cross-validation measure or number of active variables over different thres
 of models of \code{'spar.cv'} object, produce a residuals vs fitted plot,
 or a plot of the estimated coefficients in each marginal model, sorted by their absolute value.
 }
+\examples{
+\donttest{
+example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
+  nummods = c(5, 10))
+plot(spar_res)
+plot(spar_res, plot_type = "val_measure", plot_along = "nummod", nu = 0)
+plot(spar_res, plot_type = "val_measure", plot_along = "nu", nummod = 10)
+plot(spar_res, plot_type = "val_numactive",  plot_along = "nummod", nu = 0)
+plot(spar_res, plot_type = "val_numactive",  plot_along = "nu", nummod = 10)
+plot(spar_res, plot_type = "res_vs_fitted",  xfit = example_data$xtest,
+  yfit = example_data$ytest, opt_par = "1se")
+plot(spar_res, "coefs", prange = c(1, 400))
+}
+}

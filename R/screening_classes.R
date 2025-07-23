@@ -13,6 +13,21 @@
 #' default \code{type}, which can take one of two values \code{"prob"} (indicating
 #' probabilistic screening should be employed),
 #' \code{"fixed"} (indicating that the top \code{nscreen} variables should be employed).
+#' @examples
+#' generate_scr_sirs <- function(y, x, object) {
+#'   res_screen <- do.call(function(...)
+#'     VariableScreening::screenIID(x, y, ...),
+#'     object$control)
+#'   coefs <- res_screen$measurement
+#'   coefs
+#' }
+#' screen_sirs <- constructor_screencoef("screen_sirs",
+#'   generate_fun = generate_scr_sirs)
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' spar_example <- spar(example_data$x, example_data$y,
+#'   screencoef = screen_sirs(control = list(method = "SIRS")),
+#'   rp = rp_sparse())
+#' spar_example
 #' @export
 constructor_screencoef <- function(name, generate_fun) {
   ## Checks

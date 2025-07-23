@@ -34,3 +34,10 @@ Creates an object class \code{'sparmodel'} using arguments passed by user.
 \details{
 Relies on \link[glmnet]{glmnet}.
 }
+\examples{
+example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+spar_res <- spar(example_data$x, example_data$y,
+  xval = example_data$xtest, yval = example_data$ytest,
+  model = spar_glmnet(alpha = 0.1))
+
+}

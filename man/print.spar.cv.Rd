@@ -17,3 +17,10 @@ text summary
 \description{
 Print summary of \code{'spar.cv'} object
 }
+\examples{
+\donttest{
+spar_res <- spareg.cv(example_data$x, example_data$y,
+  nummods=c(5, 10))
+print(spar_res)
+}
+}

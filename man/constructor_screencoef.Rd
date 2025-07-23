@@ -27,3 +27,19 @@ probabilistic screening should be employed),
 \details{
 Creates an object class \code{'screencoef'} using arguments passed by user.
 }
+\examples{
+generate_scr_sirs <- function(y, x, object) {
+  res_screen <- do.call(function(...)
+    VariableScreening::screenIID(x, y, ...),
+    object$control)
+  coefs <- res_screen$measurement
+  coefs
+}
+screen_sirs <- constructor_screencoef("screen_sirs",
+  generate_fun = generate_scr_sirs)
+example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+spar_example <- spar(example_data$x, example_data$y,
+  screencoef = screen_sirs(control = list(method = "SIRS")),
+  rp = rp_sparse())
+spar_example
+}

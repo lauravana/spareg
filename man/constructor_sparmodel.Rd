@@ -29,3 +29,22 @@ constitutes of a list.
 \details{
 Creates an object of class \code{'sparmodel'} using arguments passed by user.
 }
+\examples{
+model_glmrob <- function(y, z, object) {
+  requireNamespace("robustbase")
+  fam <- object$control$family
+  glmrob_res <- do.call(function(...)
+    robustbase::glmrob(y ~ as.matrix(z), ...),
+    object$control)
+  intercept <- coef(glmrob_res)[1]
+  gammas <- coef(glmrob_res)[-1]
+  list(gammas = gammas, intercept = intercept)
+}
+spar_glmrob <- constructor_sparmodel(name = "glmrob",
+  model_fun = model_glmrob)
+example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+  yval = example_data$ytest,
+  model = spar_glmrob())
+spar_res
+}

@@ -40,3 +40,9 @@ Vector of predictions
 \description{
 Predict responses for new predictors from \code{'spar'} object
 }
+\examples{
+example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
+  yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+pred <- predict(spar_res, xnew = example_data$xtest)
+}
