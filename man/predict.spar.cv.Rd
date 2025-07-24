@@ -50,7 +50,8 @@ Predict responses for new predictors from \code{'spar.cv'} object
 }
 \examples{
 \donttest{
-spar_res <- spareg.cv(example_data$x, example_data$y,
+example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+spar_res <- spareg.cv(example_data$x, example_data$y, nfolds = 3L,
   nummods=c(5, 10))
 pred <- predict(spar_res, example_data$x)
 }

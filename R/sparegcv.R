@@ -194,7 +194,8 @@ spareg.cv <- spar.cv
 #'  \item \code{nummod} number of models based on which the coefficient is computed
 #'  \item \code{nu}  threshold based on which the coefficient is computed
 #' }
-##' \donttest{
+#' @examples
+#' \donttest{
 #' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
 #' spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
 #'   nummods = c(5, 10, 15, 20, 25, 30))
@@ -338,7 +339,8 @@ coef.spar.cv <- function(object,
 #' @return Vector of predictions
 #' @examples
 #' \donttest{
-#' spar_res <- spareg.cv(example_data$x, example_data$y,
+#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' spar_res <- spareg.cv(example_data$x, example_data$y, nfolds = 3L,
 #'   nummods=c(5, 10))
 #' pred <- predict(spar_res, example_data$x)
 #' }
@@ -639,6 +641,7 @@ plot.spar.cv <- function(x,
 #' @return text summary
 #' @examples
 #' \donttest{
+#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
 #' spar_res <- spareg.cv(example_data$x, example_data$y,
 #'   nummods=c(5, 10))
 #' print(spar_res)

@@ -19,6 +19,7 @@ Print summary of \code{'spar.cv'} object
 }
 \examples{
 \donttest{
+example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
 spar_res <- spareg.cv(example_data$x, example_data$y,
   nummods=c(5, 10))
 print(spar_res)
