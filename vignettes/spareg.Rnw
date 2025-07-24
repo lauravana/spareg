@@ -1339,10 +1339,10 @@ library(doParallel)
 library(doRNG)
 cl <- makeCluster(2, type = "PSOCK")
 registerDoParallel(cl)
-  registerDoRNG(seed = 123)
-  spar_res_par <- spar(example_data4$x, example_data4$y,
-    screencoef = screen_cor(), rp = rp_gaussian(),
-    nummods = 50, parallel = TRUE)
+registerDoRNG(seed = 123)
+spar_res_par <- spar(example_data4$x, example_data4$y,
+  screencoef = screen_cor(), rp = rp_gaussian(),
+  nummods = 50, parallel = TRUE)
 stopCluster(cl)
 @
 %
