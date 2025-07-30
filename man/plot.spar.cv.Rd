@@ -58,9 +58,9 @@ or a plot of the estimated coefficients in each marginal model, sorted by their 
 }
 \examples{
 \donttest{
-example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
-  nummods = c(5, 10))
+  screencoef = screen_cor(), rp = rp_gaussian(), nummods = c(5, 10))
 plot(spar_res)
 plot(spar_res, plot_type = "val_measure", plot_along = "nummod", nu = 0)
 plot(spar_res, plot_type = "val_measure", plot_along = "nu", nummod = 10)

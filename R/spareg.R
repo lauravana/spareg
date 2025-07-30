@@ -510,9 +510,9 @@ spar_algorithm <- function(x, y,
 #' }
 #' @seealso [print.coefspar], [summary.coefspar]
 #' @examples
-#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#'   yval = example_data$ytest, nummods=c(5, 10))
 #' coef(spar_res)
 #' coef(spar_res, aggregate = "median")
 #' coef(spar_res, aggregate = "none")
@@ -606,9 +606,9 @@ coef.spar <- function(object,
 #'
 #' @return Invisibly returns the input object \code{x}.
 #' @examples
-#' example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 100, p = 2000, ntest = 100)
 #' spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#'   yval = example_data$ytest, nummods=c(5, 10))
 #' coef(spar_res)
 #' coef(spar_res, aggregate = "median")
 #' coef(spar_res, aggregate = "none")
@@ -701,9 +701,9 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
 #' @param ... Additional arguments (ignored).
 #' @return Invisibly returns \code{object}.
 #' @examples
-#' example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 100, p = 2000, ntest = 100)
 #' spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#'   yval = example_data$ytest, nummods=c(5, 10))
 #' summary(coef(spar_res))
 #' summary(coef(spar_res, aggregate = "none"))
 #' @export
@@ -772,9 +772,9 @@ summary.coefspar <- function(object, digits = 4L, ...) {
 #' @param ... further arguments passed to or from other methods
 #' @return Vector of predictions
 #' @examples
-#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#'   yval = example_data$ytest, nummods=c(5, 10))
 #' pred <- predict(spar_res, xnew = example_data$xtest)
 #' @export
 predict.spar <- function(object,
@@ -852,9 +852,9 @@ predict.spar <- function(object,
 #'
 #' @import ggplot2
 #' @examples
-#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#'   yval = example_data$ytest, nummods=c(5, 10))
 #' plot(spar_res)
 #' plot(spar_res, plot_type = "val_measure", plot_along = "nummod", nu = 0)
 #' plot(spar_res, plot_type = "val_measure", plot_along = "nu", nummod = 10)
@@ -1022,9 +1022,9 @@ plot.spar <- function(x,
 #' @param ... further arguments passed to or from other methods
 #' @return text summary
 #' @examples
-#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#'   yval = example_data$ytest, nummods=c(5, 10))
 #' print(spar_res)
 #' @export
 print.spar <- function(x, ...) {
@@ -1057,9 +1057,9 @@ print.spar <- function(x, ...) {
 #' @return A numeric vector or matrix of coefficients.
 #' @seealso [coef.spar], [coef.spar.cv], [print.coefspar], [summary.coefspar]
 #' @examples
-#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#'   yval = example_data$ytest, nummods=c(5, 10))
 #' coefs <- coef(spar_res)
 #' get_coef(coefs)
 #
@@ -1073,9 +1073,9 @@ get_coef <- function(x) {
 #' @param x A `\code{coefspar}' object.
 #' @return Intercept (numeric or vector).
 #' @examples
-#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#'   yval = example_data$ytest, nummods=c(5, 10))
 #' coefs <- coef(spar_res)
 #' get_coef(coefs)
 #' @export
@@ -1094,11 +1094,13 @@ get_intercept <- function(x) {
 #' @examples
 #' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#'   yval = example_data$ytest, screencoef = screen_cor(),
+#'   rp = rp_gaussian(), nummods=c(5, 10))
 #' best_model <- get_model(spar_res, opt_par = "best")
 #' \donttest{
 #' spar_cv <- spar.cv(example_data$x, example_data$y,
-#'   nummods = c(5, 10, 15, 20, 25, 30), nfolds = 4)
+#'   screencoef = screen_cor(),
+#'   rp = rp_gaussian(), nummods = c(5, 10), nfolds = 4L)
 #' best_model_cv <- get_model(spar_cv, opt_par = "best")
 #' onese_model_cv <- get_model(spar_cv, opt_par = "1se")
 #' }
@@ -1160,7 +1162,7 @@ get_model <- function(object, opt_par = c("best", "1se")) {
 #' @examples
 #' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+#'   yval = example_data$ytest, nummods=c(5, 10))
 #' get_measure(spar_res)
 #'
 #' @seealso [spar], [spar.cv], [get_model]

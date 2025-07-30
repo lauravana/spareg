@@ -21,11 +21,13 @@ Extractor of Specific Model from \code{'spar'} and \code{'spar.cv'} Object
 \examples{
 example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-  yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+  yval = example_data$ytest, screencoef = screen_cor(),
+  rp = rp_gaussian(), nummods=c(5, 10))
 best_model <- get_model(spar_res, opt_par = "best")
 \donttest{
 spar_cv <- spar.cv(example_data$x, example_data$y,
-  nummods = c(5, 10, 15, 20, 25, 30), nfolds = 4)
+  screencoef = screen_cor(),
+  rp = rp_gaussian(), nummods = c(5, 10), nfolds = 4L)
 best_model_cv <- get_model(spar_cv, opt_par = "best")
 onese_model_cv <- get_model(spar_cv, opt_par = "1se")
 }

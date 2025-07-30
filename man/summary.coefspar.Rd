@@ -20,9 +20,9 @@ Invisibly returns \code{object}.
 Provides a summary of a \code{coefspar} object.
 }
 \examples{
-example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+example_data <- simulate_spareg_data(n = 100, p = 2000, ntest = 100)
 spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
-  yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+  yval = example_data$ytest, nummods=c(5, 10))
 summary(coef(spar_res))
 summary(coef(spar_res, aggregate = "none"))
 }

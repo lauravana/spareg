@@ -47,9 +47,9 @@ Extract coefficients from \code{'spar.cv'} object
 }
 \examples{
 \donttest{
-example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
-  nummods = c(5, 10, 15, 20, 25, 30))
+  nummods = c(5, 10))
 coef(spar_res)
 }
 }

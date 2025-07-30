@@ -1,14 +1,14 @@
 test_that("Results has right class", {
   x <- matrix(rnorm(300), ncol = 30)
   y <- rnorm(10)
-  spar_res <- spar(x, y)
+  spar_res <- spar(x, y,nummods = 3L)
   expect_equal(class(spar_res),"spar")
 })
 
 test_that("Coef returns vector of correct length", {
   x <- matrix(rnorm(300), ncol = 30)
   y <- rnorm(10)
-  spar_res <- spar(x,y)
+  spar_res <- spar(x,y,nummods = 5L)
   sparcoef <- coef(spar_res)
   expect_equal(length(sparcoef$beta),30)
 })
@@ -100,7 +100,7 @@ test_that("Columns with zero sd get ceofficient 0", {
   x <- example_data$x
   x[,c(1,11,111)] <- 2
   y <- example_data$y
-  spar_res <- spar(x,y)
+  spar_res <- spar(x, y, nummods = 5L, rp = rp_gaussian())
   sparcoef <- coef(spar_res)
   expect_equal(sparcoef$beta[c(1, 11, 111)], c("V1" = 0,"V11" = 0,"V111" = 0))
 })
@@ -119,13 +119,13 @@ test_that("Data splitting delivers different results", {
   x <- example_data$x
   y <- example_data$y
   set.seed(123)
-  spar_res <- spar(x,y,
+  spar_res <- spar(x,y,rp = rp_gaussian(),
                    screencoef = screen_cor(split_data_prop = 0.25))
   set.seed(123)
-  spar_res3 <- spar(x,y,
+  spar_res3 <- spar(x,y, rp = rp_gaussian(),
                     screencoef = screen_cor(split_data = TRUE)) # this should not work
   set.seed(123)
-  spar_res2 <- spar(x,y,
+  spar_res2 <- spar(x,y,rp = rp_gaussian(),
                     screencoef = screen_cor())
   sparcoef <- coef(spar_res)
   sparcoef2 <- coef(spar_res2)
@@ -178,23 +178,23 @@ test_that("Test the screen_glm() with poisson family", {
   set.seed(123)
   spar_screen_glm <- spar(x,yval, family = poisson(),
                           screencoef = screen_marglik(),
-                          rp = rp_gaussian())
-  expect_equal(round(spar_screen_glm$val_res$measure[1], 2), 1431.17)
+                          rp = rp_gaussian(), nummods = 5L)
+  expect_equal(round(spar_screen_glm$val_res$measure[1], 2), 1639.05)
 })
 
 test_that("Test get_intercept() and get_coef() extractor", {
   x <- example_data$x
   y <- example_data$y
-  spar_res <- spar(x, y, seed = 123)
+  spar_res <- spar(x, y, rp = rp_sparse(), seed = 123)
   cf <- coef(spar_res, opt_par = "best")
-  expect_equal(unname(get_intercept(cf)), 2.484463, tolerance = 1e-5)
-  expect_equal(unname(get_coef(cf)[1]), 0.06769493, tolerance = 1e-5)
+  expect_equal(unname(get_intercept(cf)), 1.817597, tolerance = 1e-5)
+  expect_equal(unname(get_coef(cf)[1]), -0.1274503, tolerance = 1e-5)
 })
 
 test_that("Test get_model() extractor", {
   x <- example_data$x
   y <- example_data$y
-  spar_res <- spar(x, y)
+  spar_res <- spar(x, y, rp = rp_sparse(), seed = 123)
   a <- get_model(spar_res, "best")
   expect_equal(nrow(a$val_res), 1)
 })
@@ -212,16 +212,23 @@ test_that("Test get_measure() extractor", {
 test_that("Test avg_type for validation", {
   x <- example_data$x
   y <- example_data$y
-  spar_res <- spar(x, y, nus = 0, seed = 123)
-  spar_res2 <- spar(x, y,nus = 0,  avg_type = "response", seed = 123)
+  spar_res <- spar(x, y, nus = 0, nummods = 10L,
+                   rp = rp_gaussian(), seed = 123)
+  spar_res2 <- spar(x, y,nus = 0, nummods = 10L,
+                    rp = rp_gaussian(),
+                    avg_type = "response", seed = 123)
   spar_res3 <- spar(x, abs(round(y)), family = poisson(),
-                    nus = 0, seed = 123)
-  spar_res4 <- spar(x, abs(round(y)), family = poisson(),
-                    nus = 0,  avg_type = "response", seed = 123)
+                    rp = rp_gaussian(),
+                    nus = 0,nummods = 10L, seed = 123)
+  spar_res4 <- spar(x, abs(round(y)), rp = rp_gaussian(),
+                    family = poisson(),
+                    nus = 0, nummods = 10L, avg_type = "response", seed = 123)
   spar_res5 <- spar(x, as.numeric(y > 0), family = binomial(),
-                    nus = 0, seed = 123)
+                    rp = rp_gaussian(),
+                    nus = 0, nummods = 10L, seed = 123)
   spar_res6 <- spar(x, as.numeric(y > 0), family = binomial(),
-                    nus = 0,  avg_type = "response", seed = 123)
+                    rp = rp_gaussian(),
+                    nus = 0, nummods = 10L, avg_type = "response", seed = 123)
   expect_equal(spar_res$val_res$measure, spar_res2$val_res$measure)
   expect_equal(spar_res$val_res$numactive, spar_res2$val_res$numactive)
   expect_lt(spar_res3$val_res$measure, spar_res4$val_res$measure)
@@ -240,12 +247,12 @@ test_that("Get results with parallel option", {
       doRNG::registerDoRNG(seed = 123)
       suppressMessages(
         spar_res2 <- spar(x, y, screencoef = screen_cor(),
-                          rp = rp_gaussian(),
+                          rp = rp_gaussian(), nummods = 10L,
                           parallel = TRUE)
       )
       suppressMessages(
         spar_res3 <- spar(x, y, screencoef = screen_cor(),
-                          rp = rp_gaussian(),
+                          rp = rp_gaussian(), nummods = 10L,
                           parallel = TRUE, seed = 123)
       )
     }
@@ -254,13 +261,12 @@ test_that("Get results with parallel option", {
   }
 })
 
+# Tests expecting errors
 test_that("Get errors for msup > nscreen", {
   x <- matrix(rnorm(300), ncol = 30)
   y <- rnorm(10)
-  expect_message(spar(x,y,nscreen = 18, msup = 20))
+  expect_message(spar(x,y, nscreen = 18, msup = 20))
 })
-
-# Tests expecting errors
 
 test_that("Get errors for data.frame input x", {
   x <- data.frame(matrix(rnorm(300), ncol = 30))
@@ -305,7 +311,7 @@ test_that("Get errors for to small length of inds and RPMs lists", {
 test_that("Get errors for prediction when xnew has wrong dimensions", {
   x <- example_data$x
   y <- example_data$y
-  spar_res <- spar(x,y)
+  spar_res <- spar(x, y, nummods = 5L)
   xnew <- example_data$xtest
   expect_error(predict(spar_res,xnew=xnew[,-1]))
 })

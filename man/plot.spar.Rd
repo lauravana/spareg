@@ -53,9 +53,9 @@ the order of the predictors; defaults to \code{1 : p}.}
 Plot values of validation measure or number of active variables over different thresholds or number of models for \code{'spar'} object, or residuals vs fitted
 }
 \examples{
-example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-  yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30))
+  yval = example_data$ytest, nummods=c(5, 10))
 plot(spar_res)
 plot(spar_res, plot_type = "val_measure", plot_along = "nummod", nu = 0)
 plot(spar_res, plot_type = "val_measure", plot_along = "nu", nummod = 10)
