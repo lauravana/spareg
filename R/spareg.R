@@ -375,15 +375,6 @@ spar_algorithm <- function(x, y,
               getDoParWorkers(), ' workers')
       `%d%` <- `%dopar%`
     }
-    if (!getDoParRegistered()) {
-      message('Warning: No doPar backend. Executing SPAR algorithm sequentially.
-               For using parallelization, please register backend and rerun.')
-      `%d%` <- `%do%`
-    } else {
-      message('Using ', getDoParName(), ' with ',
-              getDoParWorkers(), ' workers')
-      `%d%` <- `%dopar%`
-    }
     i <- NULL
     res_all <- foreach(i = seq_len(max_num_mod),
                        .verbose = FALSE,
