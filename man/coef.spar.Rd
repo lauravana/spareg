@@ -21,8 +21,11 @@ validation \code{measure} is used if not provided.}
 \item{nu}{threshold level used to form coefficients; value with minimal
 validation \code{measure} is used if not provided.}
 
-\item{aggregate}{character one of c("mean", "median", "none"). If set to "none"
-the coefficients are not aggregated over the marginal models, otherwise
+\item{aggregate}{character, one of c("mean", "median", "none"), giving the method of aggregating
+the coefficients over the marginal models. If set to "none",
+the coefficients are not aggregated over the marginal models and a
+matrix of coefficients, one column for each marginal model is returned.
+Otherwise
 the coefficients are aggregated using the specified method (mean or median).
 Defaults to mean aggregation.}
 
@@ -31,14 +34,16 @@ Defaults to mean aggregation.}
 \value{
 object of class  \code{'coefspar'} which is a list with elements
 \itemize{
-\item \code{intercept} intercept value
-\item \code{beta} vector of length p of averaged coefficients
-\item \code{nummod} number of models based on which the coefficient is computed
-\item \code{nu}  threshold based on which the coefficient is computed
+\item \code{intercept} average intercept value or vector intercepts (one for
+each marginal model) if \code{aggregate = "none"}.
+\item \code{beta} vector of length p of averaged coefficients or a
+p x \code{max(nummods)} matrix of coefficients if \code{agregate = "none"}.
+\item \code{nummod} number of models based on which the coefficients are computed
+\item \code{nu}  threshold based on which the coefficients are computed
 }
 }
 \description{
-Extracts coefficients from \code{'spar'} bbject
+Extracts coefficients from \code{'spar'} object
 }
 \examples{
 example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
