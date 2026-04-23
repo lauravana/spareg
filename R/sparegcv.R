@@ -481,16 +481,16 @@ plot.spar.cv <- function(x,
       ind_1se <- which.min(tmp_df$numactive[allowed_ind])
 
       res <- ggplot2::ggplot(data = tmp_df,
-                             ggplot2::aes(x = .data$nnu,y = .data$Meas)) +
+                             ggplot2::aes(x = .data$nu,y = .data$Meas)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         # ggplot2::scale_x_continuous(breaks=seq(1,nrow(my_val_sum),1),labels=round(my_val_sum$nu,3)) +
-        ggplot2::scale_x_continuous(
-          breaks=seq(1,nrow(tmp_df)),
-          labels=formatC(tmp_df$nu,
-                         format = "e", digits = digits)) +
+        # ggplot2::scale_x_continuous(
+        #   breaks=seq(1,nrow(tmp_df)),
+        #   labels=formatC(tmp_df$nu,
+        #                  format = "e", digits = digits)) +
         ggplot2::labs(x=expression(nu),y=spar_res$measure) +
-        ggplot2::geom_point(data=data.frame(x=tmp_df$nnu[ind_min],
+        ggplot2::geom_point(data=data.frame(x=tmp_df$nu[ind_min],
                                             y=tmp_df$Meas[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red") +
         ggplot2::ggtitle(paste0(tmp_title,mynummod)) +
@@ -499,7 +499,8 @@ plot.spar.cv <- function(x,
                              alpha=0.2,linetype=2,show.legend = FALSE) +
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
                             color="red",show.legend = FALSE,
-                            data=data.frame(x = c(tmp_df$nnu[ind_min],tmp_df$nnu[tmp_df$nu==nu_1se]),
+                            data=data.frame(x = c(tmp_df$nu[ind_min],
+                                                  tmp_df$nu[tmp_df$nu==nu_1se]),
                                             y = c(tmp_df$Meas[ind_min],tmp_df$Meas[tmp_df$nu==nu_1se])))
       # ggplot2::annotate("segment",x = tmp_df$nnu[ind_min],
       #                   y = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
