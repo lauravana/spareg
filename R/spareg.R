@@ -432,9 +432,9 @@ spar_algorithm <- function(x, y,
         numactive <- sum(beta_hat != 0)
       } else {
         tmp_intercept <- intercepts[seq_len(nummod)] +
-           drop(ycenter - crossprod(xcenter, tmp_beta))
+          drop(ycenter - crossprod(xcenter, tmp_beta))
         eta_hat <- sweep((xval %*% tmp_beta), tmp_intercept,
-                       MARGIN = 2, FUN = "+")
+                         MARGIN = 2, FUN = "+")
         y_hat <- rowMeans(family$linkinv(as.matrix(eta_hat)))
         val_measure <- val.meas(yval, y_hat = y_hat)
         numactive <- sum(rowSums(tmp_beta != 0) > 0)
@@ -481,23 +481,28 @@ spar_algorithm <- function(x, y,
 
 #' Coef Method for \code{'spar'} Object
 #'
-#' Extracts coefficients from \code{'spar'} bbject
+#' Extracts coefficients from \code{'spar'} object
 #' @param object result of [spar] function of class \code{'spar'}.
 #' @param nummod number of models used to form coefficients; value with minimal
 #'        validation \code{measure} is used if not provided.
 #' @param nu threshold level used to form coefficients; value with minimal
 #'        validation \code{measure} is used if not provided.
-#' @param aggregate character one of c("mean", "median", "none"). If set to "none"
-#'        the coefficients are not aggregated over the marginal models, otherwise
+#' @param aggregate character, one of c("mean", "median", "none"), giving the method of aggregating
+#'        the coefficients over the marginal models. If set to "none",
+#'        the coefficients are not aggregated over the marginal models and a
+#'        matrix of coefficients, one column for each marginal model is returned.
+#'        Otherwise
 #'        the coefficients are aggregated using the specified method (mean or median).
 #'        Defaults to mean aggregation.
 #' @param ... further arguments passed to or from other methods
 #' @return object of class  \code{'coefspar'} which is a list with elements
 #' \itemize{
-#'  \item \code{intercept} intercept value
-#'  \item \code{beta} vector of length p of averaged coefficients
-#'  \item \code{nummod} number of models based on which the coefficient is computed
-#'  \item \code{nu}  threshold based on which the coefficient is computed
+#'  \item \code{intercept} average intercept value or vector intercepts (one for
+#'  each marginal model) if \code{aggregate = "none"}.
+#'  \item \code{beta} vector of length p of averaged coefficients or a
+#'        p x \code{max(nummods)} matrix of coefficients if \code{agregate = "none"}.
+#'  \item \code{nummod} number of models based on which the coefficients are computed
+#'  \item \code{nu}  threshold based on which the coefficients are computed
 #' }
 #' @seealso [print.coefspar], [summary.coefspar]
 #' @examples
@@ -866,6 +871,7 @@ plot.spar <- function(x,
                       yfit = NULL,
                       prange = NULL,
                       coef_order = NULL,
+                      # scale_y_axis = c("none", "log10", "log"),
                       digits = 2L, ...) {
   spar_res <- x
   plot_type <- match.arg(plot_type)
@@ -881,6 +887,7 @@ plot.spar <- function(x,
                                              residuals=yfit-pred),
                            ggplot2::aes(x=.data$fitted,y=.data$residuals)) +
       ggplot2::geom_point() +
+      ggplot2::theme_bw() +
       ggplot2::geom_hline(yintercept = 0,linetype=2,linewidth=0.5)
   } else if (plot_type == "val_measure") {
     if (plot_along=="nu") {
@@ -895,14 +902,13 @@ plot.spar <- function(x,
       ind_min <- which.min(tmp_df$measure)
 
       res <- ggplot2::ggplot(data = tmp_df,
-                             ggplot2::aes(x=.data$nnu,y=.data$measure)) +
+                             ggplot2::aes(x=.data$nu,y=.data$measure)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
-        ggplot2::scale_x_continuous(breaks=seq(1,nrow(tmp_df)),
-                                    labels=formatC(tmp_df$nu,
-                                                   format = "e", digits = digits)) +
-        ggplot2::labs(x=expression(nu),y=spar_res$measure) +
-        ggplot2::geom_point(data=data.frame(x=tmp_df$nnu[ind_min],
+        ggplot2::theme_bw() +
+        ggplot2::labs(x=expression(nu),
+                      y=spar_res$measure) +
+        ggplot2::geom_point(data=data.frame(x=tmp_df$nu[ind_min],
                                             y=tmp_df$measure[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red") +
         ggplot2::ggtitle(paste0(tmp_title,mynummod))
@@ -920,10 +926,13 @@ plot.spar <- function(x,
                              ggplot2::aes(x=.data$nummod,y=.data$measure)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
+        ggplot2::theme_bw() +
         ggplot2::labs(y=spar_res$measure) +
-        ggplot2::geom_point(data=data.frame(x=tmp_df$nummod[ind_min],y=tmp_df$measure[ind_min]),
+        ggplot2::geom_point(data = data.frame(x = tmp_df$nummod[ind_min],
+                                              y = tmp_df$measure[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red")+
-        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3))))
+        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),
+                                    list(txt=tmp_title,v=round(nu,3))))
     }
   } else if (plot_type=="val_numactive") {
     if (plot_along=="nu") {
@@ -939,6 +948,7 @@ plot.spar <- function(x,
       res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nnu,y=.data$numactive)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
+        ggplot2::theme_bw() +
         # ggplot2::scale_x_continuous(breaks=seq(1,nrow(spar_res$val_res),1),labels=round(spar_res$val_res$nu,3)) +
         ggplot2::scale_x_continuous(breaks=seq(1,nrow(spar_res$val_res),1),
                                     labels=formatC(spar_res$val_res$nu[seq(1,nrow(spar_res$val_res),1)],
@@ -960,6 +970,7 @@ plot.spar <- function(x,
       res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nummod,y=.data$numactive)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
+        ggplot2::theme_bw() +
         ggplot2::geom_point(
           data=data.frame(x=tmp_df$nummod[ind_min],
                           y=tmp_df$numactive[ind_min]),
@@ -1022,7 +1033,7 @@ print.spar <- function(x, ...) {
   mycoef <- coef(x)
   beta <- mycoef$beta
   measure <- x$val_res$measure[mycoef$nu == x$val_res$nu &
-    mycoef$nummod == x$val_res$nummod ]
+                                 mycoef$nummod == x$val_res$nummod ]
   if (nrow(x$val_res) == 1) {
     cat(sprintf("spar object: \nValidation measure (%s) of %s reached for nummod=%d,
               nu=%s leading to %d / %d active predictors.\n",
