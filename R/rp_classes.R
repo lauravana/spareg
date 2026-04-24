@@ -1,4 +1,5 @@
 #' @keywords internal
+#' @export
 update_rp <- function(...) {
   args <- list2(...)
   if (is.null(attr(args$rp, "family"))) {
@@ -12,7 +13,6 @@ update_rp <- function(...) {
 #' Constructor Function for Building \code{'randomprojection'} Object
 #'
 #' Creates an object class \code{'randomprojection'} using arguments passed by user.
-#' @param name character
 #' @param generate_fun function for generating the random projection matrix. This
 #' function should have with arguments \code{rp}, which is a \code{'randomprojection'}
 #' object, \code{m}, the target dimension and a vector of indexes
@@ -20,12 +20,14 @@ update_rp <- function(...) {
 #' Vector \code{included_vector} shows the column index of the original variables in the
 #' \code{x} matrix to be projected using the random projection. This is needed
 #' due to the fact that screening is employed pre-projection.
-#' @param update_fun function for updating the \code{'randomprojection'} object with
+#' @param name optional string describing the random projection method. This is used for printing.
+
+#' @param update_fun optional function for updating the \code{'randomprojection'} object with
 #' information from the data. This
 #' function should have arguments \code{rp}, which is a \code{'randomprojection'}
 #' object and `x` (the matrix of predictors)
 #' and `y` (the vector of responses).
-#' @param update_rpm_w_data function for updating the random projection matrix with data.
+#' @param update_rpm_w_data optional function for updating the random projection matrix with data.
 #' This can be used for the case where a list of random projection matrices is
 #' provided by argument \code{RPMs}. In this case, the random structure is kept
 #' fixed, but the data-dependent part gets updated with the provided data. Defaults
@@ -45,15 +47,15 @@ update_rp <- function(...) {
 #'  RM <- matrix(vals, nrow = m, ncol = p)
 #'  return(RM)
 #' }
-#' rp_cauchy <- constructor_randomprojection("rp_cauchy",
-#'   generate_fun = generate_cauchy)
+#' rp_cauchy <- constructor_randomprojection(
+#'   generate_fun = generate_cauchy, name = "rp_cauchy")
 #' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
 #'   yval = example_data$ytest, rp = rp_cauchy(scale = 1/400))
 #' spar_res
 #' @export
-constructor_randomprojection <- function(name,
-                                         generate_fun,
+constructor_randomprojection <- function(generate_fun,
+                                         name = NULL,
                                          update_fun = NULL,
                                          update_rpm_w_data = NULL,
                                          control = list()) {
@@ -124,7 +126,7 @@ generate_gaussian <- function(rp, m, included_vector, x = NULL, y = NULL) {
 #' \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}
 #'
 #' @return object of class \code{'randomprojection'} which is a list with
-#' elements name,
+#' elements \code{name},
 #' \code{generate_fun},  \code{update_fun},  \code{control}
 #'
 #' @details
@@ -148,7 +150,7 @@ generate_gaussian <- function(rp, m, included_vector, x = NULL, y = NULL) {
 #' @export
 #'
 rp_gaussian <- constructor_randomprojection(
-  "rp_gaussian",
+  name = "rp_gaussian",
   generate_fun = generate_gaussian
 )
 
@@ -193,7 +195,7 @@ generate_sparse <- function(rp, m, included_vector, x = NULL, y = NULL) {
 #' \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}
 #'
 #' @return object of class \code{'randomprojection'} which is a list with
-#' elements name,
+#' elements \code{name},
 #' \code{generate_fun},  \code{update_fun},  \code{control}
 #'
 #' @details
@@ -225,7 +227,7 @@ generate_sparse <- function(rp, m, included_vector, x = NULL, y = NULL) {
 #' @export
 #'
 rp_sparse <- constructor_randomprojection(
-  "rp_sparse",
+  name = "rp_sparse",
   generate_fun = generate_sparse
 )
 
@@ -351,7 +353,7 @@ update_rpm_w_data_cw <- function(rpm, rp, included_vector) {
 #' \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}
 #'
 #' @return object of class \code{'randomprojection'} which is a list with
-#' elements name,
+#' elements \code{name},
 #' \code{generate_fun},  \code{update_fun},  \code{control}
 #'
 #' @details
@@ -379,7 +381,7 @@ update_rpm_w_data_cw <- function(rpm, rp, included_vector) {
 #'
 #' @export
 rp_cw <- constructor_randomprojection(
-  "rp_cw",
+  name = "rp_cw",
   generate_fun = generate_cw,
   update_fun = update_rp_cw,
   update_rpm_w_data = update_rpm_w_data_cw
@@ -394,7 +396,7 @@ rp_cw <- constructor_randomprojection(
 #'
 #' @export
 print.randomprojection <- function(x, ...) {
-  cat(paste0("Name: ", x$name), "\n")
+  if (!is.null(x$name)) cat(paste0("Name: ", x$name), "\n")
   cat("Main attributes:", "\n")
   # cat("* Data-dependent:", attr(x,"data"), "\n")
   cat("* Lower bound on goal dimension m:",

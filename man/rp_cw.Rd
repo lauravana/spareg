@@ -15,7 +15,7 @@ projection matrix}
 }
 \value{
 object of class \code{'randomprojection'} which is a list with
-elements name,
+elements \code{name},
 \code{generate_fun},  \code{update_fun},  \code{control}
 }
 \description{

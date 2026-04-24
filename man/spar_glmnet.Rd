@@ -15,7 +15,7 @@ spar_glmnet(..., control = list())
 \value{
 object of class \code{'sparmodel'} which is a list with elements
 \itemize{
-\item \code{name} (character)
+\item \code{name} (character, optional, used for printing)
 \item \code{control} (list of controls passed as an argument)
 \item \code{model_fun}  for generating the screening coefficient.
 This function should have arguments \code{y}, vector of standardized responses,
