@@ -1,12 +1,14 @@
-# spareg 1.0.0
+# spareg 1.2.0
 
-* Initial CRAN submission.
+* Change plot methods to display original scale for the threshold parameter when plot_along = "nu".
+* Remove duplicated warning sign in parallel case.
 
-# spareg 1.1.0
+
+# spareg 1.1.1
 
 * Improved man pages.
 
-# spareg 1.1.1
+# spareg 1.1.0
 
 * Enhance `print` method with type of measure being used for choosing $M$ and $\nu$
 * Allow for cases where $p < n$.
@@ -27,4 +29,8 @@ to extract the intercept and coefficients (non-standardized) from the
 argument is used in computing the validation measure.
 * Removed `coef` argument from `predict` method.
 * Added `aggregate = c("mean", "median")` argument for `predict` method.
+
+# spareg 1.0.0
+
+* Initial CRAN submission.
 
