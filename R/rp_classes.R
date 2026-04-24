@@ -1,5 +1,4 @@
 #' @keywords internal
-#' @export
 update_rp <- function(...) {
   args <- list2(...)
   if (is.null(attr(args$rp, "family"))) {
@@ -27,6 +26,9 @@ update_rp <- function(...) {
 #' function should have arguments \code{rp}, which is a \code{'randomprojection'}
 #' object and `x` (the matrix of predictors)
 #' and `y` (the vector of responses).
+#' If `update_fun` is not provided,
+#' the internal function `update_rp()` is
+#' used as the default which only manipulates the family string.
 #' @param update_rpm_w_data optional function for updating the random projection matrix with data.
 #' This can be used for the case where a list of random projection matrices is
 #' provided by argument \code{RPMs}. In this case, the random structure is kept
@@ -65,7 +67,7 @@ constructor_randomprojection <- function(generate_fun,
   if (!is.null(update_fun)) {
     stopifnot("Function update_fun should have as argument .... All arguments of spar are passed through ..."=names(formals(update_fun)) %in% c("..."))
   } else {
-    update_fun <- update_rp
+    update_fun <- spareg:::update_rp
   }
   if (!is.null(update_rpm_w_data)) {
     stopifnot(

@@ -27,7 +27,10 @@ due to the fact that screening is employed pre-projection.}
 information from the data. This
 function should have arguments \code{rp}, which is a \code{'randomprojection'}
 object and \code{x} (the matrix of predictors)
-and \code{y} (the vector of responses).}
+and \code{y} (the vector of responses).
+If \code{update_fun} is not provided,
+the internal function \code{update_rp()} is
+used as the default which only manipulates the family string.}
 
 \item{update_rpm_w_data}{optional function for updating the random projection matrix with data.
 This can be used for the case where a list of random projection matrices is
