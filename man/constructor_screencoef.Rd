@@ -4,15 +4,15 @@
 \alias{constructor_screencoef}
 \title{Constructor Function for Building \code{'screencoef'} Objects}
 \usage{
-constructor_screencoef(name, generate_fun)
+constructor_screencoef(generate_fun, name = NULL)
 }
 \arguments{
-\item{name}{character}
-
 \item{generate_fun}{function for generating the screening coefficient. This
 function should have arguments  and   \code{y} (vector of responses -- standardized
 for Gaussian family), \code{x} (the matrix of standardized predictors) and a
 \code{'screencoef'} object.}
+
+\item{name}{character}
 }
 \value{
 a function which in turn creates an object of class \code{'screencoef'}

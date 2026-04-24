@@ -16,7 +16,7 @@ screen_glmnet(..., control = list())
 object of class \code{'screencoef'} which is a list with elements
 
 \itemize{
-\item \code{name} (character)
+\item \code{name} (character, optional, used for printing)
 \item \code{control} (list of controls passed as an argument)
 \item \code{generate_fun}  for generating the screening coefficient.
 This function should have arguments  and   \code{y} (vector of (standardized for Gaussian) responses),

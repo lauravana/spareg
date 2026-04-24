@@ -1,12 +1,12 @@
 #' Constructor Function for Building \code{'sparmodel'} Object
 #'
 #' Creates an object of class \code{'sparmodel'} using arguments passed by user.
-#' @param name character
 #' @param model_fun function for estimating the marginal models which returns the
 #     intercept and the vector of coefficients. This
 #'    function should have arguments  and   \code{y} (vector of responses -- standardized
 #'    for Gaussian family), \code{z} (the matrix of projected predictors) and a
 #'    \code{'sparmodel'} \code{object}.
+#' @param name optional string describing the model employed. This is used for printing.
 #' @param update_fun optional function for updating the \code{'sparmodel'} object
 #'  before the
 #' start of the algorithm.
@@ -26,15 +26,17 @@
 #'   gammas <- coef(glmrob_res)[-1]
 #'   list(gammas = gammas, intercept = intercept)
 #' }
-#' spar_glmrob <- constructor_sparmodel(name = "glmrob",
-#'   model_fun = model_glmrob)
+#' spar_glmrob <- constructor_sparmodel(
+#'   model_fun = model_glmrob,name = "glmrob")
 #' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
 #'   yval = example_data$ytest,
 #'   model = spar_glmrob())
 #' spar_res
 #' @export
-constructor_sparmodel <- function(name, model_fun, update_fun = NULL) {
+constructor_sparmodel <- function(model_fun,
+                                  name = NULL,
+                                  update_fun = NULL) {
   ## Checks
   args_generate_fun <- formals(model_fun)
   stopifnot("Function model_fun should contain three arguments: y, z and an object
@@ -66,7 +68,7 @@ constructor_sparmodel <- function(name, model_fun, update_fun = NULL) {
 #' @param control list of controls to be passed to the model function
 #' @return object of class \code{'sparmodel'} which is a list with elements
 #' \itemize{
-#'  \item \code{name} (character)
+#'  \item \code{name} (character, optional, used for printing)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{model_fun}  for generating the screening coefficient.
 #'   This function should have arguments \code{y}, vector of standardized responses,
@@ -149,7 +151,7 @@ model_glmnet <- function(y, z, object) {
 #' @param control list of controls to be passed to the model function
 #' @return object of class \code{'sparmodel'} which is a list with elements
 #' \itemize{
-#'  \item \code{name} (character)
+#'  \item \code{name} (character, optional, used for printing)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{model_fun} function for estimating the model coefficients and the intercept.
 #'   This function should have arguments \code{y}, vector of standardized responses,

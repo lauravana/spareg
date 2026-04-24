@@ -29,7 +29,7 @@
 #'   rp = rp_sparse())
 #' spar_example
 #' @export
-constructor_screencoef <- function(name, generate_fun) {
+constructor_screencoef <- function(generate_fun, name = NULL) {
   ## Checks
   args_generate_fun <- formals(generate_fun)
   stopifnot("Function generate_fun should contain three arguments: x, y and an object
@@ -87,7 +87,7 @@ generate_scrcoef_marglik <- function(y, x, object) {
 #' @return object of class \code{'screencoef'} which is a list with elements:
 #'
 #' \itemize{
-#'  \item \code{name} (character)
+#'  \item \code{name} (character, optional, used for printing)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{generate_fun}  for generating the screening coefficient.
 #'  This function should have arguments  and   \code{y} (vector of (standardized for Gaussian) responses),
@@ -159,7 +159,7 @@ generate_scrcoef_cor <- function(y, x, object) {
 #' @param control list of controls to be passed to the screening function
 #' @return object of class \code{'screencoef'} which is a list with elements
 #' \itemize{
-#'  \item \code{name} (character)
+#'  \item \code{name} (character, optional, used for printing)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{generate_fun}  for generating the screening coefficient.
 #'  This function should have arguments  and   \code{y} (vector of (standardized for Gaussian) responses),
@@ -260,7 +260,7 @@ generate_scrcoef_glmnet <- function(y, x, object) {
 #' @return object of class \code{'screencoef'} which is a list with elements
 #'
 #' \itemize{
-#'  \item \code{name} (character)
+#'  \item \code{name} (character, optional, used for printing)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{generate_fun}  for generating the screening coefficient.
 #'  This function should have arguments  and   \code{y} (vector of (standardized for Gaussian) responses),
@@ -317,7 +317,7 @@ screen_glmnet <- constructor_screencoef(
 #'
 #' @export
 print.screencoef <- function(x, ...) {
-  cat(paste0("Name: ", x$name), "\n")
+  if (!is.null(x$name)) cat(paste0("Name: ", x$name), "\n")
   cat("Main attributes:", "\n")
   cat("* proportion of data used for screening:",
       ifelse(is.null(attr(x, "split_data_prop")),
