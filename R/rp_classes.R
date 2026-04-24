@@ -67,7 +67,7 @@ constructor_randomprojection <- function(generate_fun,
   if (!is.null(update_fun)) {
     stopifnot("Function update_fun should have as argument .... All arguments of spar are passed through ..."=names(formals(update_fun)) %in% c("..."))
   } else {
-    update_fun <- spareg:::update_rp
+    update_fun <- update_rp
   }
   if (!is.null(update_rpm_w_data)) {
     stopifnot(
