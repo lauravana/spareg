@@ -931,6 +931,8 @@ plot.spar <- function(x,
         ggplot2::geom_point(data = data.frame(x = tmp_df$nummod[ind_min],
                                               y = tmp_df$measure[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red")+
+        scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
+                           minor_breaks = NULL)+
         ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),
                                     list(txt=tmp_title,v=round(nu,3))))
     }
@@ -945,16 +947,16 @@ plot.spar <- function(x,
       tmp_df <- spar_res$val_res[spar_res$val_res$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$measure)
 
-      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nnu,y=.data$numactive)) +
+      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nu,y=.data$numactive)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         ggplot2::theme_bw() +
         # ggplot2::scale_x_continuous(breaks=seq(1,nrow(spar_res$val_res),1),labels=round(spar_res$val_res$nu,3)) +
-        ggplot2::scale_x_continuous(breaks=seq(1,nrow(spar_res$val_res),1),
-                                    labels=formatC(spar_res$val_res$nu[seq(1,nrow(spar_res$val_res),1)],
-                                                   format = "e", digits = digits)) +
+        #ggplot2::scale_x_continuous(breaks=seq(1,nrow(spar_res$val_res),1),
+        #                            labels=formatC(spar_res$val_res$nu[seq(1,nrow(spar_res$val_res),1)],
+        #                                           format = "e", digits = digits)) +
         ggplot2::labs(x=expression(nu)) +
-        ggplot2::geom_point(data=data.frame(x=tmp_df$nnu[ind_min],y=tmp_df$numactive[ind_min]),
+        ggplot2::geom_point(data=data.frame(x=tmp_df$nu[ind_min],y=tmp_df$numactive[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red")+
         ggplot2::ggtitle(paste0(tmp_title,mynummod))
     } else {
@@ -975,6 +977,8 @@ plot.spar <- function(x,
           data=data.frame(x=tmp_df$nummod[ind_min],
                           y=tmp_df$numactive[ind_min]),
           ggplot2::aes(x = .data$x,y=.data$y),col="red")+
+        scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
+                           minor_breaks = NULL)+
         ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),
                                     list(txt=tmp_title,v=round(nu,3))))
     }

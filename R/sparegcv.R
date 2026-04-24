@@ -466,6 +466,7 @@ plot.spar.cv <- function(x,
     res <- ggplot2::ggplot(data = data.frame(fitted=pred,residuals=yfit-pred),
                            ggplot2::aes(x=.data$fitted,y=.data$residuals)) +
       ggplot2::geom_point() +
+      ggplot2::theme_bw() +
       ggplot2::geom_hline(yintercept = 0,linetype=2,linewidth=0.5)
   } else if (plot_type=="val_measure") {
     if (plot_along=="nu") {
@@ -475,18 +476,18 @@ plot.spar.cv <- function(x,
       } else {
         tmp_title <- "Fixed given nummod="
       }
+
       nu_1se <- coef(spar_res, opt_par = "1se")$nu
       tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$Meas)
-
-      allowed_ind <- tmp_df$mean_measure < (tmp_df$Meas+tmp_df$sd_measure)[ind_min]
-      ind_1se <- which.min(tmp_df$numactive[allowed_ind])
+      ind_1se <- which(tmp_df$nu == nu_1se)
 
       res <- ggplot2::ggplot(data = tmp_df,
                              ggplot2::aes(x = .data$nu,y = .data$Meas)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
-        # ggplot2::scale_x_continuous(breaks=seq(1,nrow(my_val_sum),1),labels=round(my_val_sum$nu,3)) +
+        ggplot2::theme_bw() +
+        #ggplot2::scale_x_continuous(breaks = sort(unique(tmp_df$nu))) +
         # ggplot2::scale_x_continuous(
         #   breaks=seq(1,nrow(tmp_df)),
         #   labels=formatC(tmp_df$nu,
@@ -503,12 +504,12 @@ plot.spar.cv <- function(x,
                             color="red",show.legend = FALSE,
                             data=data.frame(x = c(tmp_df$nu[ind_min],
                                                   tmp_df$nu[tmp_df$nu==nu_1se]),
-                                            y = c(tmp_df$Meas[ind_min],tmp_df$Meas[tmp_df$nu==nu_1se])))
-      # ggplot2::annotate("segment",x = tmp_df$nnu[ind_min],
-      #                   y = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
-      #                   xend = tmp_df$nnu[allowed_ind][ind_1se],
-      #                   yend = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
-      #                   color=2,linetype=2)
+                                            y = c(tmp_df$Meas[ind_min],tmp_df$Meas[tmp_df$nu==nu_1se]))) +
+      ggplot2::annotate("segment",x = tmp_df$nu[ind_min],
+                        y = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
+                        xend = tmp_df$nu[ind_1se],
+                        yend = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
+                        color=2,linetype=2)
     } else {
       if (is.null(nu)) {
         nu <- my_val_sum$nu[which.min(my_val_sum$Meas)]
@@ -540,7 +541,10 @@ plot.spar.cv <- function(x,
                           y = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
                           xend = tmp_df$nummod[allowed_ind][ind_1se],
                           yend = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
-                          color=2,linetype=2)
+                          color=2,linetype=2) +
+        ggplot2::theme_bw() +
+        scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
+                           minor_breaks = NULL)
     }
   } else if (plot_type=="val_numactive") {
     if (plot_along=="nu") {
@@ -556,18 +560,19 @@ plot.spar.cv <- function(x,
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sd_measure[ind_min]
       ind_1se <- which.min(tmp_df$numactive[allowed_ind])
 
-      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nnu,y=.data$numactive)) +
+      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nu,y=.data$numactive)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         # ggplot2::scale_x_continuous(breaks=seq(1,nrow(my_val_sum),1),labels=round(my_val_sum$nu,3)) +
-        ggplot2::scale_x_continuous(breaks=seq(1,nrow(tmp_df),2),
-                                    labels=formatC(tmp_df$nu[seq(1,nrow(tmp_df),2)],
-                                                   format = "e", digits = digits)) +
+        #ggplot2::scale_x_continuous(breaks=seq(1,nrow(tmp_df),2),
+        #                            labels=formatC(tmp_df$nu[seq(1,nrow(tmp_df),2)],
+        #                                           format = "e", digits = digits)) +
         ggplot2::labs(x=expression(nu)) +
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
                             color=2,show.legend = FALSE,
-                            data=data.frame(x = c(tmp_df$nnu[ind_min],tmp_df$nnu[allowed_ind][ind_1se]),
+                            data=data.frame(x = c(tmp_df$nu[ind_min],tmp_df$nu[allowed_ind][ind_1se]),
                                             y = c(tmp_df$numactive[ind_min],tmp_df$numactive[allowed_ind][ind_1se]))) +
+        ggplot2::theme_bw() +
         ggplot2::ggtitle(paste0(tmp_title,mynummod))
     } else {
       if (is.null(nu)) {
@@ -585,11 +590,13 @@ plot.spar.cv <- function(x,
       res <- ggplot2::ggplot(data = tmp_df,
                              ggplot2::aes(x=.data$nummod,y=.data$numactive)) +
         ggplot2::geom_point() +
-        ggplot2::geom_line() +
+        ggplot2::geom_line() + ggplot2::theme_bw() +
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
                             color=2,show.legend = FALSE,
                             data=data.frame(x = c(tmp_df$nummod[ind_min],tmp_df$nummod[allowed_ind][ind_1se]),
                                             y = c(tmp_df$numactive[ind_min],tmp_df$numactive[allowed_ind][ind_1se]))) +
+        scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
+                           minor_breaks = NULL)+
         ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3))))
 
     }
