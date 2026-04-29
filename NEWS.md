@@ -2,7 +2,7 @@
 
 * Change plot methods to display original scale for the threshold parameter when plot_along = "nu".
 * Remove duplicated warning sign in parallel case.
-
+* Make "name" argument optional in the constructor functions.
 
 # spareg 1.1.1
 

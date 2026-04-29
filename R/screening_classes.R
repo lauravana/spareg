@@ -230,10 +230,15 @@ generate_scrcoef_glmnet <- function(y, x, object) {
   # Set lambda.min.ration to close to zero unless otherwise specified
   if (is.null(control_glmnet$lambda.min.ratio)) {
     tmp_sc <- apply(x, 2, function(col) sqrt(var(col)*(n-1)/n))
+    # TODO: allow for weights in the future
     x2 <- scale(x, center = colMeans(x), scale = tmp_sc)
-    ytX <- crossprod(y, x2[,tmp_sc > 0])
-    lam_max <- 1000 * max(abs(ytX))/n * family$mu.eta(family$linkfun(mean(y)))/
-      family$variance(mean(y))
+    mu0 <- glm(y ~ 1, family = family)$fitted.values
+    r <- y - mu0
+    eta <- family$linkfun(mu0)
+    v <- family$variance(mu0)
+    me <- family$mu.eta(eta)
+    rv <- 1/n * r / v * me
+    lam_max <- 1000 * max(abs(crossprod(rv, x2[,tmp_sc > 0])))
     control_glmnet$lambda.min.ratio <- min(0.01, 1e-4 / lam_max)
   }
   # Obtain Ridge coefs GLMNET
