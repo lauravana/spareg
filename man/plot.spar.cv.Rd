@@ -33,9 +33,9 @@ same as for \code{\link{predict.spar.cv}} when plot_type="res_vs_fitted".}
 \item{nu}{fixed value for \eqn{\nu} when  \code{plot_along="nummod"}
 for  \code{plot_type="val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar.cv}} when  \code{plot_type="res_vs_fitted"}.}
 
-\item{xfit}{data used for predictions in  \code{"res_vs_fitted"}.}
+\item{xfit}{data used for predictions in  \code{"res_vs_fitted"}. Needed as the \code{"spar.cv"} objects do not store the original data.}
 
-\item{yfit}{data used for predictions in  \code{"res_vs_fitted"}.}
+\item{yfit}{data used for predictions in  \code{"res_vs_fitted"}. Needed as the \code{"spar.cv"} objects do not store the original data.}
 
 \item{opt_par}{one of  \code{c("best","1se")}, only needed for
 \code{plot_type="res_vs_fitted"} to set type of predictions, see \code{\link{predict.spar.cv}}.}

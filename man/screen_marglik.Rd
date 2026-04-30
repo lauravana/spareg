@@ -37,7 +37,7 @@ Arguments related to the screening procedure can
 be passed to the \code{screen_marglik()} function through \code{...}, and
 will be saved as attributes of the \code{'screencoef'} object.
 Note that if \code{family} is not provided in \code{control},
-the \code{family} used in \fct{spar} or \fct{spar.cv} will be used.
+the \code{family} used in \link{spar}  or \link{spar.cv}  will be used.
 The following attributes are relevant for  \link{spar} and \link{spar.cv}:
 \itemize{
 \item \code{nscreen} integer giving the number of variables to be retained
