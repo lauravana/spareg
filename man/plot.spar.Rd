@@ -32,9 +32,9 @@ same as for \code{\link{predict.spar}} when  \code{plot_type="res_vs_fitted"}.}
 \item{nu}{fixed value for \eqn{\nu} when  \code{plot_along="nummod"} for
 \code{plot_type = "val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res_vs_fitted"}.}
 
-\item{xfit}{data used for predictions in  \code{"res_vs_fitted"}.}
+\item{xfit}{data used for predictions in  \code{"res_vs_fitted"}. Needed as the \code{"spar"} objects do not store the original data.}
 
-\item{yfit}{data used for predictions in  \code{"res_vs_fitted"}.}
+\item{yfit}{data used for predictions in  \code{"res_vs_fitted"}.Needed as the \code{"spar"} objects do not store the original data.}
 
 \item{prange}{optional vector of length 2 for  \code{"coefs"}-plot to give
 the limits of the predictors' plot range; defaults to  \code{c(1, p)}.}

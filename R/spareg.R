@@ -835,8 +835,8 @@ predict.spar <- function(object,
 #'               same as for \code{\link{predict.spar}} when  \code{plot_type="res_vs_fitted"}.
 #' @param nu fixed value for \eqn{\nu} when  \code{plot_along="nummod"} for
 #'  \code{plot_type = "val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res_vs_fitted"}.
-#' @param xfit data used for predictions in  \code{"res_vs_fitted"}.
-#' @param yfit data used for predictions in  \code{"res_vs_fitted"}.
+#' @param xfit data used for predictions in  \code{"res_vs_fitted"}. Needed as the \code{"spar"} objects do not store the original data.
+#' @param yfit data used for predictions in  \code{"res_vs_fitted"}.Needed as the \code{"spar"} objects do not store the original data.
 #' @param prange optional vector of length 2 for  \code{"coefs"}-plot to give
 #'  the limits of the predictors' plot range; defaults to  \code{c(1, p)}.
 #' @param coef_order optional index vector of length p for \code{plot_type = "coefs"} to give
