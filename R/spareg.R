@@ -637,9 +637,9 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
           attr(x, "nu_1se"), "\n")
     }
   }
-  cat("\n")
+  # cat("\n")
   # Coefficient vectors or matrices
-  cat("Coefficients:\n\n")
+  cat("Coefficients:\n")
   if (attr(x, "aggregate") == "none") {
     ## No aggregation ----
     coefs <- rbind("(Intercept)" = x$intercept, x$beta)
@@ -653,7 +653,7 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
                          justify = "right")))
     # Add inline ...
     if (nrow(coefs) > show) {
-      cat("\n...", sprintf("(%d rows not shown)\n\n", nrow(coefs) - show))
+      cat("...", sprintf("(%d rows not shown)\n\n", nrow(coefs) - show))
     }
     cat("Number of active variables: \n")
     no_non_zero_coefs <- paste0(colSums(x$beta != 0), "/", nrow(x$beta))
@@ -677,7 +677,7 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
 
     # Add inline ...
     if (length(coefs) > show) {
-      cat("\n...", sprintf("(%d coefficients not shown)\n\n",
+      cat("...", sprintf("(%d coefficients not shown)\n\n",
                            length(coefs) - show))
     }
 
