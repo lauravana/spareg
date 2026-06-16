@@ -3,8 +3,11 @@ example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100, seed = 1234)
 test_that("Results has right class", {
   x <- data.frame(matrix(rnorm(300), ncol = 30))
   y <- rnorm(10)
-  spar_res <- spar.cv(x, y, rp = rp_gaussian(), nfolds = 4L,
+  spar_res <- spar.cv(x, y, rp = rp_gaussian(),
+                      screencoef = screen_cor(),
+                      nfolds = 4L,
                       model = spar_glm())
+  spar_res$val_res
   expect_equal(class(spar_res),"spar.cv")
 })
 
@@ -21,7 +24,7 @@ test_that("Test get_intercept(), get_coef(), get_model() extractors and that coe
   x <- example_data$x
   y <- example_data$y
   spar_res <- spar.cv(x, y, rp = rp_gaussian(), nfolds = 2L, seed = 123)
-  sparcoef <- coef(spar_res,opt_par = "best")
+  sparcoef <- coef(spar_res, opt_par = "best")
   sparcoef2 <- coef(spar_res,opt_par = "1se")
   a <- get_model(spar_res, "best")
   b <- get_model(spar_res, "1se")

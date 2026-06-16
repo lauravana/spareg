@@ -88,7 +88,9 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
                     nnu = 20, nus = NULL, nummods = c(20),
                     measure = c("deviance","mse","mae","class","1-auc"),
                     avg_type = c("link","response"),
-                    parallel = FALSE, seed = NULL, ...) {
+                    parallel = FALSE, seed = NULL,
+                    fast_fit = c("fix_rpm_and_inds", "fix_rpm", "none"),
+                    ...) {
   # Set up and checks ----
   n <- length(y)
   stopifnot("Length of y does not fit nrow(x)." = n == nrow(x))
@@ -101,6 +103,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
   }
 
   measure <- match.arg(measure)
+  fast_fit <- match.arg(fast_fit)
   avg_type <- match.arg(avg_type)
   # Ensure back compatibility ----
   args <- list(...)
@@ -108,57 +111,97 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
                                  screencoef, rp,  measure)
   model <- arg_list$model; rp <- arg_list$rp
   screencoef <- arg_list$screencoef; measure <- arg_list$measure
+  folds <- sample(cut(seq_len(n), breaks = nfolds, labels=FALSE))
 
   # Run initial spar algorithm ----
-  SPARres <- spar_algorithm(x = x, y = y,
-                            family = family,
-                            model = model, rp = rp, screencoef = screencoef,
-                            xval = NULL, yval = NULL,
-                            nnu = nnu, nus = nus,
-                            nummods = nummods,
-                            measure = measure,
-                            avg_type = avg_type,
-                            inds = NULL, RPMs = NULL,
-                            parallel = parallel,
-                            seed = seed)
-
-  val_res <- cbind("fold" = 0, SPARres$val_res)
-  folds <- sample(cut(seq_len(n), breaks = nfolds, labels=FALSE))
-  for (k in seq_len(nfolds)) {
-    fold_id <- (folds == k)
-    foldSPARres <- spar_algorithm(
-      x = x[!fold_id,SPARres$xscale>0],y = y[!fold_id],
-      family = family, model = model,
-      xval = x[fold_id,SPARres$xscale>0],
-      yval = y[fold_id],
-      rp = rp, screencoef = screencoef,
-      nnu = nnu,
-      nus = SPARres$nus,
-      inds = SPARres$inds,
-      RPMs = SPARres$RPMs,
-      nummods = nummods,
-      measure = measure,
-      avg_type = avg_type,
-      parallel = parallel,
-      seed = seed)
-    val_res <- rbind(val_res,
-                     cbind("fold" = k, foldSPARres$val_res))
+  ## Precompute nus if not provided ----
+  if (is.null(nus) | !(fast_fit == "none")) {
+    if (fast_fit == "fix_rpm") {
+      temp_screencoef <- NULL
+      temp_arg_list <- check_and_set_args(
+        args, x, y, family, model,
+        temp_screencoef, rp,  measure)
+      model <- temp_arg_list$model; rp <- temp_arg_list$rp
+      temp_screencoef <- temp_arg_list$screencoef;
+      measure <- temp_arg_list$measure
+    } else {
+      temp_screencoef <- screencoef
+   }
+    temp_fit <- fit_spar_models(
+      x, y, family, model, rp, temp_screencoef,
+      nnu = nnu, nus = nus, nummods = min(nummods),
+      measure = measure, avg_type = avg_type,
+      parallel = parallel, seed = seed
+    )
+    if (is.null(nus)) nus <- temp_fit$nus
+    if (!(fast_fit == "none")) {
+      RPMs <- temp_fit$RPMs
+    } else {
+      RPMs <- NULL
+    }
+    if (fast_fit == "fix_rpm_and_inds") {
+      inds <- temp_fit$inds
+    } else {
+      inds <- NULL
+    }
   }
 
+  # Initialize storage for results
+  all_val_res <- list()
+  all_fitted_objects <- list()
 
-  res <- list(betas = SPARres$betas, intercepts = SPARres$intercepts,
-              scr_coef = SPARres$scr_coef, inds = SPARres$inds,
-              RPMs = SPARres$RPMs,
-              val_res = val_res,
-              nus = SPARres$nus, nummods=nummods,
-              family = SPARres$family,
-              measure = measure, avg_type = avg_type,
-              rp = rp, screencoef = screencoef,
-              model = model,
-              x_rows_for_fitting_marginal_models = SPARres$x_rows_for_fitting_marginal_models,
-              ycenter = SPARres$ycenter, yscale = SPARres$yscale,
-              xcenter = SPARres$xcenter, xscale = SPARres$xscale)
+  # Loop over folds
+  for (fold in seq_len(nfolds)) {
+    # Split data
+    x_train <- x[folds != fold, ]
+    y_train <- y[folds != fold]
+    x_val <- x[folds == fold, ]
+    y_val <- y[folds == fold]
 
+    # Fit models on training data
+    fitted_objects <- fit_spar_models(
+      x_train, y_train, family, model, rp, screencoef,
+      nnu = nnu, nus = nus, nummods = nummods,
+      inds = inds, RPMs = RPMs,
+      measure = measure, avg_type = avg_type,
+      parallel = parallel, seed = seed
+    )
+
+    # Validate on held-out data
+    val_res <- validate_spar(fitted_objects, x_val, y_val, nus,
+                             nummods, measure, avg_type)
+    all_val_res[[fold]] <- cbind(fold, val_res)
+    all_fitted_objects[[fold]] <-
+      list("betas_std"  = fitted_objects$"betas_std",
+           "intercepts" = fitted_objects$"intercepts",
+           "scr_coef"   = fitted_objects$"scr_coef",
+           "inds"       = fitted_objects$"inds",
+           "RPMs"       = fitted_objects$"RPMs",
+           "xcenter"    = fitted_objects$"xcenter",
+           "xscale"     = fitted_objects$"xscale",
+           "ycenter"    = fitted_objects$"ycenter",
+           "yscale"     = fitted_objects$"yscale",
+           "x_rows_for_fitting_marginal_models" = fitted_objects$"x_rows_for_fitting_marginal_models")
+  }
+
+  # Aggregate validation results across folds
+  combined_val_res <- do.call(rbind, all_val_res)
+  # lapply(all_fitted_objects, function(x) x$inds)
+
+  ## TODO: refit on whole data with best parameters?
+  res <- list(
+    val_res = combined_val_res,
+    fitted_objects = all_fitted_objects,
+    nus = nus,
+    nummods = nummods,
+    family = paste0(family$family, "(", family$link, ")"),
+    measure = measure,
+    avg_type = avg_type,
+    nfolds = nfolds,
+    rp = rp,
+    screencoef = screencoef,
+    model = model
+  )
   attr(res,"class") <- "spar.cv"
   return(res)
 }
@@ -267,9 +310,11 @@ coef.spar.cv <- function(object,
       stop("Length of nummod and nu must be 1!")
     }
   }
-
+  betas <- Reduce(
+    "mean",
+    lapply(object$fitted_objects, function(x) x$betas_std))
   if (nummod > ncol(object$betas)) {
-    warning("Number of models is too high, maximum of fitted is used instead!")
+    warning("Number of models is too high, maximum of fitted models is used instead!")
     nummod <- ncol(object$betas)
   }
 
@@ -441,7 +486,7 @@ predict.spar.cv <- function(object,
 #' }
 #' @export
 plot.spar.cv <- function(x,
-                         plot_type = c("val_measure","val_numactive","res_vs_fitted","coefs"),
+                         plot_type = c("val_measure","val_numactive"),#,"res_vs_fitted","coefs"),
                          plot_along = c("nu","nummod"),
                          nummod = NULL,
                          nu = NULL,
@@ -458,17 +503,18 @@ plot.spar.cv <- function(x,
   my_val_sum <- compute_val_summary(spar_res$val_res)
   colnames(my_val_sum)[match(c("mean_measure", "mean_numactive"),colnames(my_val_sum))] <- c("Meas", "numactive")
 
-  if (plot_type=="res_vs_fitted") {
-    if (is.null(xfit) | is.null(yfit)) {
-      stop("xfit and yfit need to be provided for res_vs_fitted plot!")
-    }
-    pred <- predict(spar_res,xfit,opt_par=opt_par,nummod=nummod,nu=nu)
-    res <- ggplot2::ggplot(data = data.frame(fitted=pred,residuals=yfit-pred),
-                           ggplot2::aes(x=.data$fitted,y=.data$residuals)) +
-      ggplot2::geom_point() +
-      ggplot2::theme_bw() +
-      ggplot2::geom_hline(yintercept = 0,linetype=2,linewidth=0.5)
-  } else if (plot_type=="val_measure") {
+  # if (plot_type=="res_vs_fitted") {
+  #   if (is.null(xfit) | is.null(yfit)) {
+  #     stop("xfit and yfit need to be provided for res_vs_fitted plot!")
+  #   }
+  #   pred <- predict(spar_res,xfit,opt_par=opt_par,nummod=nummod,nu=nu)
+  #   res <- ggplot2::ggplot(data = data.frame(fitted=pred,residuals=yfit-pred),
+  #                          ggplot2::aes(x=.data$fitted,y=.data$residuals)) +
+  #     ggplot2::geom_point() +
+  #     ggplot2::theme_bw() +
+  #     ggplot2::geom_hline(yintercept = 0,linetype=2,linewidth=0.5)
+  # }
+  if (plot_type=="val_measure") {
     if (plot_along=="nu") {
       if (is.null(nummod)) {
         mynummod <- my_val_sum$nummod[which.min(my_val_sum$Meas)]
@@ -600,7 +646,8 @@ plot.spar.cv <- function(x,
         ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3))))
 
     }
-  } else if (plot_type=="coefs") {
+  }
+  else if (plot_type=="coefs") {
     p <- nrow(spar_res$betas)
     nummod <- ncol(spar_res$betas)
     if (is.null(prange)) {
@@ -658,8 +705,8 @@ plot.spar.cv <- function(x,
 #' }
 #' @export
 print.spar.cv <- function(x, ...) {
-  mycoef_best <- coef(x,opt_par = "best")
-  mycoef_1se  <- coef(x,opt_par = "1se")
+  mycoef_best <- coef(x, opt_par = "best")
+  mycoef_1se  <- coef(x, opt_par = "1se")
   val_sum <- compute_val_summary(x$val_res)
   if (nrow(val_sum) == 1) {
     cat(sprintf(
