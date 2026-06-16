@@ -165,36 +165,29 @@ spar <- function(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
 #' @export
 spareg <- spar
 
-
-spar_algorithm <- function(x, y,
-                           family, model, rp, screencoef,
-                           xval = NULL, yval = NULL,
-                           nnu, nus,
-                           nummods, measure,
-                           avg_type,
-                           inds = NULL, RPMs = NULL,
-                           parallel = FALSE,
-                           seed = NULL){
-  # Start SPAR algorithm
+fit_spar_models <- function(x, y, family, model, rp, screencoef,
+                            nnu, nus, nummods, measure, avg_type,
+                            inds = NULL, RPMs = NULL, parallel = FALSE, seed = NULL) {
+  # Set up and checks -----
   p <- ncol(x)
   n <- nrow(x)
-  # Scaling the x matrix ----
+
+  # Scaling the x matrix -----
   xcenter <- colMeans(x)
-  xscale  <- apply(x, 2, sd)
+  xscale <- apply(x, 2, sd)
 
   if (!is.null(seed)) {
-    if (parallel & requireNamespace("doRNG", quietly = TRUE)) {
+    if (parallel && requireNamespace("doRNG", quietly = TRUE)) {
       registerDoRNG <- getNamespace("doRNG")$registerDoRNG
       registerDoRNG(seed = seed)
     } else {
       set.seed(seed)
     }
   }
+
   if (is.null(inds) || is.null(RPMs)) {
     actual_p <- sum(xscale > 0)
-    z <- scale(x[, xscale > 0],
-               center = xcenter[xscale > 0],
-               scale  = xscale[xscale > 0])
+    z <- scale(x[, xscale > 0], center = xcenter[xscale > 0], scale = xscale[xscale > 0])
   } else {
     actual_p <- p
     xscale[xscale == 0] <- 1
@@ -202,47 +195,48 @@ spar_algorithm <- function(x, y,
   }
 
   # Scaling the y vector ----
-  if (family$family == "gaussian" & family$link=="identity") {
+  if (family$family == "gaussian" && family$link == "identity") {
     ycenter <- mean(y)
     yscale <- sd(y)
   } else {
     ycenter <- 0
-    yscale  <- 1
+    yscale <- 1
   }
-  yz <- scale(y,center = ycenter,scale = yscale)
+  yz <- scale(y, center = ycenter, scale = yscale)
+
   # Setup model ----
-  if (is.null(model$control$family))  {
+  if (is.null(model$control$family)) {
     if (is.null(attr(model, "family"))) {
       model$control$family <- family
     } else {
       model$control$family <- attr(model, "family")
     }
   }
-
   if (!is.null(model$update_fun)) {
     model <- model$update_fun(model)
   }
+
   # Setup screening ----
-  family_str <- paste0(family$family, "(", family$link, ")")
+  family_str <- family_string <- paste0(family$family, "(", family$link, ")")
   if (is.null(attr(screencoef, "family"))) {
     attr(screencoef, "family_string") <- family_str
   }
   if (!is.null(attr(screencoef, "split_data_prop"))) {
-    scr_inds <- sample(n,
-                       ceiling(n * attr(screencoef, "split_data_prop")))
+    scr_inds <- sample(n, ceiling(n * attr(screencoef, "split_data_prop")))
     mar_inds <- seq_len(n)[-scr_inds]
   } else {
     mar_inds <- scr_inds <- seq_len(n)
   }
 
   if (is.null(attr(screencoef, "nscreen"))) {
-    if (2*n > p) {
+    if (2 * n > p) {
       message("Screening is not performed by default, as 2 * n, the default number of screened variables, is larger than the number of predictors. For performing screening, adjust nscreen in screen_*().")
     }
     nscreen <- attr(screencoef, "nscreen") <- min(p, 2 * n)
   } else {
     nscreen <- attr(screencoef, "nscreen")
   }
+
   mslow <- attr(rp, "mslow")
   if (is.null(mslow)) mslow <- ceiling(log(p))
   msup <- attr(rp, "msup")
@@ -251,45 +245,38 @@ spar_algorithm <- function(x, y,
     message("Provided upper bound on goal dimension of random projection (msup) or its default value (n/2) is larger than nscreen. Setting msup to nscreen.")
     msup <- nscreen
   }
-  stopifnot("Provided lower bound on goal dimension of random projection (mslow) or its default value (log(p)) is larger than upper bound (msup)." =
-              mslow <= msup)
-  # Perform screening ----
+  stopifnot("Provided lower bound on goal dimension of random projection (mslow) or its default value (log(p)) is larger than upper bound (msup)." = mslow <= msup)
+
+  # Perform screening
   if (nscreen < p) {
-    scr_coef <- screencoef$generate_fun(
-      object = screencoef,
-      x = z[scr_inds,],
-      y = yz[scr_inds, ])
+    scr_coef <- screencoef$generate_fun(object = screencoef, x = z[scr_inds, ], y = yz[scr_inds, ])
     inc_probs <- abs(scr_coef)
     max_inc_probs <- max(inc_probs)
-    inc_probs <- inc_probs/max_inc_probs
+    inc_probs <- inc_probs / max_inc_probs
     attr(screencoef, "inc_prob") <- inc_probs
     if (attr(screencoef, "type") == "prob" && sum(inc_probs > 0) < nscreen) {
       warning(
-        sprintf("The number of variables with non-zero screening coefficients (%i) is less than the number of variables to screen (%i). Probabilistic screening with nscreen variables is performed anyway, but some of some of the variables with a zero inclusion probability will be randomly added to the set of screened variables. Alternatively, nscreen can be lowered in screen_*().",
-                sum(inc_probs > 0), nscreen))
-
+        sprintf("The number of variables with non-zero screening coefficients (%i) is less than the number of variables to screen (%i). Probabilistic screening with nscreen variables is performed anyway, but some of the variables with a zero inclusion probability will be randomly added to the set of screened variables. Alternatively, nscreen can be lowered in screen_*().",
+                sum(inc_probs > 0), nscreen)
+      )
     }
   } else {
     scr_coef <- NULL
-    # message("No screening performed.")
   }
   attr(screencoef, "importance") <- scr_coef
 
-  # Update RP ----
+  # Update RP -----
   thiscall <- match.call(expand.dots = TRUE)
   thiscall[["screencoef"]] <- screencoef
-  rp <- eval.parent(as.call(c(list(rp$update_fun),
-                              as.list(thiscall)[-1])))
+  rp <- eval.parent(as.call(c(list(rp$update_fun), as.list(thiscall)[-1])))
 
   max_num_mod <- max(nummods)
-
 
   drawRPMs <- FALSE
   if (is.null(RPMs)) {
     RPMs <- vector("list", length = max_num_mod)
     drawRPMs <- TRUE
-    ms <- sample(seq(floor(mslow), ceiling(msup)),
-                 max_num_mod, replace=TRUE)
+    ms <- sample(seq(floor(mslow), ceiling(msup)), max_num_mod, replace = TRUE)
   }
 
   drawinds <- FALSE
@@ -298,67 +285,58 @@ spar_algorithm <- function(x, y,
     drawinds <- TRUE
   }
 
-  # SPAR algorithm  ----
+  # SPAR algorithm -----
   marginal_model_function <- function(i) {
-    ## Function for screening, drawing the RP and estimating one model in ensemble
-    ## Screening step  ----
     out <- list()
     if (drawinds) {
       if (nscreen < p) {
         ind_use <- switch(attr(screencoef, "type"),
-                          "fixed" =  order(inc_probs, decreasing = TRUE)[seq_len(nscreen)],
-                          "prob"  =  c(sample(seq_len(actual_p)[inc_probs > 0],
-                                              min(sum(inc_probs > 0), nscreen),
-                                              prob = inc_probs[inc_probs>0]),
-                                       sample(seq_len(actual_p)[inc_probs == 0],
-                                              nscreen - min(sum(inc_probs > 0), nscreen))),
+                          "fixed" = order(inc_probs, decreasing = TRUE)[seq_len(nscreen)],
+                          "prob" = c(
+                            sample(seq_len(actual_p)[inc_probs > 0], min(sum(inc_probs > 0), nscreen), prob = inc_probs[inc_probs > 0]),
+                            sample(seq_len(actual_p)[inc_probs == 0], nscreen - min(sum(inc_probs > 0), nscreen))
+                          ),
                           stop("Type of screening coef should be fixed or prob.")
         )
       } else {
         ind_use <- seq_len(actual_p)
       }
-      out$inds <- ind_use
     } else {
       ind_use <- inds[[i]]
     }
+    out$inds <- ind_use
     p_use <- length(ind_use)
 
-    ## RP step  ----
+    ## RP step -----
     if (drawRPMs) {
       m <- ms[i]
       if (p_use < m) {
         m <- p_use
-        RPM <- Matrix::Matrix(diag(1, m),sparse=TRUE)
+        RPM <- Matrix::Matrix(diag(1, m), sparse = TRUE)
       } else {
-        RPM    <- rp$generate_fun(rp, m = m,
-                                  included_vector = ind_use,
-                                  x = x, y = y)
+        RPM <- rp$generate_fun(rp, m = m, included_vector = ind_use, x = x, y = y)
       }
-      out$RPMs <- RPM
     } else {
       RPM <- RPMs[[i]]
       if (!is.null(rp$update_rpm_w_data)) {
-        RPM <- rp$update_rpm_w_data(rpm = RPM, rp = rp,
-                                    included_vector = ind_use)
+        RPM <- rp$update_rpm_w_data(rpm = RPM, rp = rp, included_vector = ind_use)
       }
     }
+    out$RPMs <- RPM
 
-    ## Marginal model ----
+    # Marginal model
     znew <- Matrix::tcrossprod(z[mar_inds, ind_use], RPM)
     res <- model$model_fun(y = yz[mar_inds], z = znew, object = model)
     out$intercepts <- res$intercept
-    out$betas_std_m <-  as(numeric(actual_p), "sparseMatrix")
+    out$betas_std_m <- as(numeric(actual_p), "sparseMatrix")
     out$betas_std_m[ind_use] <- crossprod(RPM, res$gammas)
     out
   }
 
   if (parallel) {
-    # honor registration made by user, and only create and register
-    # our own cluster object once
     if (!requireNamespace("foreach", quietly = TRUE)) {
       stop("Package 'foreach' is required for parallel execution. Please install it using install.packages('foreach').")
     }
-    # Load foreach functions
     foreach <- getNamespace("foreach")$foreach
     `%dopar%` <- getNamespace("foreach")$`%dopar%`
     `%do%` <- getNamespace("foreach")$`%do%`
@@ -367,21 +345,16 @@ spar_algorithm <- function(x, y,
     getDoParWorkers <- getNamespace("foreach")$getDoParWorkers
 
     if (!getDoParRegistered()) {
-      message('Warning: No doPar backend. Executing SPAR algorithm sequentially.
-               For using parallelization, please register backend and rerun.')
+      message('Warning: No doPar backend. Executing SPAR algorithm sequentially. For using parallelization, please register backend and rerun.')
       `%d%` <- `%do%`
     } else {
-      message('Using ', getDoParName(), ' with ',
-              getDoParWorkers(), ' workers')
+      message('Using ', getDoParName(), ' with ', getDoParWorkers(), ' workers')
       `%d%` <- `%dopar%`
     }
     i <- NULL
-    res_all <- foreach(i = seq_len(max_num_mod),
-                       .verbose = FALSE,
-                       .packages = "spareg",
-                       .errorhandling = "stop") %d% {
-                         marginal_model_function(i = i)
-                       }
+    res_all <- foreach(i = seq_len(max_num_mod), .verbose = FALSE, .packages = "spareg", .errorhandling = "stop") %d% {
+      marginal_model_function(i = i)
+    }
   } else {
     res_all <- lapply(seq_len(max_num_mod), marginal_model_function)
   }
@@ -392,87 +365,409 @@ spar_algorithm <- function(x, y,
   betas_std <- Reduce("cbind2", lapply(res_all, "[[", "betas_std_m"))
 
   if (is.null(nus)) {
-    if (nnu>1) {
-      nus <- unname(c(0, quantile(abs(betas_std@x),
-                                  probs=seq_len(nnu-1)/(nnu-1))))
+    if (nnu > 1) {
+      nus <- unname(c(0, quantile(abs(betas_std@x), probs = seq_len(nnu - 1) / (nnu - 1))))
     } else {
       nus <- 0
     }
-  } else {
-    nnu <- length(nus)
   }
+  # Return fitted objects
+  return(list(
+    betas_std = betas_std,
+    intercepts = intercepts,
+    scr_coef = scr_coef,
+    inds = inds,
+    RPMs = RPMs,
+    nus = nus,
+    xcenter = xcenter,
+    xscale = xscale,
+    ycenter = ycenter,
+    yscale = yscale,
+    avg_type = avg_type,
+    measure = measure,
+    family = family_str,
+    model = model,
+    rp = rp,
+    screencoef = screencoef,
+    x_rows_for_fitting_marginal_models = if (!is.null(attr(screencoef, "split_data_prop"))) mar_inds else NULL
+  ))
+}
 
-  ## Validation set ----
-  val_res <- data.frame(nnu = NULL, nu = NULL,
-                        nummod = NULL, numactive = NULL, measure = NULL)
-  if (!is.null(yval) && !is.null(xval)) {
-    val_set <- TRUE
-  } else {
-    val_set <- FALSE
-    yval <- y
-    xval <- x
-  }
+validate_spar <- function(fitted_objects, xval, yval, nus, nummods, measure, avg_type) {
+  p <- length(fitted_objects$xscale)
+  n <- nrow(xval)
 
-  val.meas <- get_val_measure_function(measure, family)
+  # Get validation measure function
+  val.meas <- get_val_measure_function(measure, eval(parse(text = fitted_objects$family)))
 
-  ## Fitted values ----
-  tabnummodres <- lapply(nummods,  function(nummod) {
-    tabres <- lapply(seq_len(nnu), function(l){
+  # Initialize validation results
+  val_res <- data.frame(nnu = NULL, nu = NULL, nummod = NULL, numactive = NULL, measure = NULL)
+
+  # Loop over nummods
+  tabnummodres <- lapply(nummods, function(nummod) {
+    tabres <- lapply(seq_along(nus), function(l) {
       thresh <- nus[l]
-      tmp_coef <- betas_std[, seq_len(nummod), drop = FALSE]
+      tmp_coef <- fitted_objects$betas_std[, seq_len(nummod), drop = FALSE]
       tmp_coef[abs(tmp_coef) < thresh] <- 0
       tmp_beta <- Matrix(0, nrow = p, ncol = nummod)
-      tmp_beta[xscale > 0, ] <- yscale * tmp_coef/(xscale[xscale > 0])
+      tmp_beta[fitted_objects$xscale > 0, ] <- fitted_objects$yscale * tmp_coef / (fitted_objects$xscale[fitted_objects$xscale > 0])
+      print(str(tmp_beta))
       if (avg_type == "link") {
         beta_hat <- rowMeans(tmp_beta)
-        alpha_hat <- mean(intercepts[seq_len(nummod)]) +
-          (ycenter - sum(xcenter * beta_hat))
+        alpha_hat <- mean(fitted_objects$intercepts[seq_len(nummod)]) + (fitted_objects$ycenter - sum(fitted_objects$xcenter * beta_hat))
         eta_hat <- xval %*% beta_hat + alpha_hat
         val_measure <- val.meas(yval, eta_hat = eta_hat)
         numactive <- sum(beta_hat != 0)
       } else {
-        tmp_intercept <- intercepts[seq_len(nummod)] +
-          drop(ycenter - crossprod(xcenter, tmp_beta))
-        eta_hat <- sweep((xval %*% tmp_beta), tmp_intercept,
-                         MARGIN = 2, FUN = "+")
-        y_hat <- rowMeans(family$linkinv(as.matrix(eta_hat)))
+        tmp_intercept <- fitted_objects$intercepts[seq_len(nummod)] + drop(fitted_objects$ycenter - crossprod(fitted_objects$xcenter, tmp_beta))
+        eta_hat <- sweep((xval %*% tmp_beta), tmp_intercept, MARGIN = 2, FUN = "+")
+        y_hat <- rowMeans(eval(parse(text = fitted_objects$family))$linkinv(as.matrix(eta_hat)))
         val_measure <- val.meas(yval, y_hat = y_hat)
         numactive <- sum(rowSums(tmp_beta != 0) > 0)
       }
-      c(nnu = l, nu = unname(thresh), nummod = nummod,
-        measure = val_measure, numactive = numactive)
+      c(nnu = l, nu = unname(thresh), nummod = nummod, measure = val_measure, numactive = numactive)
     })
     out <- do.call("rbind", tabres)
-    colnames(out) <- c("nnu","nu","nummod","measure", "numactive")
+    colnames(out) <- c("nnu", "nu", "nummod", "measure", "numactive")
     out
   })
+
   val_res <- do.call("rbind.data.frame", tabnummodres)
-  betas <- Matrix(0, p, max_num_mod, sparse = TRUE)
-  betas[xscale>0,] <- betas_std
+  return(val_res)
+}
+
+spar_algorithm <- function(x, y, family, model, rp, screencoef,
+                           xval = NULL, yval = NULL,
+                           nnu, nus,
+                           nummods, measure,
+                           avg_type,
+                           inds = NULL, RPMs = NULL,
+                           parallel = FALSE,
+                           seed = NULL){
+  # # Start SPAR algorithm
+  # p <- ncol(x)
+  # n <- nrow(x)
+  # # Scaling the x matrix ----
+  # xcenter <- colMeans(x)
+  # xscale  <- apply(x, 2, sd)
+  #
+  # if (!is.null(seed)) {
+  #   if (parallel & requireNamespace("doRNG", quietly = TRUE)) {
+  #     registerDoRNG <- getNamespace("doRNG")$registerDoRNG
+  #     registerDoRNG(seed = seed)
+  #   } else {
+  #     set.seed(seed)
+  #   }
+  # }
+  # if (is.null(inds) || is.null(RPMs)) {
+  #   actual_p <- sum(xscale > 0)
+  #   z <- scale(x[, xscale > 0],
+  #              center = xcenter[xscale > 0],
+  #              scale  = xscale[xscale > 0])
+  # } else {
+  #   actual_p <- p
+  #   xscale[xscale == 0] <- 1
+  #   z <- scale(x, center = xcenter, scale = xscale)
+  # }
+  #
+  # # Scaling the y vector ----
+  # if (family$family == "gaussian" & family$link=="identity") {
+  #   ycenter <- mean(y)
+  #   yscale <- sd(y)
+  # } else {
+  #   ycenter <- 0
+  #   yscale  <- 1
+  # }
+  # yz <- scale(y,center = ycenter,scale = yscale)
+  #
+  # # Setup model ----
+  # # thiscall <- match.call(expand.dots = TRUE)
+  # # model <- eval.parent(as.call(c(list(model$update_fun),
+  # #                             as.list(thiscall)[-1])))
+  #
+  # # model <- model_setup(model, family)
+  # if (is.null(model$control$family))  {
+  #   if (is.null(attr(model, "family"))) {
+  #     model$control$family <- family
+  #   } else {
+  #     model$control$family <- attr(model, "family")
+  #   }
+  # }
+  # if (!is.null(model$update_fun)) {
+  #   model <- model$update_fun(model)
+  # }
+  # # Setup screening ----
+  # family_str <- paste0(family$family, "(", family$link, ")")
+  # if (is.null(attr(screencoef, "family"))) {
+  #   attr(screencoef, "family_string") <- family_str
+  # }
+  # if (!is.null(attr(screencoef, "split_data_prop"))) {
+  #   scr_inds <- sample(n,
+  #                      ceiling(n * attr(screencoef, "split_data_prop")))
+  #   mar_inds <- seq_len(n)[-scr_inds]
+  # } else {
+  #   mar_inds <- scr_inds <- seq_len(n)
+  # }
+  #
+  # if (is.null(attr(screencoef, "nscreen"))) {
+  #   if (2 * n > p) {
+  #     message("Screening is not performed by default, as 2 * n, the default number of screened variables, is larger than the number of predictors. For performing screening, adjust nscreen in screen_*().")
+  #   }
+  #   nscreen <- attr(screencoef, "nscreen") <- min(p, 2 * n)
+  # } else {
+  #   nscreen <- attr(screencoef, "nscreen")
+  # }
+  # mslow <- attr(rp, "mslow")
+  # if (is.null(mslow)) mslow <- ceiling(log(p))
+  # msup <- attr(rp, "msup")
+  # if (is.null(msup)) msup <- ceiling(n/2)
+  # if (!(msup <= nscreen)) {
+  #   message("Provided upper bound on goal dimension of random projection (msup) or its default value (n/2) is larger than nscreen. Setting msup to nscreen.")
+  #   msup <- nscreen
+  # }
+  # stopifnot("Provided lower bound on goal dimension of random projection (mslow) or its default value (log(p)) is larger than upper bound (msup)." =
+  #             mslow <= msup)
+  # # Perform screening ----
+  # if (nscreen < p) {
+  #   scr_coef <- screencoef$generate_fun(
+  #     object = screencoef,
+  #     x = z[scr_inds,],
+  #     y = yz[scr_inds, ])
+  #   inc_probs <- abs(scr_coef)
+  #   max_inc_probs <- max(inc_probs)
+  #   inc_probs <- inc_probs/max_inc_probs
+  #   attr(screencoef, "inc_prob") <- inc_probs
+  #   if (attr(screencoef, "type") == "prob" && sum(inc_probs > 0) < nscreen) {
+  #     warning(
+  #       sprintf("The number of variables with non-zero screening coefficients (%i) is less than the number of variables to screen (%i). Probabilistic screening with nscreen variables is performed anyway, but some of some of the variables with a zero inclusion probability will be randomly added to the set of screened variables. Alternatively, nscreen can be lowered in screen_*().",
+  #               sum(inc_probs > 0), nscreen))
+  #
+  #   }
+  # } else {
+  #   scr_coef <- NULL
+  #   # message("No screening performed.")
+  # }
+  # attr(screencoef, "importance") <- scr_coef
+  #
+  # # Update RP ----
+  # thiscall <- match.call(expand.dots = TRUE)
+  # thiscall[["screencoef"]] <- screencoef
+  # rp <- eval.parent(as.call(c(list(rp$update_fun),
+  #                             as.list(thiscall)[-1])))
+  #
+  # max_num_mod <- max(nummods)
+  #
+  #
+  # drawRPMs <- FALSE
+  # if (is.null(RPMs)) {
+  #   RPMs <- vector("list", length = max_num_mod)
+  #   drawRPMs <- TRUE
+  #   ms <- sample(seq(floor(mslow), ceiling(msup)),
+  #                max_num_mod, replace=TRUE)
+  # }
+  #
+  # drawinds <- FALSE
+  # if (is.null(inds)) {
+  #   inds <- vector("list", length = max_num_mod)
+  #   drawinds <- TRUE
+  # }
+  #
+  # # SPAR algorithm  ----
+  # marginal_model_function <- function(i) {
+  #   ## Function for screening, drawing the RP and estimating one model in ensemble
+  #   ## Screening step  ----
+  #   out <- list()
+  #   if (drawinds) {
+  #     if (nscreen < p) {
+  #       ind_use <- switch(attr(screencoef, "type"),
+  #                         "fixed" =  order(inc_probs, decreasing = TRUE)[seq_len(nscreen)],
+  #                         "prob"  =  c(sample(seq_len(actual_p)[inc_probs > 0],
+  #                                             min(sum(inc_probs > 0), nscreen),
+  #                                             prob = inc_probs[inc_probs>0]),
+  #                                      sample(seq_len(actual_p)[inc_probs == 0],
+  #                                             nscreen - min(sum(inc_probs > 0), nscreen))),
+  #                         stop("Type of screening coef should be fixed or prob.")
+  #       )
+  #     } else {
+  #       ind_use <- seq_len(actual_p)
+  #     }
+  #     out$inds <- ind_use
+  #   } else {
+  #     ind_use <- inds[[i]]
+  #   }
+  #   p_use <- length(ind_use)
+  #
+  #   ## RP step  ----
+  #   if (drawRPMs) {
+  #     m <- ms[i]
+  #     if (p_use < m) {
+  #       m <- p_use
+  #       RPM <- Matrix::Matrix(diag(1, m),sparse=TRUE)
+  #     } else {
+  #       RPM    <- rp$generate_fun(rp, m = m,
+  #                                 included_vector = ind_use,
+  #                                 x = x, y = y)
+  #     }
+  #     out$RPMs <- RPM
+  #   } else {
+  #     RPM <- RPMs[[i]]
+  #     if (!is.null(rp$update_rpm_w_data)) {
+  #       RPM <- rp$update_rpm_w_data(rpm = RPM, rp = rp,
+  #                                   included_vector = ind_use)
+  #     }
+  #   }
+  #
+  #   ## Marginal model ----
+  #   znew <- Matrix::tcrossprod(z[mar_inds, ind_use], RPM)
+  #   res <- model$model_fun(y = yz[mar_inds], z = znew, object = model)
+  #   out$intercepts <- res$intercept
+  #   out$betas_std_m <-  as(numeric(actual_p), "sparseMatrix")
+  #   out$betas_std_m[ind_use] <- crossprod(RPM, res$gammas)
+  #   out
+  # }
+  #
+  # if (parallel) {
+  #   # honor registration made by user, and only create and register
+  #   # our own cluster object once
+  #   if (!requireNamespace("foreach", quietly = TRUE)) {
+  #     stop("Package 'foreach' is required for parallel execution. Please install it using install.packages('foreach').")
+  #   }
+  #   # Load foreach functions
+  #   foreach <- getNamespace("foreach")$foreach
+  #   `%dopar%` <- getNamespace("foreach")$`%dopar%`
+  #   `%do%` <- getNamespace("foreach")$`%do%`
+  #   getDoParRegistered <- getNamespace("foreach")$getDoParRegistered
+  #   getDoParName <- getNamespace("foreach")$getDoParName
+  #   getDoParWorkers <- getNamespace("foreach")$getDoParWorkers
+  #
+  #   if (!getDoParRegistered()) {
+  #     message('Warning: No doPar backend. Executing SPAR algorithm sequentially.
+  #              For using parallelization, please register backend and rerun.')
+  #     `%d%` <- `%do%`
+  #   } else {
+  #     message('Using ', getDoParName(), ' with ',
+  #             getDoParWorkers(), ' workers')
+  #     `%d%` <- `%dopar%`
+  #   }
+  #   i <- NULL
+  #   res_all <- foreach(i = seq_len(max_num_mod),
+  #                      .verbose = FALSE,
+  #                      .packages = "spareg",
+  #                      .errorhandling = "stop") %d% {
+  #                        marginal_model_function(i = i)
+  #                      }
+  # } else {
+  #   res_all <- lapply(seq_len(max_num_mod), marginal_model_function)
+  # }
+  #
+  # if (drawRPMs) RPMs <- lapply(res_all, "[[", "RPMs")
+  # if (drawinds) inds <- lapply(res_all, "[[", "inds")
+  # intercepts <- sapply(res_all, "[[", "intercepts")
+  # betas_std <- Reduce("cbind2", lapply(res_all, "[[", "betas_std_m"))
+  #
+  # if (is.null(nus)) {
+  #   if (nnu>1) {
+  #     nus <- unname(c(0, quantile(abs(betas_std@x),
+  #                                 probs=seq_len(nnu-1)/(nnu-1))))
+  #   } else {
+  #     nus <- 0
+  #   }
+  # } else {
+  #   nnu <- length(nus)
+  # }
+  #
+  # ## Validation set ----
+  # val_res <- data.frame(nnu = NULL, nu = NULL,
+  #                       nummod = NULL, numactive = NULL, measure = NULL)
+  # if (!is.null(yval) && !is.null(xval)) {
+  #   val_set <- TRUE
+  # } else {
+  #   val_set <- FALSE
+  #   yval <- y
+  #   xval <- x
+  # }
+  #
+  # val.meas <- get_val_measure_function(measure, family)
+  #
+  # ## Fitted values ----
+  # tabnummodres <- lapply(nummods,  function(nummod) {
+  #   tabres <- lapply(seq_len(nnu), function(l){
+  #     thresh <- nus[l]
+  #     tmp_coef <- betas_std[, seq_len(nummod), drop = FALSE]
+  #     tmp_coef[abs(tmp_coef) < thresh] <- 0
+  #     tmp_beta <- Matrix(0, nrow = p, ncol = nummod)
+  #     tmp_beta[xscale > 0, ] <- yscale * tmp_coef/(xscale[xscale > 0])
+  #     if (avg_type == "link") {
+  #       beta_hat <- rowMeans(tmp_beta)
+  #       alpha_hat <- mean(intercepts[seq_len(nummod)]) +
+  #         (ycenter - sum(xcenter * beta_hat))
+  #       eta_hat <- xval %*% beta_hat + alpha_hat
+  #       val_measure <- val.meas(yval, eta_hat = eta_hat)
+  #       numactive <- sum(beta_hat != 0)
+  #     } else {
+  #       tmp_intercept <- intercepts[seq_len(nummod)] +
+  #         drop(ycenter - crossprod(xcenter, tmp_beta))
+  #       eta_hat <- sweep((xval %*% tmp_beta), tmp_intercept,
+  #                        MARGIN = 2, FUN = "+")
+  #       y_hat <- rowMeans(family$linkinv(as.matrix(eta_hat)))
+  #       val_measure <- val.meas(yval, y_hat = y_hat)
+  #       numactive <- sum(rowSums(tmp_beta != 0) > 0)
+  #     }
+  #     c(nnu = l, nu = unname(thresh), nummod = nummod,
+  #       measure = val_measure, numactive = numactive)
+  #   })
+  #   out <- do.call("rbind", tabres)
+  #   colnames(out) <- c("nnu","nu","nummod","measure", "numactive")
+  #   out
+  # })
+  # val_res <- do.call("rbind.data.frame", tabnummodres)
+  # betas <- Matrix(0, p, max_num_mod, sparse = TRUE)
+  # betas[xscale>0,] <- betas_std
+  # if (is.null(colnames(x))) {
+  #   rownames(betas) <- paste0("V", seq_len(ncol(x)))
+  # } else {
+  #   rownames(betas) <- colnames(x)
+  # }
+  #
+  # ## Clean up
+  # res <- list(betas = betas, intercepts = intercepts,
+  #             scr_coef = scr_coef,
+  #             inds = inds, RPMs = RPMs,
+  #             val_res = val_res, val_set = val_set,
+  #             nus = nus, nummods = nummods,
+  #             ycenter = ycenter, yscale = yscale,
+  #             xcenter = xcenter, xscale = xscale,
+  #             family = family_str,
+  #             measure = measure,
+  #             avg_type = avg_type,
+  #             rp = rp,
+  #             screencoef = screencoef,
+  #             model = model,
+  #             x_rows_for_fitting_marginal_models =
+  #               if (!is.null(attr(screencoef, "split_data_prop"))) mar_inds else NULL
+  # )
+  res <- fit_spar_models(x = x, y = y, family = family, model = model, rp = rp, screencoef = screencoef,
+                         nnu = nnu, nus = nus, nummods = nummods, measure = measure, avg_type = avg_type,
+                         inds = inds, RPMs = RPMs, parallel = parallel, seed = seed)
+
+  betas <- Matrix(0, ncol(x), max(nummods), sparse = TRUE)
+  betas[res$xscale > 0,] <- res$betas_std
   if (is.null(colnames(x))) {
     rownames(betas) <- paste0("V", seq_len(ncol(x)))
   } else {
     rownames(betas) <- colnames(x)
   }
-
-  ## Clean up
-  res <- list(betas = betas, intercepts = intercepts,
-              scr_coef = scr_coef,
-              inds = inds, RPMs = RPMs,
-              val_res = val_res, val_set = val_set,
-              nus = nus, nummods = nummods,
-              ycenter = ycenter, yscale = yscale,
-              xcenter = xcenter, xscale = xscale,
-              family = family_str,
-              measure = measure,
-              avg_type = avg_type,
-              rp = rp,
-              screencoef = screencoef,
-              model = model,
-              x_rows_for_fitting_marginal_models =
-                if (!is.null(attr(screencoef, "split_data_prop"))) mar_inds else NULL
-  )
-
+  if (is.null(xval)) xval <- x
+  if (is.null(yval)) yval <- y
+  val_res <- validate_spar(fitted_objects = res,
+                           xval = xval, yval = yval,
+                           nus = res$nus,
+                           nummods = nummods,
+                           measure = measure,
+                           avg_type = avg_type)
+  res[["val_res"]] <- val_res
+  res[["betas"]] <- betas
+  res[["betas_std"]] <- NULL
   attr(res,"class") <- "spar"
 
   return(res)
@@ -678,7 +973,7 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
     # Add inline ...
     if (length(coefs) > show) {
       cat("...", sprintf("(%d coefficients not shown)\n\n",
-                           length(coefs) - show))
+                         length(coefs) - show))
     }
 
     cat("Number of active variables: ",
