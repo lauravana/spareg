@@ -411,7 +411,6 @@ validate_spar <- function(fitted_objects, xval, yval, nus, nummods, measure, avg
       tmp_coef[abs(tmp_coef) < thresh] <- 0
       tmp_beta <- Matrix(0, nrow = p, ncol = nummod)
       tmp_beta[fitted_objects$xscale > 0, ] <- fitted_objects$yscale * tmp_coef / (fitted_objects$xscale[fitted_objects$xscale > 0])
-      print(str(tmp_beta))
       if (avg_type == "link") {
         beta_hat <- rowMeans(tmp_beta)
         alpha_hat <- mean(fitted_objects$intercepts[seq_len(nummod)]) + (fitted_objects$ycenter - sum(fitted_objects$xcenter * beta_hat))
