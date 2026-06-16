@@ -126,10 +126,10 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
       measure <- temp_arg_list$measure
     } else {
       temp_screencoef <- screencoef
-   }
+    }
     temp_fit <- fit_spar_models(
       x, y, family, model, rp, temp_screencoef,
-      nnu = nnu, nus = nus, nummods = min(nummods),
+      nnu = nnu, nus = nus, nummods = max(nummods),
       measure = measure, avg_type = avg_type,
       parallel = parallel, seed = seed
     )
@@ -405,7 +405,7 @@ predict.spar.cv <- function(object,
     stop("No 'xnew' provided. This 'spar.cv' object does not retain training data. ",
          "Please provide xnew explicitly. ",
          "If you want to predict in-sample, use the original data used for fitting the model as xnew.")
-    }
+  }
 
   if (ncol(xnew)!=length(object$xscale)) {
     stop("xnew must have same number of columns as initial x!")
@@ -497,6 +497,7 @@ plot.spar.cv <- function(x,
                          coef_order = NULL, digits = 2, ...) {
   spar_res <- x
   plot_type <- match.arg(plot_type)
+  if (!(plot_type %in% c("val_measure","val_numactive"))) stop("Only plot types 'val_measure' and 'val_numactive' are currently implemented!")
   plot_along <- match.arg(plot_along)
   opt_par <- match.arg(opt_par)
   mynummod <- nummod
@@ -522,22 +523,20 @@ plot.spar.cv <- function(x,
       } else {
         tmp_title <- "Fixed given nummod="
       }
-
-      nu_1se <- coef(spar_res, opt_par = "1se")$nu
       tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$Meas)
-      ind_1se <- which(tmp_df$nu == nu_1se)
+      allowed_ind <- tmp_df$Meas<=tmp_df$Meas[ind_min]+
+        tmp_df$sd_measure[ind_min]
+      ind_1se <- which.min(tmp_df$numactive[allowed_ind])
+      par1se <- tmp_df[allowed_ind,][ind_1se,]
+      nu_1se <- par1se$nu
+
 
       res <- ggplot2::ggplot(data = tmp_df,
                              ggplot2::aes(x = .data$nu,y = .data$Meas)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         ggplot2::theme_bw() +
-        #ggplot2::scale_x_continuous(breaks = sort(unique(tmp_df$nu))) +
-        # ggplot2::scale_x_continuous(
-        #   breaks=seq(1,nrow(tmp_df)),
-        #   labels=formatC(tmp_df$nu,
-        #                  format = "e", digits = digits)) +
         ggplot2::labs(x=expression(nu),y=spar_res$measure) +
         ggplot2::geom_point(data=data.frame(x=tmp_df$nu[ind_min],
                                             y=tmp_df$Meas[ind_min]),
@@ -549,13 +548,13 @@ plot.spar.cv <- function(x,
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
                             color="red",show.legend = FALSE,
                             data=data.frame(x = c(tmp_df$nu[ind_min],
-                                                  tmp_df$nu[tmp_df$nu==nu_1se]),
+                                                  tmp_df$nu[ind_1se]),
                                             y = c(tmp_df$Meas[ind_min],tmp_df$Meas[tmp_df$nu==nu_1se]))) +
-      ggplot2::annotate("segment",x = tmp_df$nu[ind_min],
-                        y = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
-                        xend = tmp_df$nu[ind_1se],
-                        yend = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
-                        color=2,linetype=2)
+        ggplot2::annotate("segment",x = tmp_df$nu[ind_min],
+                          y = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
+                          xend = tmp_df$nu[ind_1se],
+                          yend = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
+                          color = 2, linetype = 2)
     } else {
       if (is.null(nu)) {
         nu <- my_val_sum$nu[which.min(my_val_sum$Meas)]
@@ -589,10 +588,12 @@ plot.spar.cv <- function(x,
                           yend = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
                           color=2,linetype=2) +
         ggplot2::theme_bw() +
-        scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
-                           minor_breaks = NULL)
+        ggplot2::scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
+                                    minor_breaks = NULL)
     }
-  } else if (plot_type=="val_numactive") {
+  }
+
+  if (plot_type=="val_numactive") {
     if (plot_along=="nu") {
       if (is.null(nummod)) {
         mynummod <- my_val_sum$nummod[which.min(my_val_sum$Meas)]
@@ -641,50 +642,11 @@ plot.spar.cv <- function(x,
                             color=2,show.legend = FALSE,
                             data=data.frame(x = c(tmp_df$nummod[ind_min],tmp_df$nummod[allowed_ind][ind_1se]),
                                             y = c(tmp_df$numactive[ind_min],tmp_df$numactive[allowed_ind][ind_1se]))) +
-        scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
-                           minor_breaks = NULL)+
+        ggplot2::scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
+                                    minor_breaks = NULL)+
         ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3))))
 
     }
-  }
-  else if (plot_type=="coefs") {
-    p <- nrow(spar_res$betas)
-    nummod <- ncol(spar_res$betas)
-    if (is.null(prange)) {
-      prange <- c(1,p)
-    }
-    if (is.null(coef_order)) {
-      coef_order <- 1:p
-    }
-
-
-    tmp_mat <- data.frame(t(apply(as.matrix(spar_res$betas)[coef_order,],1,
-                                  function(row)row[order(abs(row),decreasing = TRUE)])),
-                          predictor=1:p)
-    colnames(tmp_mat) <- c(1:nummod,"predictor")
-
-    tmp_df <- reshape(tmp_mat, idvar = "predictor",
-                      varying = seq_len(nummod),
-                      v.names = "value",
-                      timevar = "marginal model",
-                      direction = "long")
-
-    tmp_df$`marginal model` <- as.numeric(tmp_df$`marginal model`)
-
-    mrange <- max(Matrix::rowSums(spar_res$betas != 0))
-
-    res <- ggplot2::ggplot(tmp_df,ggplot2::aes(x=.data$predictor,
-                                               y=.data$`marginal model`,
-                                               fill=.data$value)) +
-      ggplot2::geom_tile() +
-      ggplot2::scale_fill_gradient2() +
-      ggplot2::coord_cartesian(xlim=prange,ylim=c(1,mrange)) +
-      ggplot2::theme_bw() +
-      ggplot2::ylab("Index of marginal model") +
-      ggplot2::theme(panel.border = ggplot2::element_blank())
-
-  } else {
-    res <- NULL
   }
   return(res)
 }
@@ -738,7 +700,7 @@ print.spar.cv <- function(x, ...) {
       sum(mycoef_1se$beta!=0),length(mycoef_1se$beta),
       x$measure,
       val_sum$mean_measure[val_sum$nummod==mycoef_1se$nummod
-                    & val_sum$nu==mycoef_1se$nu]))
+                           & val_sum$nu==mycoef_1se$nu]))
     cat("Summary of those non-zero coefficients:\n")
     print(summary(mycoef_1se$beta[mycoef_1se$beta!=0]))
   }
