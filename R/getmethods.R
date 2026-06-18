@@ -9,7 +9,7 @@
 #' @return The modified object with the best model selected.
 #' @examples
 #' # Example usage with a fitted object
-#' fitted_obj <- spar(x, y, family = gaussian(), ...)
+#' fitted_obj <- spar(x, y, family = gaussian())
 #' best_model <- get_model(fitted_obj)
 #' @export
 get_model <- function(object, ...){
