@@ -23,6 +23,7 @@ The method dispatched depends on the class of the input object.
 }
 \examples{
 # Example usage with a fitted object
-fitted_obj <- spar(x, y, family = gaussian())
+example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+fitted_obj <- spar(example_data$x, example_data$y, family = gaussian())
 best_model <- get_model(fitted_obj)
 }

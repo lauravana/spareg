@@ -24,6 +24,7 @@ Extracts the best model from a fitted \code{spar} object based on validation res
 The best model is determined by the minimum validation measure.
 }
 \examples{
-fitted_spar <- spar(x, y, family = gaussian(), ...)
+example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+fitted_spar <- spar(example_data$x, example_data$y, family = gaussian())
 best_spar <- get_model(fitted_spar)
 }
