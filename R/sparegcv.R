@@ -175,7 +175,11 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
   # Loop over folds ----
   for (fold in seq_len(nfolds)) {
     # Split data
-    seed_fold <- ifelse(is.null(seed), NULL, seed + fold)
+    if (is.null(seed)) {
+       seed_fold <- NULL
+     } else {
+       seed_fold <- seed + fold
+    }
     x_train <- x[folds != fold, temp_fit$xscale>0]
     y_train <- y[folds != fold]
     x_val <- x[folds == fold, temp_fit$xscale>0]
@@ -191,7 +195,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
       measure = measure, avg_type = avg_type,
       parallel = parallel, seed = seed_fold
     )
-    print(fitted_objects$RPMs[[1]][1:2,1:2])
+
     # Validate on held-out data
     val_res <- validate_spar(fitted_objects, x_val, y_val, nus,
                              nummods, measure, avg_type)

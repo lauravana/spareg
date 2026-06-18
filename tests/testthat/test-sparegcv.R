@@ -57,6 +57,7 @@ test_that("With screening: fast_fit = fix_rpm delivers diff results than fix_rpm
 })
 
 test_that("No screening: fast_fit = fix_rpm delivers same results as none due to seeds ", {
+  set.seed(123)
   x <- matrix(rnorm(50*60), ncol = 60)
   y <- rnorm(50)
   xnew <- matrix(rnorm(50*60), ncol = 60)
