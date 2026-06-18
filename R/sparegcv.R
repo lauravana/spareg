@@ -116,41 +116,41 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
   # Run initial spar algorithm ----
   ## Precompute nus if not provided ----
   #if (is.null(nus) | !(fast_fit == "none")) {
-    if (fast_fit == "fix_rpm") {
-      temp_screencoef <- NULL
-      temp_arg_list <- check_and_set_args(
-        args, x, y, family, model,
-        temp_screencoef, rp,  measure)
-      model <- temp_arg_list$model; rp <- temp_arg_list$rp
-      temp_screencoef <- temp_arg_list$screencoef;
-      measure <- temp_arg_list$measure
-    } else {
-      temp_screencoef <- screencoef
-    }
+  if (fast_fit == "fix_rpm") {
+    temp_screencoef <- NULL
+    temp_arg_list <- check_and_set_args(
+      args, x, y, family, model,
+      temp_screencoef, rp,  measure)
+    model <- temp_arg_list$model; rp <- temp_arg_list$rp
+    temp_screencoef <- temp_arg_list$screencoef;
+    measure <- temp_arg_list$measure
+  } else {
+    temp_screencoef <- screencoef
+  }
 
-    #x, y, family, model, rp, screencoef,
-    #nnu, nus, nummods, measure, avg_type,
-    #inds = NULL, RPMs = NULL, parallel = FALSE, seed = NULL
-    temp_fit <- fit_spar_models(
-      x = x, y = y, family = family, model = model, rp = rp,
-      screencoef = temp_screencoef, nnu = nnu, nus = nus,
-      nummods = nummods, measure = measure, avg_type = avg_type,
-      parallel = parallel, seed = seed
-    )
-    temp_val_res <- validate_spar(temp_fit, x, y, temp_fit$nus,
-                             nummods, measure, avg_type)
+  #x, y, family, model, rp, screencoef,
+  #nnu, nus, nummods, measure, avg_type,
+  #inds = NULL, RPMs = NULL, parallel = FALSE, seed = NULL
+  temp_fit <- fit_spar_models(
+    x = x, y = y, family = family, model = model, rp = rp,
+    screencoef = temp_screencoef, nnu = nnu, nus = nus,
+    nummods = nummods, measure = measure, avg_type = avg_type,
+    parallel = parallel, seed = seed
+  )
+  temp_val_res <- validate_spar(temp_fit, x, y, temp_fit$nus,
+                                nummods, measure, avg_type)
 
-    if (is.null(nus)) nus <- temp_fit$nus
-    if (!(fast_fit == "none")) {
-      RPMs <- temp_fit$RPMs
-    } else {
-      RPMs <- NULL
-    }
-    if (fast_fit == "fix_rpm_and_inds") {
-      inds <- temp_fit$inds
-    } else {
-      inds <- NULL
-    }
+  if (is.null(nus)) nus <- temp_fit$nus
+  if (!(fast_fit == "none")) {
+    RPMs <- temp_fit$RPMs
+  } else {
+    RPMs <- NULL
+  }
+  if (fast_fit == "fix_rpm_and_inds") {
+    inds <- temp_fit$inds
+  } else {
+    inds <- NULL
+  }
   #}
 
   # Folds
@@ -175,6 +175,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
   # Loop over folds ----
   for (fold in seq_len(nfolds)) {
     # Split data
+    seed_fold <- ifelse(is.null(seed), NULL, seed + fold)
     x_train <- x[folds != fold, temp_fit$xscale>0]
     y_train <- y[folds != fold]
     x_val <- x[folds == fold, temp_fit$xscale>0]
@@ -188,9 +189,9 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
       nnu = nnu, nus = nus, nummods = nummods,
       inds = inds, RPMs = RPMs,
       measure = measure, avg_type = avg_type,
-      parallel = parallel, seed = seed
+      parallel = parallel, seed = seed_fold
     )
-
+    print(fitted_objects$RPMs[[1]][1:2,1:2])
     # Validate on held-out data
     val_res <- validate_spar(fitted_objects, x_val, y_val, nus,
                              nummods, measure, avg_type)
@@ -201,12 +202,13 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
            "scr_coef"   = fitted_objects$"scr_coef",
            "inds"       = fitted_objects$"inds",
            "RPMs"       = fitted_objects$"RPMs",
-        #  "inds"       = ifelse(fast_fit == "fix_rpm_and_inds", NULL, fitted_objects$"inds"),
-        #  "RPMs"       = ifelse(fast_fit == "fix_rpm_and_inds", NULL, fitted_objects$"RPMs"),
+           #  "inds"       = ifelse(fast_fit == "fix_rpm_and_inds", NULL, fitted_objects$"inds"),
+           #  "RPMs"       = ifelse(fast_fit == "fix_rpm_and_inds", NULL, fitted_objects$"RPMs"),
            "xcenter"    = fitted_objects$"xcenter",
            "xscale"     = fitted_objects$"xscale",
            "ycenter"    = fitted_objects$"ycenter",
            "yscale"     = fitted_objects$"yscale",
+           "seed" = fitted_objects$"seed",
            "x_rows_for_fitting_marginal_models" = fitted_objects$"x_rows_for_fitting_marginal_models")
   }
 
@@ -307,7 +309,7 @@ plot.spar.cv <- function(x,
       allowed_ind <- tmp_df$Meas<=tmp_df$Meas[ind_min]+
         tmp_df$sd_measure[ind_min]
       ind_1se <- which(min(tmp_df$numactive[allowed_ind]) ==
-                       tmp_df$numactive)
+                         tmp_df$numactive)
 
       res <- ggplot2::ggplot(data = tmp_df,
                              ggplot2::aes(x = .data$nu,y = .data$Meas)) +
@@ -449,10 +451,10 @@ print.spar.cv <- function(x, digits = 4L, ...) {
       x$measure, min(val_sum$mean_measure), x$nfolds,
       val_sum$nummod,
       formatC(val_sum$nu,digits = digits,format = "e")
-      )
-      )
-#     cat("Summary of those non-zero coefficients:\n")
-#    print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
+    )
+    )
+    #     cat("Summary of those non-zero coefficients:\n")
+    #    print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
   } else {
     tmp_df <- val_sum
     ind_min <- which.min(tmp_df$mean_measure)
@@ -466,11 +468,11 @@ print.spar.cv <- function(x, digits = 4L, ...) {
       x$measure, min(val_sum$mean_measure),
       tmp_df$nummod[ind_min],
       formatC(tmp_df$nu[ind_min],digits = digits,format = "e")
-#      sum(my_best$beta!=0),length(my_best$beta)
-      )
-      )
-   # cat("Summary of those non-zero coefficients:\n")
-  #  print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
+      #      sum(my_best$beta!=0),length(my_best$beta)
+    )
+    )
+    # cat("Summary of those non-zero coefficients:\n")
+    #  print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
     cat(sprintf(
       "\nSparsest coefficient within one standard error of best CV measure (%s) of %.1f  reached for nummod=%d, nu=%s.\n",
       # leading to %d / %d active predictors with CV measure (%s) %.1f.\n",
@@ -479,8 +481,8 @@ print.spar.cv <- function(x, digits = 4L, ...) {
       formatC(tmp_df$nu[ind_1se],digits = digits,format = "e")
     ))
 
-   # cat("Summary of those non-zero coefficients:\n")
-  #  print(summary(mycoef_1se$beta[mycoef_1se$beta!=0]))
+    # cat("Summary of those non-zero coefficients:\n")
+    #  print(summary(mycoef_1se$beta[mycoef_1se$beta!=0]))
   }
 }
 

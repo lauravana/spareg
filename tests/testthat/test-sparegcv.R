@@ -36,7 +36,7 @@ test_that("No screening: fast_fit = fix_rpm delivers different results than fix_
 })
 
 
-test_that("With screening: fast_fit = fix_rpm delivers different results than fix_rpm_and_inds but same threshold", {
+test_that("With screening: fast_fit = fix_rpm delivers diff results than fix_rpm_and_inds", {
   x <- matrix(rnorm(300), ncol = 30)
   y <- rnorm(10)
   spar_res <- spar.cv(x, y, rp = rp_gaussian(),
@@ -59,6 +59,8 @@ test_that("With screening: fast_fit = fix_rpm delivers different results than fi
 test_that("No screening: fast_fit = fix_rpm delivers same results as none due to seeds ", {
   x <- matrix(rnorm(50*60), ncol = 60)
   y <- rnorm(50)
+  xnew <- matrix(rnorm(50*60), ncol = 60)
+  ynew <- rnorm(50)
   spar_res <- spar.cv(x, y, rp = rp_gaussian(),
                       model = spar_glm(),
                       nfolds = 4L, seed = 1234,
@@ -68,14 +70,16 @@ test_that("No screening: fast_fit = fix_rpm delivers same results as none due to
                        model = spar_glm(),
                        nfolds = 4L, seed = 1234,
                        fast_fit = "fix_rpm")
-  a <- get_model(spar_res, "best", x = x, y = y)
-  b <- get_model(spar_res2, "best", x = x, y = y)
+  a <- get_model(spar_res, "best", x = x, y = y,
+                 xval = xnew, yval = ynew)
+  b <- get_model(spar_res2, "best", x = x, y = y,
+                 xval = xnew, yval = ynew)
   expect_true(get_measure(a)[,3] == get_measure(b)[,3])
   expect_error(coef(spar_res))
   expect_error(predict(spar_res, x))
 })
 
-test_that("No screening: fast_fit = fix_rpm delivers diff results than none ", {
+test_that("No screening: fast_fit = fix_rpm delivers diff results than none with given thresholds ", {
   x <- matrix(rnorm(50*60), ncol = 60)
   xnew <- matrix(rnorm(50*60), ncol = 60)
   y <- rnorm(50)
