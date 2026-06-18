@@ -1,12 +1,12 @@
-# spareg 1.1.2
+# spareg 1.2.0
 
-* Change plot methods to display original scale for the threshold parameter when plot_along = "nu".
-* Remove duplicated warning sign in parallel case.
-* Make "name" argument optional in the constructor functions
-* In addition to fast fitting in spar.cv where screening indicators and random projections are fixed before the cross-validation,
-we allow for fast fitting where only the random projections are fixed in advance
-and also allow for sampling screening and random projections in each fold of the  (full) cross-validation.
-* only allow "val_measure" or "val_numactive" argument in plot.spar.cv. 
+* Updated plot methods to display the original scale for the threshold parameter when plot_along = "nu".
+* Remove the duplicated warning message in the parallel = TRUE case.
+* Made the name argument optional in constructor functions.
+* Extended fast fitting options in spar.cv to include (using new argument fast_fit):
+    - Fixing only the random projections in advance.
+    - Sampling both screening indicators and random projections in each fold of the full cross-validation.
+* Restricted plot.spar.cv to accept only "val_measure" or "val_numactive" as valid arguments.
 
 # spareg 1.1.1
 
