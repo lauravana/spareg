@@ -364,7 +364,11 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
   if (drawinds) inds <- lapply(res_all, "[[", "inds")
   intercepts <- sapply(res_all, "[[", "intercepts")
   betas_std <- Reduce("cbind2", lapply(res_all, "[[", "betas_std_m"))
-
+  if (is.null(colnames(x))) {
+    rownames(betas_std) <- paste0("V", seq_len(ncol(x[, xscale > 0, drop = FALSE])))
+  } else {
+    rownames(betas_std) <- colnames(x[, xscale > 0, drop = FALSE])
+  }
   if (is.null(nus)) {
     if (nnu > 1) {
       nus <- unname(c(0, quantile(abs(betas_std@x), probs = seq_len(nnu - 1) / (nnu - 1))))
@@ -449,7 +453,7 @@ spar_algorithm <- function(x, y, family, model, rp, screencoef,
                          inds = inds, RPMs = RPMs, parallel = parallel, seed = seed)
 
   betas <- Matrix(0, ncol(x), max(nummods), sparse = TRUE)
-  betas[res$xscale > 0,] <- res$betas_std
+  betas[res$xscale > 0, ] <- res$betas_std
   if (is.null(colnames(x))) {
     rownames(betas) <- paste0("V", seq_len(ncol(x)))
   } else {
@@ -1050,136 +1054,3 @@ print.spar <- function(x, ...) {
   cat("Summary of those non-zero coefficients:\n")
   print(summary(beta[beta!=0]))
 }
-
-
-#' Extractor for Model Coefficients from \code{'coefspar'} Object
-#' @param x A `\code{coefspar}' object.
-#' @return A numeric vector or matrix of coefficients.
-#' @seealso [coef.spar], [coef.spar.cv], [print.coefspar], [summary.coefspar]
-#' @examples
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
-#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10))
-#' coefs <- coef(spar_res)
-#' get_coef(coefs)
-#
-#' @export
-get_coef <- function(x) {
-  stopifnot(inherits(x, "coefspar"))
-  x$beta
-}
-
-#' Extractor for Model Intercept from \code{'coefspar'} Object
-#' @param x A `\code{coefspar}' object.
-#' @return Intercept (numeric or vector).
-#' @examples
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
-#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10))
-#' coefs <- coef(spar_res)
-#' get_coef(coefs)
-#' @export
-get_intercept <- function(x) {
-  stopifnot(inherits(x, "coefspar"))
-  x$intercept
-}
-
-#' Extractor of Specific Model from \code{'spar'} and \code{'spar.cv'} Object
-#'
-#' @param object A fitted '\code{spar}' or '\code{spar.cv}'  model
-#' @param opt_par One of "best", "1se"
-#'
-#' @return A '\code{spar}'  or '\code{spar.cv}'  object where the beta and intercept elements are
-#'  the ones which correspond to the best or the 1se model.
-#' @examples
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
-#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, screencoef = screen_cor(),
-#'   rp = rp_gaussian(), nummods=c(5, 10))
-#' best_model <- get_model(spar_res, opt_par = "best")
-#' \donttest{
-#' spar_cv <- spar.cv(example_data$x, example_data$y,
-#'   screencoef = screen_cor(),
-#'   rp = rp_gaussian(), nummods = c(5, 10), nfolds = 4L)
-#' best_model_cv <- get_model(spar_cv, opt_par = "best")
-#' onese_model_cv <- get_model(spar_cv, opt_par = "1se")
-#' }
-#' @export
-get_model <- function(object, opt_par = c("best", "1se")) {
-  stopifnot(inherits(object, "spar") || inherits(object, "spar.cv"))
-  opt_nunum <- match.arg(opt_par)
-  if (opt_nunum == "1se" & inherits(object, "spar")) {
-    stop("1se model is not available for spar objects, use spar.cv instead.")
-  }
-  # best
-  if(inherits(object, "spar.cv")) {
-    val_table <- compute_val_summary(object$val_res)
-    best_ind <- which.min(val_table$mean_measure)
-  }
-  if(inherits(object, "spar")) {
-    val_table <- object$val_res
-    best_ind <- which.min(val_table$measure)
-  }
-
-
-  parbest <- val_table[best_ind,]
-
-  # 1se model
-  if (inherits(object, "spar.cv")) {
-    allowed_ind <- val_table$mean_measure <
-      (val_table$mean_measure + val_table$sd_measure)[best_ind]
-
-    ind_1cv <- which.min(val_table$mean_numactive[allowed_ind])
-    par1se <- val_table[allowed_ind,][ind_1cv,]
-  }
-
-  nummod <- ifelse(opt_nunum == "best", parbest$nummod,
-                   par1se$nummod)
-  nu <- ifelse(opt_nunum == "best", parbest$nu, par1se$nu)
-
-
-  final_coef <- object$betas[, seq_len(nummod), drop=FALSE]
-  final_coef[abs(final_coef) < nu] <- 0
-  intercepts <- object$intercepts[seq_len(nummod)]
-
-  object$betas <- final_coef
-  object$intercepts <- intercepts
-  object$val_res <- object$val_res[
-    object$val_res$nummod == nummod & object$val_res$nu == nu, ,
-    drop = FALSE]
-
-  return(object)
-}
-
-#' Extractor for (Cross-)Validation Measure from '\code{spar}' or '\code{spar.cv}' Object
-#'
-#' @param object A fitted '\code{spar}' or '\code{spar.cv}'  model
-#' @return data.frame containing the (cross-)validation measure for the considered threshold and number of model combinations.
-#' For '\code{spar}' objects it contains information about the measure  calculated on the validation set (or on the training sample if
-#' xval and yval are missing) and the number of active variables. For '\code{spar.cv}' objects it contains information
-#' on the average measure obtained across folds together with the standard deviation across the folds and the average number of active variables.
-#' the \code{nfolds} of the training set.
-#' @examples
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
-#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10))
-#' get_measure(spar_res)
-#'
-#' @seealso [spar], [spar.cv], [get_model]
-#' @export
-get_measure <- function(object) {
-  stopifnot(inherits(object, "spar") || inherits(object, "spar.cv"))
-  if(inherits(object, "spar.cv")) {
-    val_table <- compute_val_summary(object$val_res)
-    colnames(val_table)[4] <- paste0("mean_", object$measure)
-    colnames(val_table)[5] <- paste0("sd_", object$measure)
-    colnames(val_table)[6] <- "mean_numactive"
-  }
-  if(inherits(object, "spar")) {
-    val_table <- object$val_res
-    colnames(val_table)[4] <- object$measure
-    colnames(val_table)[5] <- "numactive"
-  }
-  val_table[, !(colnames(val_table) %in% c("nnu"))]
-}
-

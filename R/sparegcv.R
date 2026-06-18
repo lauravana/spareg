@@ -105,17 +105,17 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
   measure <- match.arg(measure)
   fast_fit <- match.arg(fast_fit)
   avg_type <- match.arg(avg_type)
+
   # Ensure back compatibility ----
   args <- list(...)
   arg_list <- check_and_set_args(args, x, y, family, model,
                                  screencoef, rp,  measure)
   model <- arg_list$model; rp <- arg_list$rp
   screencoef <- arg_list$screencoef; measure <- arg_list$measure
-  folds <- sample(cut(seq_len(n), breaks = nfolds, labels=FALSE))
 
   # Run initial spar algorithm ----
   ## Precompute nus if not provided ----
-  if (is.null(nus) | !(fast_fit == "none")) {
+  #if (is.null(nus) | !(fast_fit == "none")) {
     if (fast_fit == "fix_rpm") {
       temp_screencoef <- NULL
       temp_arg_list <- check_and_set_args(
@@ -127,12 +127,19 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
     } else {
       temp_screencoef <- screencoef
     }
+
+    #x, y, family, model, rp, screencoef,
+    #nnu, nus, nummods, measure, avg_type,
+    #inds = NULL, RPMs = NULL, parallel = FALSE, seed = NULL
     temp_fit <- fit_spar_models(
-      x, y, family, model, rp, temp_screencoef,
-      nnu = nnu, nus = nus, nummods = max(nummods),
-      measure = measure, avg_type = avg_type,
+      x = x, y = y, family = family, model = model, rp = rp,
+      screencoef = temp_screencoef, nnu = nnu, nus = nus,
+      nummods = nummods, measure = measure, avg_type = avg_type,
       parallel = parallel, seed = seed
     )
+    temp_val_res <- validate_spar(temp_fit, x, y, temp_fit$nus,
+                             nummods, measure, avg_type)
+
     if (is.null(nus)) nus <- temp_fit$nus
     if (!(fast_fit == "none")) {
       RPMs <- temp_fit$RPMs
@@ -144,20 +151,37 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
     } else {
       inds <- NULL
     }
-  }
+  #}
+
+  # Folds
+  folds <- sample(cut(seq_len(n), breaks = nfolds, labels=FALSE))
 
   # Initialize storage for results
   all_val_res <- list()
-  all_fitted_objects <- list()
+  ## First element is the initial fit
+  all_val_res[[1]] <- cbind(fold = 0, temp_val_res)
 
-  # Loop over folds
+  all_fitted_objects <- list()
+  ## First element is the initial fit
+  all_fitted_objects[[1]] <-  list(
+    betas_std = temp_fit$betas_std,
+    intercepts = temp_fit$intercepts,
+    scr_coef = temp_fit$scr_coef,
+    inds = temp_fit$inds, RPMs = temp_fit$RPMs,
+    xcenter = temp_fit$xcenter, xscale = temp_fit$xscale,
+    ycenter = temp_fit$ycenter, yscale = temp_fit$yscale
+  )
+
+  # Loop over folds ----
   for (fold in seq_len(nfolds)) {
     # Split data
-    x_train <- x[folds != fold, ]
+    x_train <- x[folds != fold, temp_fit$xscale>0]
     y_train <- y[folds != fold]
-    x_val <- x[folds == fold, ]
+    x_val <- x[folds == fold, temp_fit$xscale>0]
     y_val <- y[folds == fold]
-
+    #x, y, family, model, rp, screencoef,
+    #nnu, nus, nummods, measure, avg_type,
+    #inds = NULL, RPMs = NULL, parallel = FALSE, seed = NULL
     # Fit models on training data
     fitted_objects <- fit_spar_models(
       x_train, y_train, family, model, rp, screencoef,
@@ -170,13 +194,15 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
     # Validate on held-out data
     val_res <- validate_spar(fitted_objects, x_val, y_val, nus,
                              nummods, measure, avg_type)
-    all_val_res[[fold]] <- cbind(fold, val_res)
-    all_fitted_objects[[fold]] <-
+    all_val_res[[fold + 1]] <- cbind(fold, val_res)
+    all_fitted_objects[[fold + 1]] <-
       list("betas_std"  = fitted_objects$"betas_std",
            "intercepts" = fitted_objects$"intercepts",
            "scr_coef"   = fitted_objects$"scr_coef",
            "inds"       = fitted_objects$"inds",
            "RPMs"       = fitted_objects$"RPMs",
+        #  "inds"       = ifelse(fast_fit == "fix_rpm_and_inds", NULL, fitted_objects$"inds"),
+        #  "RPMs"       = ifelse(fast_fit == "fix_rpm_and_inds", NULL, fitted_objects$"RPMs"),
            "xcenter"    = fitted_objects$"xcenter",
            "xscale"     = fitted_objects$"xscale",
            "ycenter"    = fitted_objects$"ycenter",
@@ -186,9 +212,8 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
 
   # Aggregate validation results across folds
   combined_val_res <- do.call(rbind, all_val_res)
-  # lapply(all_fitted_objects, function(x) x$inds)
 
-  ## TODO: refit on whole data with best parameters?
+  ## We do not refit on whole data with best parameters
   res <- list(
     val_res = combined_val_res,
     fitted_objects = all_fitted_objects,
@@ -200,7 +225,9 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
     nfolds = nfolds,
     rp = rp,
     screencoef = screencoef,
-    model = model
+    model = model,
+    fast_fit = fast_fit,
+    seed = seed
   )
   attr(res,"class") <- "spar.cv"
   return(res)
@@ -215,6 +242,257 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
 #' @aliases spar.cv
 #' @export
 spareg.cv <- spar.cv
+
+
+
+#' Plot Method for \code{'spar.cv'} Object
+#'
+#' @description
+#' Plot cross-validation measure or number of active variables over different thresholds or number
+#' of models of \code{'spar.cv'} object, produce a residuals vs fitted plot,
+#' or a plot of the estimated coefficients in each marginal model, sorted by their absolute value.
+#'
+#' @param x result of [spar.cv] function of class  \code{'spar.cv'}.
+#' @param plot_type one of  \code{c("val_measure","val_numactive","res_vs_fitted","coefs")}.
+#' @param plot_along one of  \code{c("nu","nummod")}; ignored when  \code{plot_type="res_vs_fitted"}.
+#' @param opt_par one of  \code{c("1se","best")}, chooses whether to select the
+#'  best pair of  \code{nus} and  \code{nummods} according to CV measure, or the
+#'  sparsest solution within one sd of that optimal CV measure;
+#' ignored when  \code{nummod} and  \code{nu}, or  \code{coef} are given
+#' @param nummod fixed value for  \code{nummod} when  \code{plot_along="nu"} for
+#'  \code{plot_type="val_measure"} or  \code{"val_numactive"};
+#'  same as for \code{\link{predict.spar.cv}} when plot_type="res_vs_fitted".
+#' @param nu fixed value for \eqn{\nu} when  \code{plot_along="nummod"}
+#' for  \code{plot_type="val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar.cv}} when  \code{plot_type="res_vs_fitted"}.
+#' @param xfit data used for predictions in  \code{"res_vs_fitted"}. Needed as the \code{"spar.cv"} objects do not store the original data.
+#' @param yfit data used for predictions in  \code{"res_vs_fitted"}. Needed as the \code{"spar.cv"} objects do not store the original data.
+#' @param opt_par one of  \code{c("best","1se")}, only needed for
+#'  \code{plot_type="res_vs_fitted"} to set type of predictions, see \code{\link{predict.spar.cv}}.
+#' @param prange optional vector of length 2 for  \code{"coefs"}-plot to give the limits of the predictors' plot range; defaults to  \code{c(1, p)}.
+#' @param coef_order optional index vector of length p for \code{"coefs"}-plot to give the order of the predictors; defaults to  \code{1 : p}.
+#' @param digits number of significant digits to be displayed in the axis; defaults to 2L.
+#' @param ... further arguments passed to or from other methods
+#' @return \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
+#' @import ggplot2
+#' @examples
+#' \donttest{
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
+#'   screencoef = screen_cor(), rp = rp_gaussian(), nummods = c(5, 10))
+#' plot(spar_res)
+#' plot(spar_res, plot_type = "val_measure", plot_along = "nummod", nu = 0)
+#' plot(spar_res, plot_type = "val_measure", plot_along = "nu", nummod = 10)
+#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nummod", nu = 0)
+#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nu", nummod = 10)
+#' }
+#' @export
+plot.spar.cv <- function(x,
+                         plot_type = c("val_measure","val_numactive"),
+                         plot_along = c("nu","nummod"),
+                         nummod = NULL,
+                         nu = NULL, digits = 2L, ...) {
+  spar_res <- x
+  plot_type <- match.arg(plot_type)
+  if (!(plot_type %in% c("val_measure","val_numactive"))) stop("Only plot types 'val_measure' and 'val_numactive' are currently implemented!")
+  plot_along <- match.arg(plot_along)
+  #opt_par <- match.arg(opt_par)
+  mynummod <- nummod
+  my_val_sum <- compute_val_summary(spar_res$val_res)
+  colnames(my_val_sum)[match(c("mean_measure", "mean_numactive"),colnames(my_val_sum))] <- c("Meas", "numactive")
+
+
+  if (plot_type=="val_measure") {
+    if (plot_along=="nu") {
+      if (is.null(nummod)) {
+        mynummod <- my_val_sum$nummod[which.min(my_val_sum$Meas)]
+        tmp_title <- "Fixed optimal nummod="
+      } else {
+        tmp_title <- "Fixed given nummod="
+      }
+      tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
+      ind_min <- which.min(tmp_df$Meas)
+      allowed_ind <- tmp_df$Meas<=tmp_df$Meas[ind_min]+
+        tmp_df$sd_measure[ind_min]
+      ind_1se <- which(min(tmp_df$numactive[allowed_ind]) ==
+                       tmp_df$numactive)
+
+      res <- ggplot2::ggplot(data = tmp_df,
+                             ggplot2::aes(x = .data$nu,y = .data$Meas)) +
+        ggplot2::geom_point() +
+        ggplot2::geom_line() +
+        ggplot2::theme_bw() +
+        ggplot2::labs(x=expression(nu),y=spar_res$measure) +
+        ggplot2::geom_point(data=data.frame(x=tmp_df$nu[ind_min],
+                                            y=tmp_df$Meas[ind_min]),
+                            ggplot2::aes(x=.data$x,y=.data$y),col="red") +
+        ggplot2::ggtitle(paste0(tmp_title,mynummod)) +
+        ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$Meas-.data$sd_measure,
+                                          ymax=.data$Meas+.data$sd_measure),
+                             alpha=0.2,linetype=2,show.legend = FALSE) +
+        ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
+                            color="red",show.legend = FALSE,
+                            data=data.frame(x = c(tmp_df$nu[ind_min],
+                                                  tmp_df$nu[ind_1se]),
+                                            y = c(tmp_df$Meas[ind_min],tmp_df$Meas[ind_1se]))) +
+        ggplot2::annotate("segment",x = tmp_df$nu[ind_min],
+                          y = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
+                          xend = tmp_df$nu[ind_1se],
+                          yend = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
+                          color = 2, linetype = 2)
+    } else {
+      if (is.null(nu)) {
+        nu <- my_val_sum$nu[which.min(my_val_sum$Meas)]
+        tmp_title <- "Fixed optimal "
+      } else {
+        tmp_title <- "Fixed given "
+      }
+      tmp_df <- my_val_sum[my_val_sum$nummod==nu, ]
+      ind_min <- which.min(tmp_df$Meas)
+      allowed_ind <- tmp_df$Meas<=tmp_df$Meas[ind_min]+
+        tmp_df$sd_measure[ind_min]
+      ind_1se <- match(min(tmp_df$numactive[allowed_ind]),
+                       tmp_df$numactive)
+
+      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nummod,y=.data$Meas)) +
+        ggplot2::geom_point() +
+        ggplot2::geom_line() +
+        ggplot2::labs(y=spar_res$measure) +
+        ggplot2::geom_point(data=data.frame(x=tmp_df$nummod[ind_min],y=tmp_df$Meas[ind_min]),
+                            ggplot2::aes(x=.data$x,y=.data$y),col="red")+
+        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3)))) +
+        ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$Meas-.data$sd_measure,
+                                          ymax=.data$Meas+.data$sd_measure),
+                             alpha=0.2,linetype=2,show.legend = FALSE)+
+        ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
+                            color="red",show.legend = FALSE,
+                            data=data.frame(x = c(tmp_df$nummod[ind_min],tmp_df$nummod[allowed_ind][ind_1se]),
+                                            y = c(tmp_df$Meas[ind_min],tmp_df$Meas[allowed_ind][ind_1se]))) +
+        ggplot2::annotate("segment",x = tmp_df$nummod[ind_min],
+                          y = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
+                          xend = tmp_df$nummod[allowed_ind][ind_1se],
+                          yend = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
+                          color=2,linetype=2) +
+        ggplot2::theme_bw() +
+        ggplot2::scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
+                                    minor_breaks = NULL)
+    }
+  }
+
+  if (plot_type=="val_numactive") {
+    if (plot_along=="nu") {
+      if (is.null(nummod)) {
+        mynummod <- my_val_sum$nummod[which.min(my_val_sum$Meas)]
+        tmp_title <- "Fixed optimal nummod="
+      } else {
+        tmp_title <- "Fixed given nummod="
+      }
+      tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
+      ind_min <- which.min(tmp_df$Meas)
+
+      allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sd_measure[ind_min]
+      ind_1se <- which.min(tmp_df$numactive[allowed_ind])
+
+      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nu,y=.data$numactive)) +
+        ggplot2::geom_point() +
+        ggplot2::geom_line() +
+        ggplot2::labs(x=expression(nu)) +
+        ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
+                            color=2,show.legend = FALSE,
+                            data=data.frame(x = c(tmp_df$nu[ind_min],tmp_df$nu[allowed_ind][ind_1se]),
+                                            y = c(tmp_df$numactive[ind_min],tmp_df$numactive[allowed_ind][ind_1se]))) +
+        ggplot2::theme_bw() +
+        ggplot2::ggtitle(paste0(tmp_title,mynummod))
+    } else {
+      if (is.null(nu)) {
+        nu <- my_val_sum$nu[which.min(my_val_sum$Meas)]
+        tmp_title <- "Fixed optimal "
+      } else {
+        tmp_title <- "Fixed given "
+      }
+      tmp_df <- my_val_sum[my_val_sum$nu==nu, ]
+      ind_min <- which.min(tmp_df$Meas)
+
+      allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sd_measure[ind_min]
+      ind_1se <- which.min(tmp_df$numactive[allowed_ind])
+
+      res <- ggplot2::ggplot(data = tmp_df,
+                             ggplot2::aes(x=.data$nummod,y=.data$numactive)) +
+        ggplot2::geom_point() +
+        ggplot2::geom_line() + ggplot2::theme_bw() +
+        ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
+                            color=2,show.legend = FALSE,
+                            data=data.frame(x = c(tmp_df$nummod[ind_min],tmp_df$nummod[allowed_ind][ind_1se]),
+                                            y = c(tmp_df$numactive[ind_min],tmp_df$numactive[allowed_ind][ind_1se]))) +
+        ggplot2::scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
+                                    minor_breaks = NULL)+
+        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3))))
+
+    }
+  }
+  return(res)
+}
+
+
+#' Print Method for \code{'spar.cv'} Object
+#'
+#' Print summary of \code{'spar.cv'} object
+#' @param x result of  [spar.cv] function of class  \code{'spar.cv'}.
+#' @param ... further arguments passed to or from other methods
+#' @return text summary
+#' @examples
+#' \donttest{
+#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' spar_res <- spareg.cv(example_data$x, example_data$y, nfolds = 3L,
+#'   screencoef = screen_cor(), rp = rp_gaussian(), nummods = c(5, 10))
+#' print(spar_res)
+#' }
+#' @export
+print.spar.cv <- function(x, digits = 4L, ...) {
+  val_sum <- compute_val_summary(x$val_res)
+  if (nrow(val_sum) == 1) {
+    cat(sprintf(
+      "spar.cv object: \nCV measure (%s) of  %.1f (averaged over the %i fold) reached for nummod=%d, nu=%s.",
+      #leading to %d / %d active predictors.\n",
+      x$measure, min(val_sum$mean_measure), x$nfolds,
+      val_sum$nummod,
+      formatC(val_sum$nu,digits = digits,format = "e")
+      )
+      )
+#     cat("Summary of those non-zero coefficients:\n")
+#    print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
+  } else {
+    tmp_df <- val_sum
+    ind_min <- which.min(tmp_df$mean_measure)
+
+    allowed_ind <- tmp_df$mean_measure<tmp_df$mean_measure[ind_min]+tmp_df$sd_measure[ind_min]
+    ind_1se <- match(min(tmp_df$mean_numactive[allowed_ind]),
+                     tmp_df$mean_numactive)
+
+    #Reduce("+",
+    #       lapply(x$fitted_objects, function(x) (as.matrix(x$betas_std != 0))))
+    cat(sprintf(
+      "spar.cv object:\n\nSmallest CV measure (%s) of %.1f reached for nummod=%d, nu=%s. \n",
+      # leading  to %d / %d active predictors (averaged over folds).",
+      x$measure, min(val_sum$mean_measure),
+      tmp_df$nummod[ind_min],
+      formatC(tmp_df$nu[ind_min],digits = digits,format = "e")
+#      sum(my_best$beta!=0),length(my_best$beta)
+      )
+      )
+   # cat("Summary of those non-zero coefficients:\n")
+  #  print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
+    cat(sprintf(
+      "\nSparsest coefficient within one standard error of best CV measure (%s) of %.1f  reached for nummod=%d, nu=%s.\n",
+      # leading to %d / %d active predictors with CV measure (%s) %.1f.\n",
+      x$measure, tmp_df$mean_measure[ind_1se],
+      tmp_df$nummod[ind_1se],
+      formatC(tmp_df$nu[ind_1se],digits = digits,format = "e")
+    ))
+
+   # cat("Summary of those non-zero coefficients:\n")
+  #  print(summary(mycoef_1se$beta[mycoef_1se$beta!=0]))
+  }
+}
 
 #' Coef Method for \code{'spar.cv'} Object
 #'
@@ -254,6 +532,9 @@ coef.spar.cv <- function(object,
                          opt_par = c("best","1se"),
                          aggregate = c("mean", "median", "none"),
                          ...) {
+  if (object$fast_fit != "fix_rpm_and_inds") {
+    stop("Coefficients cannot be extracted without refitting on whole data with best or 1se parameters. To be able to extract coefficients, set fast_fit to 'fix_rpm_and_inds' when calling spar.cv or use spar() to refit with the desired (nu, M) combination. ")
+  }
   opt_nunum <- match.arg(opt_par)
   aggregate <- match.arg(aggregate)
   given_pars <- !is.null(nummod) & !is.null(nu)
@@ -310,27 +591,35 @@ coef.spar.cv <- function(object,
       stop("Length of nummod and nu must be 1!")
     }
   }
-  betas <- Reduce(
-    "mean",
-    lapply(object$fitted_objects, function(x) x$betas_std))
-  if (nummod > ncol(object$betas)) {
-    warning("Number of models is too high, maximum of fitted models is used instead!")
-    nummod <- ncol(object$betas)
-  }
+
+
 
   # calc for chosen parameters
-  final_coef <- object$betas[object$xscale>0, seq_len(nummod), drop=FALSE]
+  betas_std <- object$fitted_objects[[1]]$betas_std
+  if (nummod > ncol(betas_std)) {
+    warning("Number of models is too high, maximum of fitted is used instead!")
+    nummod <- ncol(betas_std)
+  }
+
+  xcenter <- object$fitted_objects[[1]]$xcenter
+  ycenter <- object$fitted_objects[[1]]$ycenter
+  xscale <- object$fitted_objects[[1]]$xscale
+  yscale <- object$fitted_objects[[1]]$yscale
+  intercepts <- object$fitted_objects[[1]]$intercepts
+  val_res <- object$val_res[object$val_res$fold == 0, ]
+
+  final_coef <- betas_std[, seq_len(nummod), drop=FALSE]
   final_coef[abs(final_coef) < nu] <- 0
-  p <- length(object$xscale)
+  final_coef[abs(final_coef) < nu] <- 0
+  p <- length(object$fitted_objects[[1]]$xscale)
   if (aggregate == "none") {
     beta <- matrix(0, nrow = p, ncol = nummod)
     beta_std <- final_coef
-    beta[object$xscale>0,] <- as.matrix(object$yscale *
-                                          beta_std/(object$xscale[object$xscale>0]))
+    beta[xscale>0,] <- as.matrix(yscale * beta_std/(xscale[xscale>0]))
     rownames(beta) <- rownames(final_coef)
     colnames(beta) <- paste0("Model_", seq_len(nummod))
-    intercept <- drop(object$ycenter + object$intercepts[seq_len(nummod)] -
-                        crossprod(object$xcenter, beta))
+    intercept <- drop(ycenter + intercepts[seq_len(nummod)] -
+                        crossprod(xcenter, beta))
     names(intercept) <- colnames(beta)
   } else {
     avg_fun <- switch(aggregate,
@@ -339,9 +628,9 @@ coef.spar.cv <- function(object,
                       "Aggregration method not implemeneted")
     beta <- numeric(p)
     beta_std <- apply(final_coef, 1, avg_fun)
-    beta[object$xscale>0] <- object$yscale * beta_std/(object$xscale[object$xscale>0])
+    beta[xscale>0] <- yscale * beta_std/(xscale[xscale>0])
     names(beta) <- rownames(final_coef)
-    intercept <- object$ycenter + avg_fun(object$intercepts[seq_len(nummod)]) - sum(object$xcenter*beta)
+    intercept <- ycenter + avg_fun(intercepts[seq_len(nummod)]) - sum(xcenter*beta)
     names(intercept) <- "(Intercept)"
   }
   res <- list(intercept = intercept,
@@ -350,8 +639,8 @@ coef.spar.cv <- function(object,
               nu = nu)
 
   class(res) <- "coefspar"
-  best_ind <- which.min(object$val_res$Meas)
-  par <- object$val_res[best_ind,]
+  best_ind <- which.min(val_res$measure)
+  par <- val_res[best_ind,]
   attr(res, "M_best") <- parbest$nummod
   attr(res, "nu_best") <- parbest$nu
   attr(res, "M_1se") <- par1se$nummod
@@ -362,7 +651,6 @@ coef.spar.cv <- function(object,
   attr(res, "parent_object") <- class(object)
   return(res)
 }
-
 
 #' Predict Method for \code{'spar.cv'} Object
 #'
@@ -401,13 +689,18 @@ predict.spar.cv <- function(object,
                             nu = NULL,
                             aggregate = c("mean", "median"),
                             ...) {
+  if (object$fast_fit != "fix_rpm_and_inds") {
+    stop("Predictions cannot be generated without refitting on whole data with best or 1se parameters. To be able to generate predictions, set fast_fit to 'fix_rpm_and_inds' when calling spar.cv or use spar() to refit with the desired (nu, M) combination. ")
+  }
+
   if (is.null(xnew)) {
     stop("No 'xnew' provided. This 'spar.cv' object does not retain training data. ",
          "Please provide xnew explicitly. ",
          "If you want to predict in-sample, use the original data used for fitting the model as xnew.")
   }
 
-  if (ncol(xnew)!=length(object$xscale)) {
+  xscale <- object$fitted_objects[[1]]$xscale
+  if (ncol(xnew)!=length(xscale)) {
     stop("xnew must have same number of columns as initial x!")
   }
   type <- match.arg(type)
@@ -441,267 +734,5 @@ predict.spar.cv <- function(object,
   return(res)
 }
 
-#' Plot Method for \code{'spar.cv'} Object
-#'
-#' @description
-#' Plot cross-validation measure or number of active variables over different thresholds or number
-#' of models of \code{'spar.cv'} object, produce a residuals vs fitted plot,
-#' or a plot of the estimated coefficients in each marginal model, sorted by their absolute value.
-#'
-#' @param x result of [spar.cv] function of class  \code{'spar.cv'}.
-#' @param plot_type one of  \code{c("val_measure","val_numactive","res_vs_fitted","coefs")}.
-#' @param plot_along one of  \code{c("nu","nummod")}; ignored when  \code{plot_type="res_vs_fitted"}.
-#' @param opt_par one of  \code{c("1se","best")}, chooses whether to select the
-#'  best pair of  \code{nus} and  \code{nummods} according to CV measure, or the
-#'  sparsest solution within one sd of that optimal CV measure;
-#' ignored when  \code{nummod} and  \code{nu}, or  \code{coef} are given
-#' @param nummod fixed value for  \code{nummod} when  \code{plot_along="nu"} for
-#'  \code{plot_type="val_measure"} or  \code{"val_numactive"};
-#'  same as for \code{\link{predict.spar.cv}} when plot_type="res_vs_fitted".
-#' @param nu fixed value for \eqn{\nu} when  \code{plot_along="nummod"}
-#' for  \code{plot_type="val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar.cv}} when  \code{plot_type="res_vs_fitted"}.
-#' @param xfit data used for predictions in  \code{"res_vs_fitted"}. Needed as the \code{"spar.cv"} objects do not store the original data.
-#' @param yfit data used for predictions in  \code{"res_vs_fitted"}. Needed as the \code{"spar.cv"} objects do not store the original data.
-#' @param opt_par one of  \code{c("best","1se")}, only needed for
-#'  \code{plot_type="res_vs_fitted"} to set type of predictions, see \code{\link{predict.spar.cv}}.
-#' @param prange optional vector of length 2 for  \code{"coefs"}-plot to give the limits of the predictors' plot range; defaults to  \code{c(1, p)}.
-#' @param coef_order optional index vector of length p for \code{"coefs"}-plot to give the order of the predictors; defaults to  \code{1 : p}.
-#' @param digits number of significant digits to be displayed in the axis; defaults to 2L.
-#' @param ... further arguments passed to or from other methods
-#' @return \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
-#' @import ggplot2
-#' @examples
-#' \donttest{
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
-#' spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
-#'   screencoef = screen_cor(), rp = rp_gaussian(), nummods = c(5, 10))
-#' plot(spar_res)
-#' plot(spar_res, plot_type = "val_measure", plot_along = "nummod", nu = 0)
-#' plot(spar_res, plot_type = "val_measure", plot_along = "nu", nummod = 10)
-#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nummod", nu = 0)
-#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nu", nummod = 10)
-#' plot(spar_res, plot_type = "res_vs_fitted",  xfit = example_data$xtest,
-#'   yfit = example_data$ytest, opt_par = "1se")
-#' plot(spar_res, "coefs", prange = c(1, 400))
-#' }
-#' @export
-plot.spar.cv <- function(x,
-                         plot_type = c("val_measure","val_numactive"),#,"res_vs_fitted","coefs"),
-                         plot_along = c("nu","nummod"),
-                         nummod = NULL,
-                         nu = NULL,
-                         xfit = NULL,
-                         yfit = NULL,
-                         opt_par = c("best","1se"),
-                         prange = NULL,
-                         coef_order = NULL, digits = 2, ...) {
-  spar_res <- x
-  plot_type <- match.arg(plot_type)
-  if (!(plot_type %in% c("val_measure","val_numactive"))) stop("Only plot types 'val_measure' and 'val_numactive' are currently implemented!")
-  plot_along <- match.arg(plot_along)
-  opt_par <- match.arg(opt_par)
-  mynummod <- nummod
-  my_val_sum <- compute_val_summary(spar_res$val_res)
-  colnames(my_val_sum)[match(c("mean_measure", "mean_numactive"),colnames(my_val_sum))] <- c("Meas", "numactive")
-
-  # if (plot_type=="res_vs_fitted") {
-  #   if (is.null(xfit) | is.null(yfit)) {
-  #     stop("xfit and yfit need to be provided for res_vs_fitted plot!")
-  #   }
-  #   pred <- predict(spar_res,xfit,opt_par=opt_par,nummod=nummod,nu=nu)
-  #   res <- ggplot2::ggplot(data = data.frame(fitted=pred,residuals=yfit-pred),
-  #                          ggplot2::aes(x=.data$fitted,y=.data$residuals)) +
-  #     ggplot2::geom_point() +
-  #     ggplot2::theme_bw() +
-  #     ggplot2::geom_hline(yintercept = 0,linetype=2,linewidth=0.5)
-  # }
-  if (plot_type=="val_measure") {
-    if (plot_along=="nu") {
-      if (is.null(nummod)) {
-        mynummod <- my_val_sum$nummod[which.min(my_val_sum$Meas)]
-        tmp_title <- "Fixed optimal nummod="
-      } else {
-        tmp_title <- "Fixed given nummod="
-      }
-      tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
-      ind_min <- which.min(tmp_df$Meas)
-      allowed_ind <- tmp_df$Meas<=tmp_df$Meas[ind_min]+
-        tmp_df$sd_measure[ind_min]
-      ind_1se <- which.min(tmp_df$numactive[allowed_ind])
-      par1se <- tmp_df[allowed_ind,][ind_1se,]
-      nu_1se <- par1se$nu
 
 
-      res <- ggplot2::ggplot(data = tmp_df,
-                             ggplot2::aes(x = .data$nu,y = .data$Meas)) +
-        ggplot2::geom_point() +
-        ggplot2::geom_line() +
-        ggplot2::theme_bw() +
-        ggplot2::labs(x=expression(nu),y=spar_res$measure) +
-        ggplot2::geom_point(data=data.frame(x=tmp_df$nu[ind_min],
-                                            y=tmp_df$Meas[ind_min]),
-                            ggplot2::aes(x=.data$x,y=.data$y),col="red") +
-        ggplot2::ggtitle(paste0(tmp_title,mynummod)) +
-        ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$Meas-.data$sd_measure,
-                                          ymax=.data$Meas+.data$sd_measure),
-                             alpha=0.2,linetype=2,show.legend = FALSE) +
-        ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
-                            color="red",show.legend = FALSE,
-                            data=data.frame(x = c(tmp_df$nu[ind_min],
-                                                  tmp_df$nu[ind_1se]),
-                                            y = c(tmp_df$Meas[ind_min],tmp_df$Meas[tmp_df$nu==nu_1se]))) +
-        ggplot2::annotate("segment",x = tmp_df$nu[ind_min],
-                          y = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
-                          xend = tmp_df$nu[ind_1se],
-                          yend = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
-                          color = 2, linetype = 2)
-    } else {
-      if (is.null(nu)) {
-        nu <- my_val_sum$nu[which.min(my_val_sum$Meas)]
-        tmp_title <- "Fixed optimal "
-      } else {
-        tmp_title <- "Fixed given "
-      }
-      tmp_df <- my_val_sum[my_val_sum$nu == nu, ]
-      ind_min <- which.min(tmp_df$Meas)
-
-      allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sd_measure[ind_min]
-      ind_1se <- which.min(tmp_df$numactive[allowed_ind])
-
-      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nummod,y=.data$Meas)) +
-        ggplot2::geom_point() +
-        ggplot2::geom_line() +
-        ggplot2::labs(y=spar_res$measure) +
-        ggplot2::geom_point(data=data.frame(x=tmp_df$nummod[ind_min],y=tmp_df$Meas[ind_min]),
-                            ggplot2::aes(x=.data$x,y=.data$y),col="red")+
-        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3)))) +
-        ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$Meas-.data$sd_measure,
-                                          ymax=.data$Meas+.data$sd_measure),
-                             alpha=0.2,linetype=2,show.legend = FALSE)+
-        ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
-                            color="red",show.legend = FALSE,
-                            data=data.frame(x = c(tmp_df$nummod[ind_min],tmp_df$nummod[allowed_ind][ind_1se]),
-                                            y = c(tmp_df$Meas[ind_min],tmp_df$Meas[allowed_ind][ind_1se]))) +
-        ggplot2::annotate("segment",x = tmp_df$nummod[ind_min],
-                          y = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
-                          xend = tmp_df$nummod[allowed_ind][ind_1se],
-                          yend = tmp_df$Meas[ind_min] + tmp_df$sd_measure[ind_min],
-                          color=2,linetype=2) +
-        ggplot2::theme_bw() +
-        ggplot2::scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
-                                    minor_breaks = NULL)
-    }
-  }
-
-  if (plot_type=="val_numactive") {
-    if (plot_along=="nu") {
-      if (is.null(nummod)) {
-        mynummod <- my_val_sum$nummod[which.min(my_val_sum$Meas)]
-        tmp_title <- "Fixed optimal nummod="
-      } else {
-        tmp_title <- "Fixed given nummod="
-      }
-      tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
-      ind_min <- which.min(tmp_df$Meas)
-
-      allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sd_measure[ind_min]
-      ind_1se <- which.min(tmp_df$numactive[allowed_ind])
-
-      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nu,y=.data$numactive)) +
-        ggplot2::geom_point() +
-        ggplot2::geom_line() +
-        # ggplot2::scale_x_continuous(breaks=seq(1,nrow(my_val_sum),1),labels=round(my_val_sum$nu,3)) +
-        #ggplot2::scale_x_continuous(breaks=seq(1,nrow(tmp_df),2),
-        #                            labels=formatC(tmp_df$nu[seq(1,nrow(tmp_df),2)],
-        #                                           format = "e", digits = digits)) +
-        ggplot2::labs(x=expression(nu)) +
-        ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
-                            color=2,show.legend = FALSE,
-                            data=data.frame(x = c(tmp_df$nu[ind_min],tmp_df$nu[allowed_ind][ind_1se]),
-                                            y = c(tmp_df$numactive[ind_min],tmp_df$numactive[allowed_ind][ind_1se]))) +
-        ggplot2::theme_bw() +
-        ggplot2::ggtitle(paste0(tmp_title,mynummod))
-    } else {
-      if (is.null(nu)) {
-        nu <- my_val_sum$nu[which.min(my_val_sum$Meas)]
-        tmp_title <- "Fixed optimal "
-      } else {
-        tmp_title <- "Fixed given "
-      }
-      tmp_df <- my_val_sum[my_val_sum$nu==nu, ]
-      ind_min <- which.min(tmp_df$Meas)
-
-      allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sd_measure[ind_min]
-      ind_1se <- which.min(tmp_df$numactive[allowed_ind])
-
-      res <- ggplot2::ggplot(data = tmp_df,
-                             ggplot2::aes(x=.data$nummod,y=.data$numactive)) +
-        ggplot2::geom_point() +
-        ggplot2::geom_line() + ggplot2::theme_bw() +
-        ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
-                            color=2,show.legend = FALSE,
-                            data=data.frame(x = c(tmp_df$nummod[ind_min],tmp_df$nummod[allowed_ind][ind_1se]),
-                                            y = c(tmp_df$numactive[ind_min],tmp_df$numactive[allowed_ind][ind_1se]))) +
-        ggplot2::scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
-                                    minor_breaks = NULL)+
-        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3))))
-
-    }
-  }
-  return(res)
-}
-
-
-#' Print Method for \code{'spar.cv'} Object
-#'
-#' Print summary of \code{'spar.cv'} object
-#' @param x result of  [spar.cv] function of class  \code{'spar.cv'}.
-#' @param ... further arguments passed to or from other methods
-#' @return text summary
-#' @examples
-#' \donttest{
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
-#' spar_res <- spareg.cv(example_data$x, example_data$y, nfolds = 3L,
-#'   screencoef = screen_cor(), rp = rp_gaussian(), nummods = c(5, 10))
-#' print(spar_res)
-#' }
-#' @export
-print.spar.cv <- function(x, ...) {
-  mycoef_best <- coef(x, opt_par = "best")
-  mycoef_1se  <- coef(x, opt_par = "1se")
-  val_sum <- compute_val_summary(x$val_res)
-  if (nrow(val_sum) == 1) {
-    cat(sprintf(
-      "spar.cv object: \nCV measure (%s) %.1f reached for nummod=%d, nu=%s leading
-  to %d / %d active predictors.\n",
-      x$measure,
-      min(val_sum$mean_measure),mycoef_best$nummod,
-      formatC(mycoef_best$nu,digits = 2,format = "e"),
-      sum(mycoef_best$beta!=0),length(mycoef_best$beta)))
-    cat("Summary of those non-zero coefficients:\n")
-    print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
-  } else {
-    cat(sprintf(
-      "spar.cv object:\nSmallest CV measure (%s) %.1f reached for nummod=%d, nu=%s leading
-  to %d / %d active predictors.\n",
-      x$measure,
-      min(val_sum$mean_measure),mycoef_best$nummod,
-      formatC(mycoef_best$nu,digits = 2,format = "e"),
-      sum(mycoef_best$beta!=0),length(mycoef_best$beta)))
-    cat("Summary of those non-zero coefficients:\n")
-    print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
-    cat(sprintf(
-      "\nSparsest coefficient within one standard error of best CV measure (%s)
-  reached for nummod=%d, nu=%s leading to %d / %d active predictors
-  with CV measure (%s) %.1f.\n",
-      x$measure,
-      mycoef_1se$nummod,
-      formatC(mycoef_1se$nu,digits = 2,format = "e"),
-      sum(mycoef_1se$beta!=0),length(mycoef_1se$beta),
-      x$measure,
-      val_sum$mean_measure[val_sum$nummod==mycoef_1se$nummod
-                           & val_sum$nu==mycoef_1se$nu]))
-    cat("Summary of those non-zero coefficients:\n")
-    print(summary(mycoef_1se$beta[mycoef_1se$beta!=0]))
-  }
-}

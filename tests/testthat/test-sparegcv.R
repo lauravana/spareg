@@ -3,11 +3,8 @@ example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100, seed = 1234)
 test_that("Results has right class", {
   x <- data.frame(matrix(rnorm(300), ncol = 30))
   y <- rnorm(10)
-  spar_res <- spar.cv(x, y, rp = rp_gaussian(),
-                      screencoef = screen_cor(),
-                      nfolds = 4L,
+  spar_res <- spar.cv(x, y, rp = rp_gaussian(), nfolds = 4L,
                       model = spar_glm())
-  spar_res$val_res
   expect_equal(class(spar_res),"spar.cv")
 })
 
@@ -20,10 +17,104 @@ test_that("Coef returns vector of correct length", {
   expect_equal(length(sparcoef$beta),30)
 })
 
+test_that("No screening: fast_fit = fix_rpm delivers different results than fix_rpm_and_inds but same threshold", {
+  x <- matrix(rnorm(300), ncol = 30)
+  y <- rnorm(10)
+  spar_res <- spar.cv(x, y, rp = rp_gaussian(),
+                      model = spar_glm(),
+                      nfolds = 4L, seed = 1234)
+  spar_res2 <- spar.cv(x, y, rp = rp_gaussian(),
+                       model = spar_glm(),
+                       nfolds = 4L, seed = 1234,
+                       fast_fit = "fix_rpm")
+  a <- get_model(spar_res, "best",, x = x, y = y)
+  b <- get_model(spar_res2, "best", x = x, y = y)
+  expect_true(get_measure(a)[,3] == get_measure(b)[,3])
+  expect_true(get_measure(a)[,1] == get_measure(b)[,1])
+  expect_error(coef(spar_res2))
+  expect_error(predict(spar_res2, x))
+})
+
+
+test_that("With screening: fast_fit = fix_rpm delivers different results than fix_rpm_and_inds but same threshold", {
+  x <- matrix(rnorm(300), ncol = 30)
+  y <- rnorm(10)
+  spar_res <- spar.cv(x, y, rp = rp_gaussian(),
+                      screencoef = screen_cor(),
+                      model = spar_glm(),
+                      nfolds = 4L, seed = 1234)
+  spar_res2 <- spar.cv(x, y, rp = rp_gaussian(),
+                       model = spar_glm(),
+                       screencoef = screen_cor(),
+                       nfolds = 4L, seed = 1234,
+                       fast_fit = "fix_rpm")
+
+  a <- get_model(spar_res, "best")
+  b <- get_model(spar_res2, "best", x = x, y = y)
+  expect_false(get_measure(a)[,3] == get_measure(b)[,3])
+  expect_error(coef(spar_res2))
+  expect_error(predict(spar_res2, x))
+})
+
+test_that("No screening: fast_fit = fix_rpm delivers same results as none due to seeds ", {
+  x <- matrix(rnorm(50*60), ncol = 60)
+  y <- rnorm(50)
+  spar_res <- spar.cv(x, y, rp = rp_gaussian(),
+                      model = spar_glm(),
+                      nfolds = 4L, seed = 1234,
+                      fast_fit = "none")
+
+  spar_res2 <- spar.cv(x, y, rp = rp_gaussian(),
+                       model = spar_glm(),
+                       nfolds = 4L, seed = 1234,
+                       fast_fit = "fix_rpm")
+  a <- get_model(spar_res, "best", x = x, y = y)
+  b <- get_model(spar_res2, "best", x = x, y = y)
+  expect_true(get_measure(a)[,3] == get_measure(b)[,3])
+  expect_error(coef(spar_res))
+  expect_error(predict(spar_res, x))
+})
+
+test_that("No screening: fast_fit = fix_rpm delivers diff results than none ", {
+  x <- matrix(rnorm(50*60), ncol = 60)
+  xnew <- matrix(rnorm(50*60), ncol = 60)
+  y <- rnorm(50)
+  ynew <- rnorm(50)
+  nu <- exp(seq(-3, -1, length.out = 20))
+  spar_res <- spar.cv(x, y, rp = rp_gaussian(),
+                      model = spar_glm(),
+                      nus = nu,
+                      screencoef = screen_cor(nscreen = 30),
+                      nfolds = 4L, seed = 1234,
+                      fast_fit = "none")
+  spar_res2 <- spar.cv(x, y, rp = rp_gaussian(),
+                       model = spar_glm(),
+                       nus = nu,
+                       screencoef = screen_cor(nscreen = 30),
+                       nfolds = 4L, seed = 1234,
+                       fast_fit = "fix_rpm")
+  spar_res3 <- spar.cv(x, y, rp = rp_gaussian(),
+                       model = spar_glm(),
+                       nus = nu,
+                       screencoef = screen_cor(nscreen = 30),
+                       nfolds = 4L, seed = 1234)
+  a <- get_model(spar_res, "best", x = x, y = y,
+                 xval = xnew,
+                 yval = ynew)
+  b <- get_model(spar_res2, "best", x = x, y = y,
+                 xval = xnew,
+                 yval = ynew)
+  cc <- get_model(spar_res3, "best", x = x, y = y,
+                  xval = xnew,
+                  yval = ynew)
+  expect_true(get_measure(a)[, 3] <= get_measure(cc)[,3])
+})
+
+
 test_that("Test get_intercept(), get_coef(), get_model() extractors and that coef is more sparse for 1se rule", {
   x <- example_data$x
   y <- example_data$y
-  spar_res <- spar.cv(x, y, rp = rp_gaussian(), nfolds = 2L, seed = 123)
+  spar_res <- spar.cv(x, y, rp = rp_gaussian(),  nfolds = 2L, seed = 123)
   sparcoef <- coef(spar_res, opt_par = "best")
   sparcoef2 <- coef(spar_res,opt_par = "1se")
   a <- get_model(spar_res, "best")
@@ -31,8 +122,8 @@ test_that("Test get_intercept(), get_coef(), get_model() extractors and that coe
   expect_equal(unname(get_intercept(sparcoef)), 1.824784, tolerance = 1e-5)
   expect_equal(unname(get_coef(sparcoef)[1]), 0.2364498, tolerance = 1e-5)
   expect_equal(all(which(sparcoef$beta==0) %in% which(sparcoef2$beta==0)),TRUE)
-  expect_equal(nrow(a$val_res), 3)
-  expect_equal(nrow(b$val_res), 3)
+  expect_equal(nrow(a$val_res), 1)
+  expect_equal(nrow(b$val_res), 1)
 })
 
 test_that("Validated nu and nummod values are same as the ones for initial SPAR fit", {
@@ -53,8 +144,11 @@ test_that("Columns with zero sd get coefficient 0", {
   spar_res <- spar.cv(x, y, screencoef = screen_cor(),
                       measure = "mae", model = spar_glm(),
                       nfolds = 4L)
-  sparcoef <- coef(spar_res)
+  sparcoef <- coef(spar_res, opt_par = "best")
+  sparcoef2 <- coef(spar_res, opt_par = "1se")
   expect_equal(unname(sparcoef$beta[c(1,11,111)]),c(0,0,0))
+  expect_equal(unname(sparcoef2$beta[c(1,11,111)]),c(0,0,0))
+
 })
 
 
@@ -66,12 +160,10 @@ test_that("Test get_measure() extractor and predictions", {
   b <- get_model(spar_res, "1se")
   expect_equal(nrow(get_measure(a)), 1)
   expect_equal(nrow(get_measure(b)), 1)
-  expect_equal(get_measure(a)$mean_deviance, 18959.96, tolerance = 1e-5)
-  expect_equal(get_measure(a)$sd_deviance, 695.6083, tolerance = 1e-5)
-  expect_equal(get_measure(a)$mean_numactive, 292, tolerance = 1e-5)
-  expect_equal(get_measure(b)$mean_deviance, 19385.83, tolerance = 1e-5)
-  expect_equal(get_measure(b)$sd_deviance, 1514.323, tolerance = 1e-5)
-  expect_equal(get_measure(b)$mean_numactive, 234.5, tolerance = 1e-5)
+  expect_equal(get_measure(a)$deviance, 276.0395, tolerance = 1e-5)
+  expect_equal(get_measure(a)$numactive, 311, tolerance = 1e-5)
+  expect_equal(get_measure(b)$deviance, 920.7225, tolerance = 1e-5)
+  expect_equal(get_measure(b)$numactive, 252, tolerance = 1e-5)
   xnew <- example_data$xtest
   pred  <- predict(spar_res,xnew = xnew)
   pred2 <- predict(spar_res,xnew = xnew, opt_par = "best")
