@@ -20,6 +20,7 @@ spar.cv(
   avg_type = c("link", "response"),
   parallel = FALSE,
   seed = NULL,
+  fast_fit = c("fix_rpm_and_inds", "fix_rpm", "none"),
   ...
 )
 
@@ -38,6 +39,7 @@ spareg.cv(
   avg_type = c("link", "response"),
   parallel = FALSE,
   seed = NULL,
+  fast_fit = c("fix_rpm_and_inds", "fix_rpm", "none"),
   ...
 )
 }

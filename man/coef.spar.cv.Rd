@@ -14,7 +14,8 @@
 )
 }
 \arguments{
-\item{object}{result of \link{spar.cv} function of class \code{'spar.cv'}.}
+\item{object}{result of \link{spar.cv} function of class \code{'spar.cv'}. Refitting
+can be done using \code{get_model().}}
 
 \item{nummod}{optional number of models used to form coefficients}
 
@@ -44,6 +45,12 @@ List with elements
 }
 \description{
 Extract coefficients from \code{'spar.cv'} object
+Only allowed if \code{fast_fit = "fix_rpm_and_inds"} is used when calling \code{spar.cv}.
+In this case the ensemble obtained on the whole data is used for the
+combination of threshold and number of models using the best or the 1se identified through cross-validation.
+Otherwise coefficients cannot be extracted without refitting on whole data with
+best or 1se parameters. To be able to extract coefficients in case \code{fast_fit = "fix_rpm"}
+or \code{fast_fit = "none"}, use \code{spar()} to refit with the desired (nu, M) combination.
 }
 \examples{
 \donttest{
@@ -52,4 +59,7 @@ spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
   nummods = c(5, 10))
 coef(spar_res)
 }
+}
+\seealso{
+\link{predict.spar.cv}, \link{get_model.spar.cv}
 }

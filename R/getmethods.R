@@ -1,17 +1,34 @@
-#' get_model
+#' Retrieve the Best Model from a Fitted Object
 #'
-#' A details of get_model
+#' This generic function retrieves the best model from a fitted object of class `spar` or `spar.cv`.
+#' The method dispatched depends on the class of the input object.
 #'
-#' @title get_model: The get_model function
-#' @param object numeric number
-#' @param ... other arguments
+#' @title get_model
+#' @param object An object of class `spar` or `spar.cv`, typically the result of a model fitting function.
+#' @param ... Additional arguments passed to the specific method.
+#' @return The modified object with the best model selected.
 #' @examples
-#' get_model(a)
+#' # Example usage with a fitted object
+#' fitted_obj <- spar(x, y, family = gaussian(), ...)
+#' best_model <- get_model(fitted_obj)
 #' @export
 get_model <- function(object, ...){
   UseMethod("get_model")
 }
 
+#' @title Get Best Model for `spar` Objects
+#' @description Extracts the best model from a fitted `spar` object based on validation results.
+#' The best model is determined by the minimum validation measure.
+#'
+#' @param object An object of class `spar`, typically the result of `spar()`.
+#' @param ... Additional arguments (currently unused).
+#' @return An updated `spar` object containing:
+#'   - `betas`: Coefficients of the best model, with values below `nu` set to 0.
+#'   - `intercepts`: Intercepts for the selected number of models (`nummod`).
+#'   - `val_res`: Validation results filtered for the best `nummod` and `nu`.
+#' @examples
+#' fitted_spar <- spar(x, y, family = gaussian(), ...)
+#' best_spar <- get_model(fitted_spar)
 #' @export
 get_model.spar <- function(object, ...) {
   val_table <- object$val_res
@@ -32,6 +49,28 @@ get_model.spar <- function(object, ...) {
   return(object)
 }
 
+
+#' @title Get Best Model for `spar.cv` Objects
+#' @description Extracts the best or 1SE model from a fitted `spar.cv` object.
+#' The selection is based on cross-validation results, and the model can be re-estimated if required.
+#'
+#' @param object An object of class `spar.cv`, typically the result of `spar.cv()`.
+#' @param opt_par A character string specifying the selection criterion:
+#'   - `"best"`: Selects the model with the minimum validation measure.
+#'   - `"1se"`: Selects the simplest model within 1 standard error of the best model.
+#' @param x A matrix or data frame of predictors. Required if `fast_fit != "fix_rpm_and_inds"`.
+#' @param y A response vector. Required if `fast_fit != "fix_rpm_and_inds"`.
+#' @param xval A matrix or data frame of validation predictors. If `NULL`, `x` is used.
+#' @param yval A validation response vector. If `NULL`, `y` is used.
+#' @param ... Additional arguments passed to `spar()` for re-estimation.
+#' @return An updated `spar` or `spar.cv` object containing:
+#'   - `betas`: Coefficients of the selected model.
+#'   - `intercepts`: Intercepts for the selected model.
+#'   - `val_res`: Validation results filtered for the selected `nummod` and `nu`.
+#'   - Additional fields like `xscale`, `yscale`, `xcenter`, and `ycenter` if `fast_fit == "fix_rpm_and_inds"`.
+#' @examples
+#' fitted_spar_cv <- spar.cv(x, y, family = gaussian(), ...)
+#' best_spar_cv <- get_model(fitted_spar_cv, opt_par = "best")
 #' @export
 get_model.spar.cv <- function(object, opt_par = c("best", "1se"),
                               x = NULL, y = NULL, xval = NULL, yval = NULL, ...) {

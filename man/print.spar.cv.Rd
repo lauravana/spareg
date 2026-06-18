@@ -4,7 +4,7 @@
 \alias{print.spar.cv}
 \title{Print Method for \code{'spar.cv'} Object}
 \usage{
-\method{print}{spar.cv}(x, ...)
+\method{print}{spar.cv}(x, digits = 4L, ...)
 }
 \arguments{
 \item{x}{result of  \link{spar.cv} function of class  \code{'spar.cv'}.}

@@ -253,23 +253,16 @@ spareg.cv <- spar.cv
 #' or a plot of the estimated coefficients in each marginal model, sorted by their absolute value.
 #'
 #' @param x result of [spar.cv] function of class  \code{'spar.cv'}.
-#' @param plot_type one of  \code{c("val_measure","val_numactive","res_vs_fitted","coefs")}.
-#' @param plot_along one of  \code{c("nu","nummod")}; ignored when  \code{plot_type="res_vs_fitted"}.
+#' @param plot_type one of  \code{c("val_measure","val_numactive")}.
+#' @param plot_along one of  \code{c("nu","nummod")}.
 #' @param opt_par one of  \code{c("1se","best")}, chooses whether to select the
 #'  best pair of  \code{nus} and  \code{nummods} according to CV measure, or the
 #'  sparsest solution within one sd of that optimal CV measure;
 #' ignored when  \code{nummod} and  \code{nu}, or  \code{coef} are given
 #' @param nummod fixed value for  \code{nummod} when  \code{plot_along="nu"} for
 #'  \code{plot_type="val_measure"} or  \code{"val_numactive"};
-#'  same as for \code{\link{predict.spar.cv}} when plot_type="res_vs_fitted".
 #' @param nu fixed value for \eqn{\nu} when  \code{plot_along="nummod"}
 #' for  \code{plot_type="val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar.cv}} when  \code{plot_type="res_vs_fitted"}.
-#' @param xfit data used for predictions in  \code{"res_vs_fitted"}. Needed as the \code{"spar.cv"} objects do not store the original data.
-#' @param yfit data used for predictions in  \code{"res_vs_fitted"}. Needed as the \code{"spar.cv"} objects do not store the original data.
-#' @param opt_par one of  \code{c("best","1se")}, only needed for
-#'  \code{plot_type="res_vs_fitted"} to set type of predictions, see \code{\link{predict.spar.cv}}.
-#' @param prange optional vector of length 2 for  \code{"coefs"}-plot to give the limits of the predictors' plot range; defaults to  \code{c(1, p)}.
-#' @param coef_order optional index vector of length p for \code{"coefs"}-plot to give the order of the predictors; defaults to  \code{1 : p}.
 #' @param digits number of significant digits to be displayed in the axis; defaults to 2L.
 #' @param ... further arguments passed to or from other methods
 #' @return \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
@@ -497,7 +490,14 @@ print.spar.cv <- function(x, digits = 4L, ...) {
 #' Coef Method for \code{'spar.cv'} Object
 #'
 #' Extract coefficients from \code{'spar.cv'} object
-#' @param object result of [spar.cv] function of class \code{'spar.cv'}.
+#' Only allowed if \code{fast_fit = "fix_rpm_and_inds"} is used when calling \code{spar.cv}.
+#' In this case the ensemble obtained on the whole data is used for the
+#' combination of threshold and number of models using the best or the 1se identified through cross-validation.
+#' Otherwise coefficients cannot be extracted without refitting on whole data with
+#'  best or 1se parameters. To be able to extract coefficients in case \code{fast_fit = "fix_rpm"}
+#'  or \code{fast_fit = "none"}, use \code{spar()} to refit with the desired (nu, M) combination.
+#' @param object result of [spar.cv] function of class \code{'spar.cv'}. Refitting
+#' can be done using \code{get_model().}
 #' @param nummod optional number of models used to form coefficients
 #' @param nu optional threshold level used to form coefficients
 #' @param opt_par one of \code{c("1se","best")}, chooses whether to select the
@@ -524,6 +524,7 @@ print.spar.cv <- function(x, digits = 4L, ...) {
 #'   nummods = c(5, 10))
 #' coef(spar_res)
 #' }
+#' @seealso [predict.spar.cv], [get_model.spar.cv]
 #' @export
 
 coef.spar.cv <- function(object,
@@ -654,7 +655,13 @@ coef.spar.cv <- function(object,
 
 #' Predict Method for \code{'spar.cv'} Object
 #'
-#' Predict responses for new predictors from \code{'spar.cv'} object
+#' Predict responses for new predictors from \code{'spar.cv'} object.
+#' Only allowed if \code{fast_fit = "fix_rpm_and_inds"} is used when calling \code{spar.cv}.
+#' In this case the ensemble obtained on the whole data is used for the
+#' combination of threshold and number of models using the best or the 1se identified through cross-validation.
+#' Otherwise predictions cannot be generated without refitting on whole data with
+#'  best or 1se parameters. To be able to generate predictions in case \code{fast_fit = "fix_rpm"}
+#'  or \code{fast_fit = "none"}, use \code{spar()} to refit with the desired (nu, M) combination.
 #' @param object result of spar function of class \code{'spar.cv'}.
 #' @param xnew matrix of new predictor variables; must have same number of columns as  \code{x}.
 #' @param type the type of required predictions; either on response level (default) or on link level
@@ -679,6 +686,7 @@ coef.spar.cv <- function(object,
 #'   rp = rp_gaussian(), nummods = c(5, 10))
 #' pred <- predict(spar_res, example_data$x)
 #' }
+#' @seealso [coef.spar.cv], [get_model.spar.cv]
 #' @export
 predict.spar.cv <- function(object,
                             xnew = NULL,
