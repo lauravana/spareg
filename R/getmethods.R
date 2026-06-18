@@ -69,7 +69,7 @@ get_model.spar <- function(object, ...) {
 #'   - `val_res`: Validation results filtered for the selected `nummod` and `nu`.
 #'   - Additional fields like `xscale`, `yscale`, `xcenter`, and `ycenter` if `fast_fit == "fix_rpm_and_inds"`.
 #' @examples
-#' fitted_spar_cv <- spar.cv(x, y, family = gaussian(), ...)
+#' fitted_spar_cv <- spar.cv(x, y, family = gaussian(), nfolds = 3L)
 #' best_spar_cv <- get_model(fitted_spar_cv, opt_par = "best")
 #' @export
 get_model.spar.cv <- function(object, opt_par = c("best", "1se"),

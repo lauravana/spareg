@@ -47,6 +47,6 @@ Extracts the best or 1SE model from a fitted \code{spar.cv} object.
 The selection is based on cross-validation results, and the model can be re-estimated if required.
 }
 \examples{
-fitted_spar_cv <- spar.cv(x, y, family = gaussian(), ...)
+fitted_spar_cv <- spar.cv(x, y, family = gaussian(), nfolds = 3L)
 best_spar_cv <- get_model(fitted_spar_cv, opt_par = "best")
 }
