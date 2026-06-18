@@ -151,6 +151,19 @@ test_that("Columns with zero sd get coefficient 0", {
 
 })
 
+test_that("Columns with zero sd get coefficient 0 when fast_fit = none", {
+  x <- example_data$x
+  x[,c(1,11,111)] <- 2
+  y <- example_data$y
+  spar_res <- spar.cv(x, y, screencoef = screen_cor(),
+                      measure = "mae", model = spar_glm(),
+                      nfolds = 4L, fast_fit = "none")
+  a <- get_model(spar_res, "best", x = x, y = y)
+  sparcoef <- coef(a, opt_par = "best")
+  sparcoef2 <- coef(a)
+  expect_equal(unname(sparcoef$beta[c(1,11,111)]),c(0,0,0))
+  expect_equal(unname(sparcoef2$beta[c(1,11,111)]),c(0,0,0))
+})
 
 test_that("Test get_measure() extractor and predictions", {
   x <- example_data$x
