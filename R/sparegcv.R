@@ -460,9 +460,6 @@ print.spar.cv <- function(x, digits = 4L, ...) {
     allowed_ind <- tmp_df$mean_measure<tmp_df$mean_measure[ind_min]+tmp_df$sd_measure[ind_min]
     ind_1se <- match(min(tmp_df$mean_numactive[allowed_ind]),
                      tmp_df$mean_numactive)
-
-    #Reduce("+",
-    #       lapply(x$fitted_objects, function(x) (as.matrix(x$betas_std != 0))))
     cat(sprintf(
       "spar.cv object:\n\nSmallest CV measure (%s) of %.1f reached for nummod=%d, nu=%s. \n",
       # leading  to %d / %d active predictors (averaged over folds).",
