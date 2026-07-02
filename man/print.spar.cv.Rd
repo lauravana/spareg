@@ -9,6 +9,8 @@
 \arguments{
 \item{x}{result of  \link{spar.cv} function of class  \code{'spar.cv'}.}
 
+\item{digits}{integer digits to be printed, defaults to 4L.}
+
 \item{...}{further arguments passed to or from other methods}
 }
 \value{

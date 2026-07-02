@@ -87,6 +87,8 @@ estimation of the marginal models. Defaults to FALSE.}
 
 \item{seed}{integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.}
 
+\item{fast_fit}{character, one of \code{c("fix_rpm_and_inds", "fix_rpm", "none")}, indicating whether to use the same random projection matrix and/or the same indices for screening across folds. Defaults to \code{"fix_rpm_and_inds"}.}
+
 \item{...}{further arguments mainly to ensure back-compatibility}
 }
 \value{
@@ -129,16 +131,6 @@ example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
   rp = rp_gaussian(), nummods = c(5, 10))
 spar_res
-coefs <- coef(spar_res)
-pred <- predict(spar_res, example_data$x)
-plot(spar_res)
-plot(spar_res, plot_type = "val_measure", plot_along = "nummod", nu = 0)
-plot(spar_res, plot_type = "val_measure", plot_along = "nu", nummod = 10)
-plot(spar_res, plot_type = "val_numactive",  plot_along = "nummod", nu = 0)
-plot(spar_res, plot_type = "val_numactive",  plot_along = "nu", nummod = 10)
-plot(spar_res, plot_type = "res_vs_fitted",  xfit = example_data$xtest,
-  yfit = example_data$ytest, opt_par = "1se")
-plot(spar_res, "coefs", prange = c(1, 400))
 }
 \donttest{
 spar_res <- spareg.cv(example_data$x, example_data$y,

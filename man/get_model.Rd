@@ -23,7 +23,9 @@ The method dispatched depends on the class of the input object.
 }
 \examples{
 # Example usage with a fitted object
+\donttest{
 example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
-fitted_obj <- spar(example_data$x, example_data$y, family = gaussian())
+fitted_obj <- spar(example_data$x, example_data$y, family = gaussian(), nfolds = 3L)
 best_model <- get_model(fitted_obj)
+}
 }

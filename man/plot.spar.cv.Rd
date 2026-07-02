@@ -6,10 +6,15 @@
 \usage{
 \method{plot}{spar.cv}(
   x,
-  plot_type = c("val_measure", "val_numactive"),
+  plot_type = c("val_measure", "val_numactive", "res_vs_fitted", "coefs"),
   plot_along = c("nu", "nummod"),
   nummod = NULL,
   nu = NULL,
+  xfit = NULL,
+  yfit = NULL,
+  opt_par = c("best", "1se"),
+  prange = NULL,
+  coef_order = NULL,
   digits = 2L,
   ...
 )
@@ -17,7 +22,7 @@
 \arguments{
 \item{x}{result of \link{spar.cv} function of class  \code{'spar.cv'}.}
 
-\item{plot_type}{one of  \code{c("val_measure","val_numactive")}.}
+\item{plot_type}{one of  \code{c("val_measure","val_numactive", "res_vs_fitted", "coefs")}.}
 
 \item{plot_along}{one of  \code{c("nu","nummod")}.}
 
@@ -27,14 +32,19 @@
 \item{nu}{fixed value for \eqn{\nu} when  \code{plot_along="nummod"}
 for  \code{plot_type="val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar.cv}} when  \code{plot_type="res_vs_fitted"}.}
 
+\item{xfit}{optional vector of fitted values to be used for  \code{plot_type="res_vs_fitted"}; if not provided, the fitted values are computed using the best parameters. Argument is used only if \code{fast_fit = "fix_rpm_and_inds"} and \code{plot_type = "res_vs_fitted"}.}
+
+\item{yfit}{optional vector of response values to be used for  \code{plot_type="res_vs_fitted"}; if not provided, the response values are computed using the best parameters. Argument is used only if \code{fast_fit = "fix_rpm_and_inds"} and \code{plot_type = "res_vs_fitted"}.}
+
+\item{opt_par}{one of \code{c("1se","best")}, chooses whether to select the best pair of \code{nus} and \code{nummods} according to cross-validated (CV) measure, or the sparsest solution within one sd of that optimal CV measure. Argument is used only if \code{fast_fit = "fix_rpm_and_inds"} and \code{plot_type = "res_vs_fitted"}.}
+
+\item{prange}{optional vector of length 2 indicating the range of predictors to be plotted for \code{plot_type = "coefs"}; defaults to \code{c(1, p)} where \code{p} is the number of predictors. Argument can be used only if \code{fast_fit = "fix_rpm_and_inds"}.}
+
+\item{coef_order}{optional vector of length \code{p} indicating the order of predictors to be plotted for \code{plot_type = "coefs"}; defaults to \code{seq_len(p)} where \code{p} is the number of predictors. Argument can be used only if \code{fast_fit = "fix_rpm_and_inds"}.}
+
 \item{digits}{number of significant digits to be displayed in the axis; defaults to 2L.}
 
 \item{...}{further arguments passed to or from other methods}
-
-\item{opt_par}{one of  \code{c("1se","best")}, chooses whether to select the
-best pair of  \code{nus} and  \code{nummods} according to CV measure, or the
-sparsest solution within one sd of that optimal CV measure;
-ignored when  \code{nummod} and  \code{nu}, or  \code{coef} are given}
 }
 \value{
 \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
