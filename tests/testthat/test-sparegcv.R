@@ -153,7 +153,15 @@ test_that("Columns with zero sd get coefficient 0", {
   sparcoef2 <- coef(spar_res, opt_par = "1se")
   expect_equal(unname(sparcoef$beta[c(1,11,111)]),c(0,0,0))
   expect_equal(unname(sparcoef2$beta[c(1,11,111)]),c(0,0,0))
-
+  pred <- predict(spar_res, xnew = example_data$xtest, opt_par = "best")
+  pred2 <- predict(spar_res, xnew = example_data$xtest, opt_par = "1se")
+  expect_equal(length(pred), nrow(example_data$xtest))
+  expect_equal(length(pred2), nrow(example_data$xtest))
+  expect_s3_class(plot(spar_res, plot_type = "res_vs_fitted", xfit = x,
+       yfit = y), "ggplot")
+  expect_s3_class(plot(spar_res, plot_type = "coefs"), "ggplot")
+  expect_s3_class(plot(spar_res, plot_type = "val_measure"), "ggplot")
+  expect_s3_class(plot(spar_res, plot_type = "val_numactive"), "ggplot")
 })
 
 test_that("Columns with zero sd get coefficient 0 when fast_fit = none", {
@@ -173,7 +181,9 @@ test_that("Columns with zero sd get coefficient 0 when fast_fit = none", {
 test_that("Test get_measure() extractor and predictions", {
   x <- example_data$x
   y <- example_data$y
+  Sys.time()
   spar_res <- spar.cv(x, y, nfolds = 2L, seed = 123)
+  Sys.time()
   a <- get_model(spar_res, "best")
   b <- get_model(spar_res, "1se")
   expect_equal(nrow(get_measure(a)), 1)
@@ -193,6 +203,18 @@ test_that("Test get_measure() extractor and predictions", {
   expect_lt(pred3[1], pred2[1])
 })
 
+test_that("Plots work well for case fast_fit = fix_rpm_and_inds", {
+  x <- example_data$x
+  y <- example_data$y
+  spar_res <- spar.cv(x, y, nfolds = 2L, seed = 123)
+  plot(spar_res, plot_type = "res_vs_fitted", xfit = x,
+       yfit = y)
+  expect_s3_class(plot(spar_res, plot_type = "res_vs_fitted", xfit = x,
+                       yfit = y), "ggplot")
+  expect_s3_class(plot(spar_res, plot_type = "val_measure"), "ggplot")
+  expect_s3_class(plot(spar_res, plot_type = "val_measure", opt_par = "1se"), "ggplot")
+  expect_s3_class(plot(spar_res, plot_type = "coefs"), "ggplot")
+})
 # Tests expecting errors
 
 test_that("Get errors for input x not data.frame or matrix", {
@@ -202,6 +224,12 @@ test_that("Get errors for input x not data.frame or matrix", {
   expect_error(spar.cv(x,y,nfolds=2L, model = spar_glm()))
 })
 
+test_that("Get errors when plot_type is res_vs_fitted but full cv was fit", {
+  x <- list("1"=1:10,"2"=(-1)^(1:12),"3"=rnorm(12),
+            "4"=rnorm(12),"5"=runif(12),"6"=runif(12))
+  y <- rnorm(6)
+  expect_error(spar.cv(x,y,nfolds=2L, model = spar_glm()))
+})
 test_that("Get errors for input x non-numeric data.frame", {
   x <- data.frame(matrix(rnorm(300), ncol = 30))
   x$X1[1] <- "a"
@@ -225,9 +253,15 @@ test_that("Get errors for prediction when xnew has wrong dimensions", {
 })
 
 test_that("Get errors for classification validation measure for non-binomial family", {
-  x <- example_data$x
-  y <- example_data$y
-  expect_error(spar.cv(x,y,measure = "1-auc",model = spar_glm()))
+  x <- data.frame(matrix(rnorm(300), ncol = 30))
+  y <- rnorm(10)
+  spar_res <- spar.cv(x,y,screencoef = screen_glmnet(),
+                      nummods=c(10,15), model = spar_glm(),
+                      nfolds = 4L, fast_fit = "none")
+
+  expect_error(plot(spar_res, plot_type = "res_vs_fitted", xfit = x,
+                    yfit = y))
+  expect_error(plot(spar_res, plot_type = "coefs"))
 })
 
 

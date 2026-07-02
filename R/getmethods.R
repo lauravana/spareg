@@ -9,9 +9,11 @@
 #' @return The modified object with the best model selected.
 #' @examples
 #' # Example usage with a fitted object
+#' \donttest{
 #' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
-#' fitted_obj <- spar(example_data$x, example_data$y, family = gaussian())
+#' fitted_obj <- spar(example_data$x, example_data$y, family = gaussian(), nfolds = 3L)
 #' best_model <- get_model(fitted_obj)
+#' }
 #' @export
 get_model <- function(object, ...){
   UseMethod("get_model")
@@ -28,9 +30,11 @@ get_model <- function(object, ...){
 #'   - `intercepts`: Intercepts for the selected number of models (`nummod`).
 #'   - `val_res`: Validation results filtered for the best `nummod` and `nu`.
 #' @examples
+#' \donttest{
 #' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
 #' fitted_spar <- spar(example_data$x, example_data$y, family = gaussian())
 #' best_spar <- get_model(fitted_spar)
+#' }
 #' @export
 get_model.spar <- function(object, ...) {
   val_table <- object$val_res
@@ -71,9 +75,11 @@ get_model.spar <- function(object, ...) {
 #'   - `val_res`: Validation results filtered for the selected `nummod` and `nu`.
 #'   - Additional fields like `xscale`, `yscale`, `xcenter`, and `ycenter` if `fast_fit == "fix_rpm_and_inds"`.
 #' @examples
-#' example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)
+#' \donttest{
+#' example_data <- simulate_spareg_data(n = 50, p = 200, ntest = 50)
 #' fitted_spar_cv <- spar.cv(example_data$x, example_data$y, family = gaussian(), nfolds = 3L)
 #' best_spar_cv <- get_model(fitted_spar_cv, opt_par = "best")
+#' }
 #' @export
 get_model.spar.cv <- function(object, opt_par = c("best", "1se"),
                               x = NULL, y = NULL, xval = NULL, yval = NULL, ...) {

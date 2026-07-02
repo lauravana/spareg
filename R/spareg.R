@@ -869,7 +869,6 @@ plot.spar <- function(x,
                       yfit = NULL,
                       prange = NULL,
                       coef_order = NULL,
-                      # scale_y_axis = c("none", "log10", "log"),
                       digits = 2L, ...) {
   spar_res <- x
   plot_type <- match.arg(plot_type)
@@ -1023,6 +1022,7 @@ plot.spar <- function(x,
 #'
 #' Print summary of \code{'spar'} object
 #' @param x result of [spar] function of class  \code{'spar'}.
+#' @param digits integer digits to be printed, defaults to 4L.
 #' @param ... further arguments passed to or from other methods
 #' @return text summary
 #' @examples
@@ -1031,7 +1031,7 @@ plot.spar <- function(x,
 #'   yval = example_data$ytest, nummods=c(5, 10))
 #' print(spar_res)
 #' @export
-print.spar <- function(x, ...) {
+print.spar <- function(x, digits = 4L,...) {
   mycoef <- coef(x)
   beta <- mycoef$beta
   measure <- x$val_res$measure[mycoef$nu == x$val_res$nu &
@@ -1041,14 +1041,14 @@ print.spar <- function(x, ...) {
               nu=%s leading to %d / %d active predictors.\n",
                 x$measure,
                 formatC(measure,digits = 2,format = "e"),
-                mycoef$nummod, formatC(mycoef$nu,digits = 2,format = "e"),
+                mycoef$nummod, formatC(mycoef$nu,digits = digits,format = "e"),
                 sum(beta!=0),length(beta)))
   } else {
     cat(sprintf("spar object:\nSmallest validation measure (%s) of %s reached for nummod=%d,
               nu=%s leading to %d / %d active predictors.\n",
                 x$measure,
                 formatC(measure,digits = 2,format = "e"),
-                mycoef$nummod, formatC(mycoef$nu,digits = 2,format = "e"),
+                mycoef$nummod, formatC(mycoef$nu,digits = digits,format = "e"),
                 sum(beta!=0),length(beta)))
   }
   cat("Summary of those non-zero coefficients:\n")

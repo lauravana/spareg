@@ -35,6 +35,7 @@
 #'        logical indicating whether the function should use it in parallelizing the
 #'        estimation of the marginal models. Defaults to FALSE.
 #' @param seed integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.
+#' @param fast_fit character, one of \code{c("fix_rpm_and_inds", "fix_rpm", "none")}, indicating whether to use the same random projection matrix and/or the same indices for screening across folds. Defaults to \code{"fix_rpm_and_inds"}.
 #' @param ... further arguments mainly to ensure back-compatibility
 #' @returns object of class \code{'spar.cv'} with elements
 #' \itemize{
@@ -69,16 +70,6 @@
 #' spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
 #'   rp = rp_gaussian(), nummods = c(5, 10))
 #' spar_res
-#' coefs <- coef(spar_res)
-#' pred <- predict(spar_res, example_data$x)
-#' plot(spar_res)
-#' plot(spar_res, plot_type = "val_measure", plot_along = "nummod", nu = 0)
-#' plot(spar_res, plot_type = "val_measure", plot_along = "nu", nummod = 10)
-#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nummod", nu = 0)
-#' plot(spar_res, plot_type = "val_numactive",  plot_along = "nu", nummod = 10)
-#' plot(spar_res, plot_type = "res_vs_fitted",  xfit = example_data$xtest,
-#'   yfit = example_data$ytest, opt_par = "1se")
-#' plot(spar_res, "coefs", prange = c(1, 400))
 #' }
 #' @seealso [spar], [coef.spar.cv], [predict.spar.cv], [plot.spar.cv], [print.spar.cv]
 #' @aliases spareg.cv
@@ -176,9 +167,9 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
   for (fold in seq_len(nfolds)) {
     # Split data
     if (is.null(seed)) {
-       seed_fold <- NULL
-     } else {
-       seed_fold <- seed + fold
+      seed_fold <- NULL
+    } else {
+      seed_fold <- seed + fold
     }
     x_train <- x[folds != fold, temp_fit$xscale>0]
     y_train <- y[folds != fold]
@@ -259,16 +250,17 @@ spareg.cv <- spar.cv
 #' or a plot of the estimated coefficients in each marginal model, sorted by their absolute value.
 #'
 #' @param x result of [spar.cv] function of class  \code{'spar.cv'}.
-#' @param plot_type one of  \code{c("val_measure","val_numactive")}.
+#' @param plot_type one of  \code{c("val_measure","val_numactive", "res_vs_fitted", "coefs")}.
 #' @param plot_along one of  \code{c("nu","nummod")}.
-#' @param opt_par one of  \code{c("1se","best")}, chooses whether to select the
-#'  best pair of  \code{nus} and  \code{nummods} according to CV measure, or the
-#'  sparsest solution within one sd of that optimal CV measure;
-#' ignored when  \code{nummod} and  \code{nu}, or  \code{coef} are given
 #' @param nummod fixed value for  \code{nummod} when  \code{plot_along="nu"} for
 #'  \code{plot_type="val_measure"} or  \code{"val_numactive"};
 #' @param nu fixed value for \eqn{\nu} when  \code{plot_along="nummod"}
 #' for  \code{plot_type="val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar.cv}} when  \code{plot_type="res_vs_fitted"}.
+#' @param xfit optional vector of fitted values to be used for  \code{plot_type="res_vs_fitted"}; if not provided, the fitted values are computed using the best parameters. Argument is used only if \code{fast_fit = "fix_rpm_and_inds"} and \code{plot_type = "res_vs_fitted"}.
+#' @param yfit optional vector of response values to be used for  \code{plot_type="res_vs_fitted"}; if not provided, the response values are computed using the best parameters. Argument is used only if \code{fast_fit = "fix_rpm_and_inds"} and \code{plot_type = "res_vs_fitted"}.
+#' @param opt_par one of \code{c("1se","best")}, chooses whether to select the best pair of \code{nus} and \code{nummods} according to cross-validated (CV) measure, or the sparsest solution within one sd of that optimal CV measure. Argument is used only if \code{fast_fit = "fix_rpm_and_inds"} and \code{plot_type = "res_vs_fitted"}.
+#' @param prange optional vector of length 2 indicating the range of predictors to be plotted for \code{plot_type = "coefs"}; defaults to \code{c(1, p)} where \code{p} is the number of predictors. Argument can be used only if \code{fast_fit = "fix_rpm_and_inds"}.
+#' @param coef_order optional vector of length \code{p} indicating the order of predictors to be plotted for \code{plot_type = "coefs"}; defaults to \code{seq_len(p)} where \code{p} is the number of predictors. Argument can be used only if \code{fast_fit = "fix_rpm_and_inds"}.
 #' @param digits number of significant digits to be displayed in the axis; defaults to 2L.
 #' @param ... further arguments passed to or from other methods
 #' @return \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
@@ -286,15 +278,22 @@ spareg.cv <- spar.cv
 #' }
 #' @export
 plot.spar.cv <- function(x,
-                         plot_type = c("val_measure","val_numactive"),
+                         plot_type = c("val_measure","val_numactive","res_vs_fitted","coefs"),
                          plot_along = c("nu","nummod"),
                          nummod = NULL,
-                         nu = NULL, digits = 2L, ...) {
+                         nu = NULL,
+                         xfit = NULL,
+                         yfit = NULL,
+                         opt_par = c("best","1se"),
+                         prange = NULL,
+                         coef_order = NULL, digits = 2L, ...)  {
   spar_res <- x
   plot_type <- match.arg(plot_type)
-  if (!(plot_type %in% c("val_measure","val_numactive"))) stop("Only plot types 'val_measure' and 'val_numactive' are currently implemented!")
+  if (plot_type %in% c("res_vs_fitted", "coefs") && spar_res$fast_fit != "fix_rpm_and_inds") {
+    stop("Plot types 'res_vs_fitted' and 'coefs' are not yet implemented!")
+  }
   plot_along <- match.arg(plot_along)
-  #opt_par <- match.arg(opt_par)
+  opt_par <- match.arg(opt_par)
   mynummod <- nummod
   my_val_sum <- compute_val_summary(spar_res$val_res)
   colnames(my_val_sum)[match(c("mean_measure", "mean_numactive"),colnames(my_val_sum))] <- c("Meas", "numactive")
@@ -345,7 +344,7 @@ plot.spar.cv <- function(x,
       } else {
         tmp_title <- "Fixed given "
       }
-      tmp_df <- my_val_sum[my_val_sum$nummod==nu, ]
+      tmp_df <- my_val_sum[my_val_sum$nu==nu, ]
       ind_min <- which.min(tmp_df$Meas)
       allowed_ind <- tmp_df$Meas<=tmp_df$Meas[ind_min]+
         tmp_df$sd_measure[ind_min]
@@ -428,6 +427,58 @@ plot.spar.cv <- function(x,
 
     }
   }
+
+  if (plot_type == "coefs") {
+    betas_std <- spar_res$fitted_objects[[1]]$betas_std
+    nummod <- ncol(betas_std)
+    p <- length(xscale)
+    xscale <- spar_res$fitted_objects[[1]]$xscale
+    beta <- matrix(0, nrow = p, ncol = nummod)
+    beta[xscale>0,] <- as.matrix(betas_std)
+
+    if (is.null(prange)) {
+      prange <- c(1, p)
+    }
+    if (is.null(coef_order)) {
+      coef_order <- seq_len(p)
+    }
+
+    tmp_mat <- data.frame(t(apply(beta[coef_order,],1,
+                                  function(row)row[order(abs(row),decreasing = TRUE)])),
+                          predictor=seq_len(p))
+    colnames(tmp_mat) <- c(1:nummod,"predictor")
+
+    tmp_df <- reshape(tmp_mat, idvar = "predictor",
+                      varying = seq_len(nummod),
+                      v.names = "value",
+                      timevar = "marginal model",
+                      direction = "long")
+
+    tmp_df$`marginal model` <- as.numeric(tmp_df$`marginal model`)
+
+    mrange <- max(Matrix::rowSums(beta != 0))
+
+    res <- ggplot2::ggplot(tmp_df,ggplot2::aes(x=.data$predictor,
+                                               y=.data$`marginal model`,
+                                               fill=.data$value)) +
+      ggplot2::geom_tile() +
+      ggplot2::scale_fill_gradient2() +
+      ggplot2::coord_cartesian(xlim=prange,ylim=c(1,mrange)) +
+      ggplot2::theme_bw() +
+      ggplot2::ylab("Index of marginal model") +
+      ggplot2::theme(panel.border = ggplot2::element_blank())
+  }
+
+  if (plot_type=="res_vs_fitted") {
+    if (is.null(xfit) | is.null(yfit)) {
+      stop("xfit and yfit need to be provided for res_vs_fitted plot!")
+    }
+    pred <- predict(spar_res, xfit, opt_par=opt_par, nummod=nummod, nu=nu)
+    res <- ggplot2::ggplot(data = data.frame(fitted=pred,residuals=yfit-pred),
+                           ggplot2::aes(x=.data$fitted,y=.data$residuals)) +
+      ggplot2::geom_point() +
+      ggplot2::geom_hline(yintercept = 0,linetype=2,linewidth=0.5)
+  }
   return(res)
 }
 
@@ -436,6 +487,7 @@ plot.spar.cv <- function(x,
 #'
 #' Print summary of \code{'spar.cv'} object
 #' @param x result of  [spar.cv] function of class  \code{'spar.cv'}.
+#' @param digits integer digits to be printed, defaults to 4L.
 #' @param ... further arguments passed to or from other methods
 #' @return text summary
 #' @examples
