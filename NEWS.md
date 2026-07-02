@@ -4,9 +4,9 @@
 * Remove the duplicated warning message in the parallel = TRUE case.
 * Made the name argument optional in constructor functions.
 * Extended fast fitting options in spar.cv to include (using new argument fast_fit):
-    - Fixing only the random projections in advance.
-    - Sampling both screening indicators and random projections in each fold of the full cross-validation.
-* Restricted plot.spar.cv to accept only "val_measure" or "val_numactive" as valid arguments.
+    - Fixing only the random projections in advance -- fast_fit = "fix_rpm".
+    - Sampling both screening indicators and random projections in each fold of the full cross-validation -- fast_fit = "none".
+* Restricted plot.spar.cv, coef.spar.cv, predict.spar.cv to be used only for fast_fit = "fix_rpm_and_inds".
 
 # spareg 1.1.1
 

@@ -431,8 +431,9 @@ plot.spar.cv <- function(x,
   if (plot_type == "coefs") {
     betas_std <- spar_res$fitted_objects[[1]]$betas_std
     nummod <- ncol(betas_std)
-    p <- length(xscale)
+
     xscale <- spar_res$fitted_objects[[1]]$xscale
+    p <- length(xscale)
     beta <- matrix(0, nrow = p, ncol = nummod)
     beta[xscale>0,] <- as.matrix(betas_std)
 
