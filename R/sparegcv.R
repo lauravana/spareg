@@ -118,10 +118,6 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
   } else {
     temp_screencoef <- screencoef
   }
-
-  #x, y, family, model, rp, screencoef,
-  #nnu, nus, nummods, measure, avg_type,
-  #inds = NULL, RPMs = NULL, parallel = FALSE, seed = NULL
   temp_fit <- fit_spar_models(
     x = x, y = y, family = family, model = model, rp = rp,
     screencoef = temp_screencoef, nnu = nnu, nus = nus,
@@ -175,9 +171,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
     y_train <- y[folds != fold]
     x_val <- x[folds == fold, temp_fit$xscale>0]
     y_val <- y[folds == fold]
-    #x, y, family, model, rp, screencoef,
-    #nnu, nus, nummods, measure, avg_type,
-    #inds = NULL, RPMs = NULL, parallel = FALSE, seed = NULL
+
     # Fit models on training data
     fitted_objects <- fit_spar_models(
       x_train, y_train, family, model, rp, screencoef,
