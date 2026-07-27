@@ -54,7 +54,7 @@ or \code{fast_fit = "none"}, use \code{spar()} to refit with the desired (nu, M)
 }
 \examples{
 \donttest{
-example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+example_data <- simulate_spareg_data(n = 80, p = 200, ntest = 100)
 spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
   nummods = c(5, 10))
 coef(spar_res)

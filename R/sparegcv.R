@@ -72,7 +72,7 @@
 #'  }
 #' @examples
 #' \donttest{
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 80, p = 200, ntest = 100)
 #' spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
 #'   rp = rp_gaussian(), nummods = c(5, 10))
 #' spar_res
@@ -154,7 +154,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
   ## First element is the initial fit
   all_val_res[[1]] <- cbind(fold = 0, temp_val_res)
 
-  all_fitted_objects <- list()
+  all_fitted_objects <- vector(length = nfolds + 1, mode = "list")
   ## First element is the initial fit
   all_fitted_objects[[1]] <-  list(
     betas_std = temp_fit$betas_std,
@@ -265,7 +265,7 @@ spareg.cv <- spar.cv
 #' @import ggplot2
 #' @examples
 #' \donttest{
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 80, p = 200, ntest = 100)
 #' spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
 #'   screencoef = screen_cor(), rp = rp_gaussian(), nummods = c(5, 10))
 #' plot(spar_res)
@@ -491,7 +491,7 @@ plot.spar.cv <- function(x,
 #' @return text summary
 #' @examples
 #' \donttest{
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 80, p = 200, ntest = 100)
 #' spar_res <- spareg.cv(example_data$x, example_data$y, nfolds = 3L,
 #'   screencoef = screen_cor(), rp = rp_gaussian(), nummods = c(5, 10))
 #' print(spar_res)
@@ -573,7 +573,7 @@ print.spar.cv <- function(x, digits = 4L, ...) {
 #' }
 #' @examples
 #' \donttest{
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 80, p = 200, ntest = 100)
 #' spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
 #'   nummods = c(5, 10))
 #' coef(spar_res)
@@ -735,7 +735,7 @@ coef.spar.cv <- function(object,
 #' @return Vector of predictions
 #' @examples
 #' \donttest{
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+#' example_data <- simulate_spareg_data(n = 80, p = 200, ntest = 100)
 #' spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
 #'   rp = rp_gaussian(), nummods = c(5, 10))
 #' pred <- predict(spar_res, example_data$x)
