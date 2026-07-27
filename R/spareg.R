@@ -21,7 +21,7 @@
 #' @param rp function creating a \code{'randomprojection'} object. Defaults to NULL.
 #' In this case \code{rp_cw(data = TRUE)} is used.
 #' @param screencoef function creating a \code{'screeningcoef'} object. Defaults to NULL.
-#' In this case no screening is used is used.
+#' In this case no screening is used.
 #' @param xval optional matrix of predictor variables observations used for
 #'        validation of threshold nu and number of models; \code{x} is used
 #'        if not provided.

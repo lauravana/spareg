@@ -1,3 +1,7 @@
+# spareg 1.0.0
+
+* Initial CRAN submission.
+
 # spareg 1.1.0
 
 * Improved man pages.
@@ -23,8 +27,4 @@ to extract the intercept and coefficients (non-standardized) from the
 argument is used in computing the validation measure.
 * Removed `coef` argument from `predict` method.
 * Added `aggregate = c("mean", "median")` argument for `predict` method.
-
-# spareg 1.0.0
-
-* Initial CRAN submission.
 
