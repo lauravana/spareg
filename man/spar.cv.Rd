@@ -55,9 +55,11 @@ generalized linear model; defaults to \code{gaussian("identity")}.}
 defaults to \code{spar_glm()} for gaussian family with identity link and to
 \code{spar_glmnet()} for all other family-link combinations.}
 
-\item{rp}{function creating a \code{'randomprojection'} object.}
+\item{rp}{function creating a \code{'randomprojection'} object. If not specified by user it
+defaults to \code{rp_cw(data = TRUE)}.}
 
-\item{screencoef}{function creating a \code{'screeningcoef'} object}
+\item{screencoef}{function creating a \code{'screeningcoef'} object.  If not specified by user it
+defaults to no screening.}
 
 \item{nfolds}{number of folds to use for cross-validation; should be at least 2, defaults to 10.}
 
@@ -94,17 +96,25 @@ estimation of the marginal models. Defaults to FALSE.}
 \value{
 object of class \code{'spar.cv'} with elements
 \itemize{
-\item \code{betas} p x  \code{max(nummods)} sparse matrix of class
+\item \code{val_res} a \code{data.frame} with CV results for each fold and for each element of nus and nummods
+\item \code{fitted_objects} list of fitted objects for the whole data (first element) and for each fold, each element is a list with elements
+\itemize{
+\item \code{betas_std} p x  \code{max(nummods)} sparse matrix of class
 \code{'\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}'} containing the
-standardized coefficients from each marginal model computed with the spar
-algorithm on the whole training data.
-\item \code{intercepts} used in each marginal model, vector of length \code{max(nummods)}
-computed with the spar algorithm on the whole training data.
+standardized coefficients from each marginal model computed with the SPAR
+algorithm on the training data.
+\item \code{intercepts} in each marginal model, vector of length \code{max(nummods)}
+computed with the SPAR algorithm on the  training data.
 \item \code{scr_coef} p-vector of coefficients used for screening for standardized predictors
 \item \code{inds} list of index-vectors corresponding to variables kept after
-screening in each marginal model of length  \code{max(nummods)}
-\item \code{RPMs} list of projection matrices used in each marginal model of length \code{max(nummods)}
-\item \code{val_res} a \code{data.frame} with CV results for each fold and for each element of nus and nummods
+screening in each marginal model of length  \code{max(nummods)}. If kept fixed, only the first element corresponding to the indicators computed on the whole data is populated.
+\item \code{RPMs} list of projection matrices used in each marginal model of length \code{max(nummods)}.  If kept fixed, only the first element corresponding to the projection matrices generated once on the whole data is populated.
+\item \code{ycenter} empirical mean of response vector in training data
+\item \code{yscale} empirical standard deviation of response vector in training data
+. \item \code{xcenter} p-vector of empirical means of predictor variables  in training data
+\item \code{xscale} p-vector of empirical standard deviations of  predictor variables  in training data
+\item \code{seed} integer seed used at the beginning of the algorithm. In each fold the seed is modified as \code{seed + fold_id}.
+}
 \item \code{nus} vector of \eqn{\nu}'s considered for thresholding
 \item \code{nummods} vector of numbers of marginal models considered for validation
 \item \code{family}  a character corresponding to \link[stats]{family}  object used for the marginal generalized linear model e.g.,
@@ -114,10 +124,8 @@ screening in each marginal model of length  \code{max(nummods)}
 \item \code{rp} an object of class \code{'randomprojection'}
 \item \code{screencoef} an object of class \code{'screeningcoef'}
 \item \code{model} an object of class \code{'sparmodel'}
-\item \code{ycenter} empirical mean of initial response vector
-\item \code{yscale} empirical standard deviation of initial response vector
-. \item \code{xcenter} p-vector of empirical means of initial predictor variables
-\item \code{xscale} p-vector of empirical standard deviations of initial predictor variables
+\item \code{fast_fit} character, one of \code{c("fix_rpm_and_inds", "fix_rpm", "none")}, indicating whether the same random projection matrix and/or the same indices for screening across folds were used.
+\item \code{seed} integer seed used at the beginning of the algorithm.
 }
 }
 \description{

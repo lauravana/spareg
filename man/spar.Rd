@@ -63,7 +63,7 @@ defaults to \code{spar_glm()} for gaussian family with identity link and to
 In this case \code{rp_cw(data = TRUE)} is used.}
 
 \item{screencoef}{function creating a \code{'screeningcoef'} object. Defaults to NULL.
-In this case no screening is used is used.}
+In this case no screening is used.}
 
 \item{xval}{optional matrix of predictor variables observations used for
 validation of threshold nu and number of models; \code{x} is used

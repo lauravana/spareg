@@ -33,6 +33,17 @@ with entries \eqn{d_j \sim \text{Unif}(\{-1, 1\})}.
 If specified as \code{rp_cw(data = TRUE)}, the random elements on the diagonal
 are replaced by the ridge coefficients with a small penalty, as introduced in
 \insertCite{parzer2024glms}{spareg}.
+
+Arguments related to the random projection procedure can
+be passed to the \code{rp_cw()} function through \code{...}, and
+will be saved as attributes of the \code{'randomprojection'} object.
+The following attributes are relevant for \link{spar} and \link{spar.cv}:
+\itemize{
+\item \code{mslow}: integer giving the minimum dimension to which the predictors
+should be projected; defaults to \eqn{\log(p)}.
+\item \code{msup}: integer giving the maximum dimension to which the predictors
+should be projected; defaults to \eqn{n/2}.
+}
 }
 \examples{
 example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)

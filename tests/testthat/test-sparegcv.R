@@ -48,6 +48,11 @@ test_that("With screening: fast_fit = fix_rpm delivers diff results than fix_rpm
                        screencoef = screen_cor(),
                        nfolds = 4L, seed = 1234,
                        fast_fit = "fix_rpm")
+  spar_res3 <- spar.cv(x, y, rp = rp_gaussian(),
+                       model = spar_glm(),
+                       screencoef = screen_cor(),
+                       nfolds = 4L, seed = 1234,
+                       fast_fit = "none")
 
   a <- get_model(spar_res, "best")
   b <- get_model(spar_res2, "best", x = x, y = y)
