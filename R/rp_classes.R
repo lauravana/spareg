@@ -365,6 +365,17 @@ update_rpm_w_data_cw <- function(rpm, rp, included_vector) {
 #' are replaced by the ridge coefficients with a small penalty, as introduced in
 #' \insertCite{parzer2024glms}{spareg}.
 #'
+#' Arguments related to the random projection procedure can
+#' be passed to the \code{rp_cw()} function through \code{...}, and
+#' will be saved as attributes of the \code{'randomprojection'} object.
+#' The following attributes are relevant for [spar] and [spar.cv]:
+#'  \itemize{
+#'  \item \code{mslow}: integer giving the minimum dimension to which the predictors
+#'  should be projected; defaults to \eqn{\log(p)}.
+#'  \item \code{msup}: integer giving the maximum dimension to which the predictors
+#'  should be projected; defaults to \eqn{n/2}.
+#'  }
+#'
 #' @references{
 #'   \insertRef{Clarkson2013LowRankApprox}{spareg}
 #'

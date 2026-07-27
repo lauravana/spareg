@@ -11,8 +11,10 @@
 #' @param model function creating a \code{'sparmodel'} object;
 #'   defaults to \code{spar_glm()} for gaussian family with identity link and to
 #'   \code{spar_glmnet()} for all other family-link combinations.
-#' @param rp function creating a \code{'randomprojection'} object.
-#' @param screencoef function creating a \code{'screeningcoef'} object
+#' @param rp function creating a \code{'randomprojection'} object. If not specified by user it
+#'   defaults to \code{rp_cw(data = TRUE)}.
+#' @param screencoef function creating a \code{'screeningcoef'} object.  If not specified by user it
+#'   defaults to no screening.
 #' @param nfolds number of folds to use for cross-validation; should be at least 2, defaults to 10.
 #' @param nnu number of different threshold values \eqn{\nu} to consider for thresholding;
 #'        ignored when \code{nus} is provided; defaults to 20.
