@@ -501,15 +501,14 @@ print.spar.cv <- function(x, digits = 4L, ...) {
   val_sum <- compute_val_summary(x$val_res)
   if (nrow(val_sum) == 1) {
     cat(sprintf(
-      "spar.cv object: \nCV measure (%s) of  %.1f (averaged over the %i fold) reached for nummod=%d, nu=%s.",
+      "spar.cv object: \nCV measure (%s) of  %s (averaged over the %i fold) reached for nummod=%d, nu=%s.",
       #leading to %d / %d active predictors.\n",
-      x$measure, min(val_sum$mean_measure), x$nfolds,
+      x$measure, formatC(min(val_sum$mean_measure),digits = digits,format = "e"),
+      x$nfolds,
       val_sum$nummod,
       formatC(val_sum$nu,digits = digits,format = "e")
     )
     )
-    #     cat("Summary of those non-zero coefficients:\n")
-    #    print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
   } else {
     tmp_df <- val_sum
     ind_min <- which.min(tmp_df$mean_measure)
@@ -518,26 +517,21 @@ print.spar.cv <- function(x, digits = 4L, ...) {
     ind_1se <- match(min(tmp_df$mean_numactive[allowed_ind]),
                      tmp_df$mean_numactive)
     cat(sprintf(
-      "spar.cv object:\n\nSmallest CV measure (%s) of %.1f reached for nummod=%d, nu=%s. \n",
+      "spar.cv object:\n\nSmallest CV measure (%s) of %s reached for nummod=%d, nu=%s. \n",
       # leading  to %d / %d active predictors (averaged over folds).",
-      x$measure, min(val_sum$mean_measure),
+      x$measure,  formatC(min(val_sum$mean_measure),digits = digits,format = "e"),
       tmp_df$nummod[ind_min],
       formatC(tmp_df$nu[ind_min],digits = digits,format = "e")
       #      sum(my_best$beta!=0),length(my_best$beta)
     )
     )
-    # cat("Summary of those non-zero coefficients:\n")
-    #  print(summary(mycoef_best$beta[mycoef_best$beta!=0]))
     cat(sprintf(
-      "\nSparsest coefficient within one standard error of best CV measure (%s) of %.1f  reached for nummod=%d, nu=%s.\n",
-      # leading to %d / %d active predictors with CV measure (%s) %.1f.\n",
-      x$measure, tmp_df$mean_measure[ind_1se],
+      "\nSparsest coefficient within one standard error of best CV measure (%s)  \
+        of %s  reached for nummod=%d, nu=%s.\n",
+      x$measure, formatC(tmp_df$mean_measure[ind_1se],digits = digits,format = "e"),
       tmp_df$nummod[ind_1se],
       formatC(tmp_df$nu[ind_1se],digits = digits,format = "e")
     ))
-
-    # cat("Summary of those non-zero coefficients:\n")
-    #  print(summary(mycoef_1se$beta[mycoef_1se$beta!=0]))
   }
 }
 
