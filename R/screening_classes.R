@@ -29,7 +29,7 @@
 #'   rp = rp_sparse())
 #' spar_example
 #' @export
-constructor_screencoef <- function(name, generate_fun) {
+constructor_screencoef <- function(generate_fun, name = NULL) {
   ## Checks
   args_generate_fun <- formals(generate_fun)
   stopifnot("Function generate_fun should contain three arguments: x, y and an object
@@ -87,7 +87,7 @@ generate_scrcoef_marglik <- function(y, x, object) {
 #' @return object of class \code{'screencoef'} which is a list with elements:
 #'
 #' \itemize{
-#'  \item \code{name} (character)
+#'  \item \code{name} (character, optional, used for printing)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{generate_fun}  for generating the screening coefficient.
 #'  This function should have arguments  and   \code{y} (vector of (standardized for Gaussian) responses),
@@ -106,6 +106,8 @@ generate_scrcoef_marglik <- function(y, x, object) {
 #' Arguments related to the screening procedure can
 #' be passed to the \code{screen_marglik()} function through \code{...}, and
 #' will be saved as attributes of the \code{'screencoef'} object.
+#' Note that if \code{family} is not provided in \code{control},
+#' the \code{family} used in [spar]  or [spar.cv]  will be used.
 #' The following attributes are relevant for  [spar] and [spar.cv]:
 #' \itemize{
 #' \item \code{nscreen} integer giving the number of variables to be retained
@@ -159,7 +161,7 @@ generate_scrcoef_cor <- function(y, x, object) {
 #' @param control list of controls to be passed to the screening function
 #' @return object of class \code{'screencoef'} which is a list with elements
 #' \itemize{
-#'  \item \code{name} (character)
+#'  \item \code{name} (character, optional, used for printing)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{generate_fun}  for generating the screening coefficient.
 #'  This function should have arguments  and   \code{y} (vector of (standardized for Gaussian) responses),
@@ -230,10 +232,15 @@ generate_scrcoef_glmnet <- function(y, x, object) {
   # Set lambda.min.ration to close to zero unless otherwise specified
   if (is.null(control_glmnet$lambda.min.ratio)) {
     tmp_sc <- apply(x, 2, function(col) sqrt(var(col)*(n-1)/n))
+    # TODO: allow for weights in the future
     x2 <- scale(x, center = colMeans(x), scale = tmp_sc)
-    ytX <- crossprod(y, x2[,tmp_sc > 0])
-    lam_max <- 1000 * max(abs(ytX))/n * family$mu.eta(family$linkfun(mean(y)))/
-      family$variance(mean(y))
+    mu0 <- glm(y ~ 1, family = family)$fitted.values
+    r <- y - mu0
+    eta <- family$linkfun(mu0)
+    v <- family$variance(mu0)
+    me <- family$mu.eta(eta)
+    rv <- 1/n * r / v * me
+    lam_max <- 1000 * max(abs(crossprod(rv, x2[,tmp_sc > 0])))
     control_glmnet$lambda.min.ratio <- min(0.01, 1e-4 / lam_max)
   }
   # Obtain Ridge coefs GLMNET
@@ -260,7 +267,7 @@ generate_scrcoef_glmnet <- function(y, x, object) {
 #' @return object of class \code{'screencoef'} which is a list with elements
 #'
 #' \itemize{
-#'  \item \code{name} (character)
+#'  \item \code{name} (character, optional, used for printing)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{generate_fun}  for generating the screening coefficient.
 #'  This function should have arguments  and   \code{y} (vector of (standardized for Gaussian) responses),
@@ -317,7 +324,7 @@ screen_glmnet <- constructor_screencoef(
 #'
 #' @export
 print.screencoef <- function(x, ...) {
-  cat(paste0("Name: ", x$name), "\n")
+  if (!is.null(x$name)) cat(paste0("Name: ", x$name), "\n")
   cat("Main attributes:", "\n")
   cat("* proportion of data used for screening:",
       ifelse(is.null(attr(x, "split_data_prop")),

@@ -4,10 +4,12 @@
 \alias{print.spar}
 \title{Summary of \code{'spar'} Object}
 \usage{
-\method{print}{spar}(x, ...)
+\method{print}{spar}(x, digits = 4L, ...)
 }
 \arguments{
 \item{x}{result of \link{spar} function of class  \code{'spar'}.}
+
+\item{digits}{integer digits to be printed, defaults to 4L.}
 
 \item{...}{further arguments passed to or from other methods}
 }

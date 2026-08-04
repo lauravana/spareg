@@ -15,7 +15,7 @@ spar_glmnet(..., control = list())
 \value{
 object of class \code{'sparmodel'} which is a list with elements
 \itemize{
-\item \code{name} (character)
+\item \code{name} (character, optional, used for printing)
 \item \code{control} (list of controls passed as an argument)
 \item \code{model_fun}  for generating the screening coefficient.
 This function should have arguments \code{y}, vector of standardized responses,
@@ -25,7 +25,14 @@ two elements: \code{gammas} which is the vector of regression coefficients
 for the projected predictors and \code{intercept} which is the intercept
 of the model.
 \item \code{update_fun}  optional function for updating the \code{'sparmodel'}
-object before the start of the algorithm.
+object before the start of the algorithm. For
+\code{spar_glmnet()} this function manipulates the
+\code{'family'} object for compatibility with
+\link[glmnet]{glmnet}. I.e., In the case of families Gaussian,
+binomial and Poisson with  canonical link, the family object is
+replaced by a string containing the name of the family.
+This leads to  \link[glmnet]{glmnet} using the faster
+specialized algorithms rather than the general algorithm.
 }
 }
 \description{

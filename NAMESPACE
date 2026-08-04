@@ -2,6 +2,8 @@
 
 S3method(coef,spar)
 S3method(coef,spar.cv)
+S3method(get_model,spar)
+S3method(get_model,spar.cv)
 S3method(plot,spar)
 S3method(plot,spar.cv)
 S3method(predict,spar)

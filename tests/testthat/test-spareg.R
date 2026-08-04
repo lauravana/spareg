@@ -96,7 +96,7 @@ test_that("Returned coef and preds are correct for fixed screening and projectio
 
 })
 
-test_that("Columns with zero sd get ceofficient 0", {
+test_that("Columns with zero sd get coefficient 0", {
   x <- example_data$x
   x[,c(1,11,111)] <- 2
   y <- example_data$y

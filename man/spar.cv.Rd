@@ -20,6 +20,7 @@ spar.cv(
   avg_type = c("link", "response"),
   parallel = FALSE,
   seed = NULL,
+  fast_fit = c("fix_rpm_and_inds", "fix_rpm", "none"),
   ...
 )
 
@@ -38,6 +39,7 @@ spareg.cv(
   avg_type = c("link", "response"),
   parallel = FALSE,
   seed = NULL,
+  fast_fit = c("fix_rpm_and_inds", "fix_rpm", "none"),
   ...
 )
 }
@@ -53,9 +55,11 @@ generalized linear model; defaults to \code{gaussian("identity")}.}
 defaults to \code{spar_glm()} for gaussian family with identity link and to
 \code{spar_glmnet()} for all other family-link combinations.}
 
-\item{rp}{function creating a \code{'randomprojection'} object.}
+\item{rp}{function creating a \code{'randomprojection'} object. If not specified by user it
+defaults to \code{rp_cw(data = TRUE)}.}
 
-\item{screencoef}{function creating a \code{'screeningcoef'} object}
+\item{screencoef}{function creating a \code{'screeningcoef'} object.  If not specified by user it
+defaults to no screening.}
 
 \item{nfolds}{number of folds to use for cross-validation; should be at least 2, defaults to 10.}
 
@@ -85,22 +89,32 @@ estimation of the marginal models. Defaults to FALSE.}
 
 \item{seed}{integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.}
 
+\item{fast_fit}{character, one of \code{c("fix_rpm_and_inds", "fix_rpm", "none")}, indicating whether to use the same random projection matrix and/or the same indices for screening across folds. Defaults to \code{"fix_rpm_and_inds"}.}
+
 \item{...}{further arguments mainly to ensure back-compatibility}
 }
 \value{
 object of class \code{'spar.cv'} with elements
 \itemize{
-\item \code{betas} p x  \code{max(nummods)} sparse matrix of class
+\item \code{val_res} a \code{data.frame} with CV results for each fold and for each element of nus and nummods
+\item \code{fitted_objects} list of fitted objects for the whole data (first element) and for each fold, each element is a list with elements
+\itemize{
+\item \code{betas_std} p x  \code{max(nummods)} sparse matrix of class
 \code{'\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}'} containing the
-standardized coefficients from each marginal model computed with the spar
-algorithm on the whole training data.
-\item \code{intercepts} used in each marginal model, vector of length \code{max(nummods)}
-computed with the spar algorithm on the whole training data.
+standardized coefficients from each marginal model computed with the SPAR
+algorithm on the training data.
+\item \code{intercepts} in each marginal model, vector of length \code{max(nummods)}
+computed with the SPAR algorithm on the  training data.
 \item \code{scr_coef} p-vector of coefficients used for screening for standardized predictors
 \item \code{inds} list of index-vectors corresponding to variables kept after
-screening in each marginal model of length  \code{max(nummods)}
-\item \code{RPMs} list of projection matrices used in each marginal model of length \code{max(nummods)}
-\item \code{val_res} a \code{data.frame} with CV results for each fold and for each element of nus and nummods
+screening in each marginal model of length  \code{max(nummods)}. If kept fixed, only the first element corresponding to the indicators computed on the whole data is populated.
+\item \code{RPMs} list of projection matrices used in each marginal model of length \code{max(nummods)}.  If kept fixed, only the first element corresponding to the projection matrices generated once on the whole data is populated.
+\item \code{ycenter} empirical mean of response vector in training data
+\item \code{yscale} empirical standard deviation of response vector in training data
+. \item \code{xcenter} p-vector of empirical means of predictor variables  in training data
+\item \code{xscale} p-vector of empirical standard deviations of  predictor variables  in training data
+\item \code{seed} integer seed used at the beginning of the algorithm. In each fold the seed is modified as \code{seed + fold_id}.
+}
 \item \code{nus} vector of \eqn{\nu}'s considered for thresholding
 \item \code{nummods} vector of numbers of marginal models considered for validation
 \item \code{family}  a character corresponding to \link[stats]{family}  object used for the marginal generalized linear model e.g.,
@@ -110,10 +124,8 @@ screening in each marginal model of length  \code{max(nummods)}
 \item \code{rp} an object of class \code{'randomprojection'}
 \item \code{screencoef} an object of class \code{'screeningcoef'}
 \item \code{model} an object of class \code{'sparmodel'}
-\item \code{ycenter} empirical mean of initial response vector
-\item \code{yscale} empirical standard deviation of initial response vector
-. \item \code{xcenter} p-vector of empirical means of initial predictor variables
-\item \code{xscale} p-vector of empirical standard deviations of initial predictor variables
+\item \code{fast_fit} character, one of \code{c("fix_rpm_and_inds", "fix_rpm", "none")}, indicating whether the same random projection matrix and/or the same indices for screening across folds were used.
+\item \code{seed} integer seed used at the beginning of the algorithm.
 }
 }
 \description{
@@ -123,20 +135,10 @@ procedure.
 }
 \examples{
 \donttest{
-example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+example_data <- simulate_spareg_data(n = 80, p = 200, ntest = 100)
 spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
   rp = rp_gaussian(), nummods = c(5, 10))
 spar_res
-coefs <- coef(spar_res)
-pred <- predict(spar_res, example_data$x)
-plot(spar_res)
-plot(spar_res, plot_type = "val_measure", plot_along = "nummod", nu = 0)
-plot(spar_res, plot_type = "val_measure", plot_along = "nu", nummod = 10)
-plot(spar_res, plot_type = "val_numactive",  plot_along = "nummod", nu = 0)
-plot(spar_res, plot_type = "val_numactive",  plot_along = "nu", nummod = 10)
-plot(spar_res, plot_type = "res_vs_fitted",  xfit = example_data$xtest,
-  yfit = example_data$ytest, opt_par = "1se")
-plot(spar_res, "coefs", prange = c(1, 400))
 }
 \donttest{
 spar_res <- spareg.cv(example_data$x, example_data$y,

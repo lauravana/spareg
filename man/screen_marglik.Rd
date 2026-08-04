@@ -16,7 +16,7 @@ screen_marglik(..., control = list())
 object of class \code{'screencoef'} which is a list with elements:
 
 \itemize{
-\item \code{name} (character)
+\item \code{name} (character, optional, used for printing)
 \item \code{control} (list of controls passed as an argument)
 \item \code{generate_fun}  for generating the screening coefficient.
 This function should have arguments  and   \code{y} (vector of (standardized for Gaussian) responses),
@@ -36,6 +36,8 @@ The function \code{generate_fun} relies on \link[stats]{glm}.
 Arguments related to the screening procedure can
 be passed to the \code{screen_marglik()} function through \code{...}, and
 will be saved as attributes of the \code{'screencoef'} object.
+Note that if \code{family} is not provided in \code{control},
+the \code{family} used in \link{spar}  or \link{spar.cv}  will be used.
 The following attributes are relevant for  \link{spar} and \link{spar.cv}:
 \itemize{
 \item \code{nscreen} integer giving the number of variables to be retained

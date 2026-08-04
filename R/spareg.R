@@ -165,36 +165,29 @@ spar <- function(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
 #' @export
 spareg <- spar
 
-
-spar_algorithm <- function(x, y,
-                           family, model, rp, screencoef,
-                           xval = NULL, yval = NULL,
-                           nnu, nus,
-                           nummods, measure,
-                           avg_type,
-                           inds = NULL, RPMs = NULL,
-                           parallel = FALSE,
-                           seed = NULL){
-  # Start SPAR algorithm
+fit_spar_models <- function(x, y, family, model, rp, screencoef,
+                            nnu, nus, nummods, measure, avg_type,
+                            inds = NULL, RPMs = NULL, parallel = FALSE, seed = NULL) {
+  # Set up and checks -----
   p <- ncol(x)
   n <- nrow(x)
-  # Scaling the x matrix ----
+
+  # Scaling the x matrix -----
   xcenter <- colMeans(x)
-  xscale  <- apply(x, 2, sd)
+  xscale <- apply(x, 2, sd)
 
   if (!is.null(seed)) {
-    if (parallel & requireNamespace("doRNG", quietly = TRUE)) {
+    if (parallel && requireNamespace("doRNG", quietly = TRUE)) {
       registerDoRNG <- getNamespace("doRNG")$registerDoRNG
       registerDoRNG(seed = seed)
     } else {
       set.seed(seed)
     }
   }
+
   if (is.null(inds) || is.null(RPMs)) {
     actual_p <- sum(xscale > 0)
-    z <- scale(x[, xscale > 0],
-               center = xcenter[xscale > 0],
-               scale  = xscale[xscale > 0])
+    z <- scale(x[, xscale > 0], center = xcenter[xscale > 0], scale = xscale[xscale > 0])
   } else {
     actual_p <- p
     xscale[xscale == 0] <- 1
@@ -202,94 +195,86 @@ spar_algorithm <- function(x, y,
   }
 
   # Scaling the y vector ----
-  if (family$family == "gaussian" & family$link=="identity") {
+  if (family$family == "gaussian" && family$link == "identity") {
     ycenter <- mean(y)
     yscale <- sd(y)
   } else {
     ycenter <- 0
-    yscale  <- 1
+    yscale <- 1
   }
-  yz <- scale(y,center = ycenter,scale = yscale)
+  yz <- scale(y, center = ycenter, scale = yscale)
+
   # Setup model ----
-  if (is.null(model$control$family))  {
+  if (is.null(model$control$family)) {
     if (is.null(attr(model, "family"))) {
       model$control$family <- family
     } else {
       model$control$family <- attr(model, "family")
     }
   }
-
   if (!is.null(model$update_fun)) {
     model <- model$update_fun(model)
   }
+
   # Setup screening ----
-  family_str <- paste0(family$family, "(", family$link, ")")
+  family_str <- family_string <- paste0(family$family, "(", family$link, ")")
   if (is.null(attr(screencoef, "family"))) {
     attr(screencoef, "family_string") <- family_str
   }
   if (!is.null(attr(screencoef, "split_data_prop"))) {
-    scr_inds <- sample(n,
-                       ceiling(n * attr(screencoef, "split_data_prop")))
+    scr_inds <- sample(n, ceiling(n * attr(screencoef, "split_data_prop")))
     mar_inds <- seq_len(n)[-scr_inds]
   } else {
     mar_inds <- scr_inds <- seq_len(n)
   }
-
   if (is.null(attr(screencoef, "nscreen"))) {
-    if (2*n > p) {
+    if (2 * n > p) {
       message("Screening is not performed by default, as 2 * n, the default number of screened variables, is larger than the number of predictors. For performing screening, adjust nscreen in screen_*().")
     }
     nscreen <- attr(screencoef, "nscreen") <- min(p, 2 * n)
   } else {
     nscreen <- attr(screencoef, "nscreen")
   }
+
   mslow <- attr(rp, "mslow")
-  if (is.null(mslow)) mslow <- ceiling(log(p))
+  if (is.null(mslow)) mslow <- attr(rp, "mslow") <- ceiling(log(p))
   msup <- attr(rp, "msup")
-  if (is.null(msup)) msup <- ceiling(n/2)
+  if (is.null(msup)) msup <- attr(rp, "msup") <- ceiling(n/2)
   if (!(msup <= nscreen)) {
     message("Provided upper bound on goal dimension of random projection (msup) or its default value (n/2) is larger than nscreen. Setting msup to nscreen.")
     msup <- nscreen
   }
-  stopifnot("Provided lower bound on goal dimension of random projection (mslow) or its default value (log(p)) is larger than upper bound (msup)." =
-              mslow <= msup)
-  # Perform screening ----
+  stopifnot("Provided lower bound on goal dimension of random projection (mslow) or its default value (log(p)) is larger than upper bound (msup)." = mslow <= msup)
+  # Perform screening
   if (nscreen < p) {
-    scr_coef <- screencoef$generate_fun(
-      object = screencoef,
-      x = z[scr_inds,],
-      y = yz[scr_inds, ])
+    scr_coef <- screencoef$generate_fun(object = screencoef, x = z[scr_inds, ], y = yz[scr_inds, ])
     inc_probs <- abs(scr_coef)
     max_inc_probs <- max(inc_probs)
-    inc_probs <- inc_probs/max_inc_probs
+    inc_probs <- inc_probs / max_inc_probs
     attr(screencoef, "inc_prob") <- inc_probs
     if (attr(screencoef, "type") == "prob" && sum(inc_probs > 0) < nscreen) {
       warning(
-        sprintf("The number of variables with non-zero screening coefficients (%i) is less than the number of variables to screen (%i). Probabilistic screening with nscreen variables is performed anyway, but some of some of the variables with a zero inclusion probability will be randomly added to the set of screened variables. Alternatively, nscreen can be lowered in screen_*().",
-                sum(inc_probs > 0), nscreen))
-
+        sprintf("The number of variables with non-zero screening coefficients (%i) is less than the number of variables to screen (%i). Probabilistic screening with nscreen variables is performed anyway, but some of the variables with a zero inclusion probability will be randomly added to the set of screened variables. Alternatively, nscreen can be lowered in screen_*().",
+                sum(inc_probs > 0), nscreen)
+      )
     }
   } else {
     scr_coef <- NULL
-    # message("No screening performed.")
   }
   attr(screencoef, "importance") <- scr_coef
 
-  # Update RP ----
+  # Update RP -----
   thiscall <- match.call(expand.dots = TRUE)
   thiscall[["screencoef"]] <- screencoef
-  rp <- eval.parent(as.call(c(list(rp$update_fun),
-                              as.list(thiscall)[-1])))
+  rp <- eval.parent(as.call(c(list(rp$update_fun), as.list(thiscall)[-1])))
 
   max_num_mod <- max(nummods)
-
 
   drawRPMs <- FALSE
   if (is.null(RPMs)) {
     RPMs <- vector("list", length = max_num_mod)
     drawRPMs <- TRUE
-    ms <- sample(seq(floor(mslow), ceiling(msup)),
-                 max_num_mod, replace=TRUE)
+    ms <- sample(seq(floor(mslow), ceiling(msup)), max_num_mod, replace = TRUE)
   }
 
   drawinds <- FALSE
@@ -298,67 +283,59 @@ spar_algorithm <- function(x, y,
     drawinds <- TRUE
   }
 
-  # SPAR algorithm  ----
+  # SPAR algorithm -----
   marginal_model_function <- function(i) {
-    ## Function for screening, drawing the RP and estimating one model in ensemble
-    ## Screening step  ----
     out <- list()
     if (drawinds) {
       if (nscreen < p) {
         ind_use <- switch(attr(screencoef, "type"),
-                          "fixed" =  order(inc_probs, decreasing = TRUE)[seq_len(nscreen)],
-                          "prob"  =  c(sample(seq_len(actual_p)[inc_probs > 0],
-                                              min(sum(inc_probs > 0), nscreen),
-                                              prob = inc_probs[inc_probs>0]),
-                                       sample(seq_len(actual_p)[inc_probs == 0],
-                                              nscreen - min(sum(inc_probs > 0), nscreen))),
+                          "fixed" = order(inc_probs, decreasing = TRUE)[seq_len(nscreen)],
+                          "prob" = c(
+                            sample(seq_len(actual_p)[inc_probs > 0], min(sum(inc_probs > 0), nscreen), prob = inc_probs[inc_probs > 0]),
+                            sample(seq_len(actual_p)[inc_probs == 0], nscreen - min(sum(inc_probs > 0), nscreen))
+                          ),
                           stop("Type of screening coef should be fixed or prob.")
         )
       } else {
         ind_use <- seq_len(actual_p)
       }
-      out$inds <- ind_use
     } else {
       ind_use <- inds[[i]]
     }
+    out$inds <- ind_use
     p_use <- length(ind_use)
 
-    ## RP step  ----
+    ## RP step -----
     if (drawRPMs) {
       m <- ms[i]
       if (p_use < m) {
         m <- p_use
-        RPM <- Matrix::Matrix(diag(1, m),sparse=TRUE)
+        RPM <- Matrix::Matrix(diag(1, m), sparse = TRUE)
       } else {
-        RPM    <- rp$generate_fun(rp, m = m,
-                                  included_vector = ind_use,
-                                  x = x, y = y)
+        RPM <- rp$generate_fun(rp, m = m, included_vector = ind_use, x = x, y = y)
       }
-      out$RPMs <- RPM
     } else {
       RPM <- RPMs[[i]]
+      if (drawinds) RPM <- RPM[, c(ind_use)]
       if (!is.null(rp$update_rpm_w_data)) {
-        RPM <- rp$update_rpm_w_data(rpm = RPM, rp = rp,
-                                    included_vector = ind_use)
+        RPM <- rp$update_rpm_w_data(rpm = RPM, rp = rp, included_vector = ind_use)
       }
     }
+    out$RPMs <- RPM
 
-    ## Marginal model ----
+    # Marginal model
     znew <- Matrix::tcrossprod(z[mar_inds, ind_use], RPM)
     res <- model$model_fun(y = yz[mar_inds], z = znew, object = model)
     out$intercepts <- res$intercept
-    out$betas_std_m <-  as(numeric(actual_p), "sparseMatrix")
+    out$betas_std_m <- as(numeric(actual_p), "sparseMatrix")
     out$betas_std_m[ind_use] <- crossprod(RPM, res$gammas)
     out
   }
 
   if (parallel) {
-    # honor registration made by user, and only create and register
-    # our own cluster object once
     if (!requireNamespace("foreach", quietly = TRUE)) {
       stop("Package 'foreach' is required for parallel execution. Please install it using install.packages('foreach').")
     }
-    # Load foreach functions
     foreach <- getNamespace("foreach")$foreach
     `%dopar%` <- getNamespace("foreach")$`%dopar%`
     `%do%` <- getNamespace("foreach")$`%do%`
@@ -367,30 +344,16 @@ spar_algorithm <- function(x, y,
     getDoParWorkers <- getNamespace("foreach")$getDoParWorkers
 
     if (!getDoParRegistered()) {
-      message('Warning: No doPar backend. Executing SPAR algorithm sequentially.
-               For using parallelization, please register backend and rerun.')
+      message('Warning: No doPar backend. Executing SPAR algorithm sequentially. For using parallelization, please register backend and rerun.')
       `%d%` <- `%do%`
     } else {
-      message('Using ', getDoParName(), ' with ',
-              getDoParWorkers(), ' workers')
-      `%d%` <- `%dopar%`
-    }
-    if (!getDoParRegistered()) {
-      message('Warning: No doPar backend. Executing SPAR algorithm sequentially.
-               For using parallelization, please register backend and rerun.')
-      `%d%` <- `%do%`
-    } else {
-      message('Using ', getDoParName(), ' with ',
-              getDoParWorkers(), ' workers')
+      message('Using ', getDoParName(), ' with ', getDoParWorkers(), ' workers')
       `%d%` <- `%dopar%`
     }
     i <- NULL
-    res_all <- foreach(i = seq_len(max_num_mod),
-                       .verbose = FALSE,
-                       .packages = "spareg",
-                       .errorhandling = "stop") %d% {
-                         marginal_model_function(i = i)
-                       }
+    res_all <- foreach(i = seq_len(max_num_mod), .verbose = FALSE, .packages = "spareg", .errorhandling = "stop") %d% {
+      marginal_model_function(i = i)
+    }
   } else {
     res_all <- lapply(seq_len(max_num_mod), marginal_model_function)
   }
@@ -399,89 +362,113 @@ spar_algorithm <- function(x, y,
   if (drawinds) inds <- lapply(res_all, "[[", "inds")
   intercepts <- sapply(res_all, "[[", "intercepts")
   betas_std <- Reduce("cbind2", lapply(res_all, "[[", "betas_std_m"))
-
+  if (is.null(colnames(x))) {
+    rownames(betas_std) <- paste0("V", seq_len(ncol(x[, xscale > 0, drop = FALSE])))
+  } else {
+    rownames(betas_std) <- colnames(x[, xscale > 0, drop = FALSE])
+  }
   if (is.null(nus)) {
-    if (nnu>1) {
-      nus <- unname(c(0, quantile(abs(betas_std@x),
-                                  probs=seq_len(nnu-1)/(nnu-1))))
+    if (nnu > 1) {
+      nus <- unname(c(0, quantile(abs(betas_std@x), probs = seq_len(nnu - 1) / (nnu - 1))))
     } else {
       nus <- 0
     }
-  } else {
-    nnu <- length(nus)
   }
+  # Return fitted objects
+  return(list(
+    betas_std = betas_std,
+    intercepts = intercepts,
+    scr_coef = scr_coef,
+    inds = inds,
+    RPMs = RPMs,
+    nus = nus,
+    xcenter = xcenter,
+    xscale = xscale,
+    ycenter = ycenter,
+    yscale = yscale,
+    avg_type = avg_type,
+    measure = measure,
+    family = family_str,
+    model = model,
+    rp = rp,
+    screencoef = screencoef,
+    x_rows_for_fitting_marginal_models = if (!is.null(attr(screencoef, "split_data_prop"))) mar_inds else NULL
+  ))
+}
 
-  ## Validation set ----
-  val_res <- data.frame(nnu = NULL, nu = NULL,
-                        nummod = NULL, numactive = NULL, measure = NULL)
-  if (!is.null(yval) && !is.null(xval)) {
-    val_set <- TRUE
-  } else {
-    val_set <- FALSE
-    yval <- y
-    xval <- x
-  }
+validate_spar <- function(fitted_objects, xval, yval, nus, nummods, measure, avg_type) {
+  p <- length(fitted_objects$xscale)
+  n <- nrow(xval)
+  # Get validation measure function
+  val.meas <- get_val_measure_function(measure, eval(parse(text = fitted_objects$family)))
 
-  val.meas <- get_val_measure_function(measure, family)
+  # Initialize validation results
+  val_res <- data.frame(nnu = NULL, nu = NULL, nummod = NULL, numactive = NULL, measure = NULL)
 
-  ## Fitted values ----
-  tabnummodres <- lapply(nummods,  function(nummod) {
-    tabres <- lapply(seq_len(nnu), function(l){
+  # Loop over nummods
+  tabnummodres <- lapply(nummods, function(nummod) {
+    tabres <- lapply(seq_along(nus), function(l) {
       thresh <- nus[l]
-      tmp_coef <- betas_std[, seq_len(nummod), drop = FALSE]
+      tmp_coef <- fitted_objects$betas_std[, seq_len(nummod), drop = FALSE]
       tmp_coef[abs(tmp_coef) < thresh] <- 0
       tmp_beta <- Matrix(0, nrow = p, ncol = nummod)
-      tmp_beta[xscale > 0, ] <- yscale * tmp_coef/(xscale[xscale > 0])
+      tmp_beta[fitted_objects$xscale > 0, ] <- fitted_objects$yscale * tmp_coef / (fitted_objects$xscale[fitted_objects$xscale > 0])
       if (avg_type == "link") {
         beta_hat <- rowMeans(tmp_beta)
-        alpha_hat <- mean(intercepts[seq_len(nummod)]) +
-          (ycenter - sum(xcenter * beta_hat))
+        alpha_hat <- mean(fitted_objects$intercepts[seq_len(nummod)]) + (fitted_objects$ycenter - sum(fitted_objects$xcenter * beta_hat))
         eta_hat <- xval %*% beta_hat + alpha_hat
         val_measure <- val.meas(yval, eta_hat = eta_hat)
         numactive <- sum(beta_hat != 0)
       } else {
-        tmp_intercept <- intercepts[seq_len(nummod)] +
-           drop(ycenter - crossprod(xcenter, tmp_beta))
-        eta_hat <- sweep((xval %*% tmp_beta), tmp_intercept,
-                       MARGIN = 2, FUN = "+")
-        y_hat <- rowMeans(family$linkinv(as.matrix(eta_hat)))
+        tmp_intercept <- fitted_objects$intercepts[seq_len(nummod)] + drop(fitted_objects$ycenter - crossprod(fitted_objects$xcenter, tmp_beta))
+        eta_hat <- sweep((xval %*% tmp_beta), tmp_intercept, MARGIN = 2, FUN = "+")
+        y_hat <- rowMeans(eval(parse(text = fitted_objects$family))$linkinv(as.matrix(eta_hat)))
         val_measure <- val.meas(yval, y_hat = y_hat)
         numactive <- sum(rowSums(tmp_beta != 0) > 0)
       }
-      c(nnu = l, nu = unname(thresh), nummod = nummod,
-        measure = val_measure, numactive = numactive)
+      c(nnu = l, nu = unname(thresh), nummod = nummod, measure = val_measure, numactive = numactive)
     })
     out <- do.call("rbind", tabres)
-    colnames(out) <- c("nnu","nu","nummod","measure", "numactive")
+    colnames(out) <- c("nnu", "nu", "nummod", "measure", "numactive")
     out
   })
+
   val_res <- do.call("rbind.data.frame", tabnummodres)
-  betas <- Matrix(0, p, max_num_mod, sparse = TRUE)
-  betas[xscale>0,] <- betas_std
+  return(val_res)
+}
+
+spar_algorithm <- function(x, y, family, model, rp, screencoef,
+                           xval = NULL, yval = NULL,
+                           nnu, nus,
+                           nummods, measure,
+                           avg_type,
+                           inds = NULL, RPMs = NULL,
+                           parallel = FALSE,
+                           seed = NULL){
+  # Start fitting SPAR algorithm -----
+  res <- fit_spar_models(x = x, y = y, family = family, model = model, rp = rp, screencoef = screencoef,
+                         nnu = nnu, nus = nus, nummods = nummods, measure = measure, avg_type = avg_type,
+                         inds = inds, RPMs = RPMs, parallel = parallel, seed = seed)
+
+  betas <- Matrix(0, ncol(x), max(nummods), sparse = TRUE)
+  betas[res$xscale > 0, ] <- res$betas_std
   if (is.null(colnames(x))) {
     rownames(betas) <- paste0("V", seq_len(ncol(x)))
   } else {
     rownames(betas) <- colnames(x)
   }
-
-  ## Clean up
-  res <- list(betas = betas, intercepts = intercepts,
-              scr_coef = scr_coef,
-              inds = inds, RPMs = RPMs,
-              val_res = val_res, val_set = val_set,
-              nus = nus, nummods = nummods,
-              ycenter = ycenter, yscale = yscale,
-              xcenter = xcenter, xscale = xscale,
-              family = family_str,
-              measure = measure,
-              avg_type = avg_type,
-              rp = rp,
-              screencoef = screencoef,
-              model = model,
-              x_rows_for_fitting_marginal_models =
-                if (!is.null(attr(screencoef, "split_data_prop"))) mar_inds else NULL
-  )
-
+  # Compute validation measures -----
+  if (is.null(xval)) xval <- x
+  if (is.null(yval)) yval <- y
+  val_res <- validate_spar(fitted_objects = res,
+                           xval = xval, yval = yval,
+                           nus = res$nus,
+                           nummods = nummods,
+                           measure = measure,
+                           avg_type = avg_type)
+  res[["val_res"]] <- val_res
+  res[["betas"]] <- betas
+  res[["betas_std"]] <- NULL
   attr(res,"class") <- "spar"
 
   return(res)
@@ -490,23 +477,28 @@ spar_algorithm <- function(x, y,
 
 #' Coef Method for \code{'spar'} Object
 #'
-#' Extracts coefficients from \code{'spar'} bbject
+#' Extracts coefficients from \code{'spar'} object
 #' @param object result of [spar] function of class \code{'spar'}.
 #' @param nummod number of models used to form coefficients; value with minimal
 #'        validation \code{measure} is used if not provided.
 #' @param nu threshold level used to form coefficients; value with minimal
 #'        validation \code{measure} is used if not provided.
-#' @param aggregate character one of c("mean", "median", "none"). If set to "none"
-#'        the coefficients are not aggregated over the marginal models, otherwise
+#' @param aggregate character, one of c("mean", "median", "none"), giving the method of aggregating
+#'        the coefficients over the marginal models. If set to "none",
+#'        the coefficients are not aggregated over the marginal models and a
+#'        matrix of coefficients, one column for each marginal model is returned.
+#'        Otherwise
 #'        the coefficients are aggregated using the specified method (mean or median).
 #'        Defaults to mean aggregation.
 #' @param ... further arguments passed to or from other methods
 #' @return object of class  \code{'coefspar'} which is a list with elements
 #' \itemize{
-#'  \item \code{intercept} intercept value
-#'  \item \code{beta} vector of length p of averaged coefficients
-#'  \item \code{nummod} number of models based on which the coefficient is computed
-#'  \item \code{nu}  threshold based on which the coefficient is computed
+#'  \item \code{intercept} average intercept value or vector intercepts (one for
+#'  each marginal model) if \code{aggregate = "none"}.
+#'  \item \code{beta} vector of length p of averaged coefficients or a
+#'        p x \code{max(nummods)} matrix of coefficients if \code{agregate = "none"}.
+#'  \item \code{nummod} number of models based on which the coefficients are computed
+#'  \item \code{nu}  threshold based on which the coefficients are computed
 #' }
 #' @seealso [print.coefspar], [summary.coefspar]
 #' @examples
@@ -641,9 +633,9 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
           attr(x, "nu_1se"), "\n")
     }
   }
-  cat("\n")
+  # cat("\n")
   # Coefficient vectors or matrices
-  cat("Coefficients:\n\n")
+  cat("Coefficients:\n")
   if (attr(x, "aggregate") == "none") {
     ## No aggregation ----
     coefs <- rbind("(Intercept)" = x$intercept, x$beta)
@@ -657,7 +649,7 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
                          justify = "right")))
     # Add inline ...
     if (nrow(coefs) > show) {
-      cat("\n...", sprintf("(%d rows not shown)\n\n", nrow(coefs) - show))
+      cat("...", sprintf("(%d rows not shown)\n\n", nrow(coefs) - show))
     }
     cat("Number of active variables: \n")
     no_non_zero_coefs <- paste0(colSums(x$beta != 0), "/", nrow(x$beta))
@@ -681,8 +673,8 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
 
     # Add inline ...
     if (length(coefs) > show) {
-      cat("\n...", sprintf("(%d coefficients not shown)\n\n",
-                           length(coefs) - show))
+      cat("...", sprintf("(%d coefficients not shown)\n\n",
+                         length(coefs) - show))
     }
 
     cat("Number of active variables: ",
@@ -839,8 +831,8 @@ predict.spar <- function(object,
 #'               same as for \code{\link{predict.spar}} when  \code{plot_type="res_vs_fitted"}.
 #' @param nu fixed value for \eqn{\nu} when  \code{plot_along="nummod"} for
 #'  \code{plot_type = "val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res_vs_fitted"}.
-#' @param xfit data used for predictions in  \code{"res_vs_fitted"}.
-#' @param yfit data used for predictions in  \code{"res_vs_fitted"}.
+#' @param xfit data used for predictions in  \code{"res_vs_fitted"}. Needed as the \code{"spar"} objects do not store the original data.
+#' @param yfit data used for predictions in  \code{"res_vs_fitted"}.Needed as the \code{"spar"} objects do not store the original data.
 #' @param prange optional vector of length 2 for  \code{"coefs"}-plot to give
 #'  the limits of the predictors' plot range; defaults to  \code{c(1, p)}.
 #' @param coef_order optional index vector of length p for \code{plot_type = "coefs"} to give
@@ -890,6 +882,7 @@ plot.spar <- function(x,
                                              residuals=yfit-pred),
                            ggplot2::aes(x=.data$fitted,y=.data$residuals)) +
       ggplot2::geom_point() +
+      ggplot2::theme_bw() +
       ggplot2::geom_hline(yintercept = 0,linetype=2,linewidth=0.5)
   } else if (plot_type == "val_measure") {
     if (plot_along=="nu") {
@@ -904,14 +897,13 @@ plot.spar <- function(x,
       ind_min <- which.min(tmp_df$measure)
 
       res <- ggplot2::ggplot(data = tmp_df,
-                             ggplot2::aes(x=.data$nnu,y=.data$measure)) +
+                             ggplot2::aes(x=.data$nu,y=.data$measure)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
-        ggplot2::scale_x_continuous(breaks=seq(1,nrow(tmp_df)),
-                                    labels=formatC(tmp_df$nu,
-                                                   format = "e", digits = digits)) +
-        ggplot2::labs(x=expression(nu),y=spar_res$measure) +
-        ggplot2::geom_point(data=data.frame(x=tmp_df$nnu[ind_min],
+        ggplot2::theme_bw() +
+        ggplot2::labs(x=expression(nu),
+                      y=spar_res$measure) +
+        ggplot2::geom_point(data=data.frame(x=tmp_df$nu[ind_min],
                                             y=tmp_df$measure[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red") +
         ggplot2::ggtitle(paste0(tmp_title,mynummod))
@@ -929,10 +921,15 @@ plot.spar <- function(x,
                              ggplot2::aes(x=.data$nummod,y=.data$measure)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
+        ggplot2::theme_bw() +
         ggplot2::labs(y=spar_res$measure) +
-        ggplot2::geom_point(data=data.frame(x=tmp_df$nummod[ind_min],y=tmp_df$measure[ind_min]),
+        ggplot2::geom_point(data = data.frame(x = tmp_df$nummod[ind_min],
+                                              y = tmp_df$measure[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red")+
-        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3))))
+        scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
+                           minor_breaks = NULL)+
+        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),
+                                    list(txt=tmp_title,v=round(nu,3))))
     }
   } else if (plot_type=="val_numactive") {
     if (plot_along=="nu") {
@@ -945,15 +942,16 @@ plot.spar <- function(x,
       tmp_df <- spar_res$val_res[spar_res$val_res$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$measure)
 
-      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nnu,y=.data$numactive)) +
+      res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nu,y=.data$numactive)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
+        ggplot2::theme_bw() +
         # ggplot2::scale_x_continuous(breaks=seq(1,nrow(spar_res$val_res),1),labels=round(spar_res$val_res$nu,3)) +
-        ggplot2::scale_x_continuous(breaks=seq(1,nrow(spar_res$val_res),1),
-                                    labels=formatC(spar_res$val_res$nu[seq(1,nrow(spar_res$val_res),1)],
-                                                   format = "e", digits = digits)) +
+        #ggplot2::scale_x_continuous(breaks=seq(1,nrow(spar_res$val_res),1),
+        #                            labels=formatC(spar_res$val_res$nu[seq(1,nrow(spar_res$val_res),1)],
+        #                                           format = "e", digits = digits)) +
         ggplot2::labs(x=expression(nu)) +
-        ggplot2::geom_point(data=data.frame(x=tmp_df$nnu[ind_min],y=tmp_df$numactive[ind_min]),
+        ggplot2::geom_point(data=data.frame(x=tmp_df$nu[ind_min],y=tmp_df$numactive[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red")+
         ggplot2::ggtitle(paste0(tmp_title,mynummod))
     } else {
@@ -969,10 +967,13 @@ plot.spar <- function(x,
       res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nummod,y=.data$numactive)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() +
+        ggplot2::theme_bw() +
         ggplot2::geom_point(
           data=data.frame(x=tmp_df$nummod[ind_min],
                           y=tmp_df$numactive[ind_min]),
           ggplot2::aes(x = .data$x,y=.data$y),col="red")+
+        scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
+                           minor_breaks = NULL)+
         ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),
                                     list(txt=tmp_title,v=round(nu,3))))
     }
@@ -1019,6 +1020,7 @@ plot.spar <- function(x,
 #'
 #' Print summary of \code{'spar'} object
 #' @param x result of [spar] function of class  \code{'spar'}.
+#' @param digits integer digits to be printed, defaults to 4L.
 #' @param ... further arguments passed to or from other methods
 #' @return text summary
 #' @examples
@@ -1027,159 +1029,26 @@ plot.spar <- function(x,
 #'   yval = example_data$ytest, nummods=c(5, 10))
 #' print(spar_res)
 #' @export
-print.spar <- function(x, ...) {
+print.spar <- function(x, digits = 4L,...) {
   mycoef <- coef(x)
   beta <- mycoef$beta
   measure <- x$val_res$measure[mycoef$nu == x$val_res$nu &
-    mycoef$nummod == x$val_res$nummod ]
+                                 mycoef$nummod == x$val_res$nummod ]
   if (nrow(x$val_res) == 1) {
     cat(sprintf("spar object: \nValidation measure (%s) of %s reached for nummod=%d,
               nu=%s leading to %d / %d active predictors.\n",
                 x$measure,
                 formatC(measure,digits = 2,format = "e"),
-                mycoef$nummod, formatC(mycoef$nu,digits = 2,format = "e"),
+                mycoef$nummod, formatC(mycoef$nu,digits = digits,format = "e"),
                 sum(beta!=0),length(beta)))
   } else {
     cat(sprintf("spar object:\nSmallest validation measure (%s) of %s reached for nummod=%d,
               nu=%s leading to %d / %d active predictors.\n",
                 x$measure,
                 formatC(measure,digits = 2,format = "e"),
-                mycoef$nummod, formatC(mycoef$nu,digits = 2,format = "e"),
+                mycoef$nummod, formatC(mycoef$nu,digits = digits,format = "e"),
                 sum(beta!=0),length(beta)))
   }
   cat("Summary of those non-zero coefficients:\n")
   print(summary(beta[beta!=0]))
 }
-
-
-#' Extractor for Model Coefficients from \code{'coefspar'} Object
-#' @param x A `\code{coefspar}' object.
-#' @return A numeric vector or matrix of coefficients.
-#' @seealso [coef.spar], [coef.spar.cv], [print.coefspar], [summary.coefspar]
-#' @examples
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
-#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10))
-#' coefs <- coef(spar_res)
-#' get_coef(coefs)
-#
-#' @export
-get_coef <- function(x) {
-  stopifnot(inherits(x, "coefspar"))
-  x$beta
-}
-
-#' Extractor for Model Intercept from \code{'coefspar'} Object
-#' @param x A `\code{coefspar}' object.
-#' @return Intercept (numeric or vector).
-#' @examples
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
-#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10))
-#' coefs <- coef(spar_res)
-#' get_coef(coefs)
-#' @export
-get_intercept <- function(x) {
-  stopifnot(inherits(x, "coefspar"))
-  x$intercept
-}
-
-#' Extractor of Specific Model from \code{'spar'} and \code{'spar.cv'} Object
-#'
-#' @param object A fitted '\code{spar}' or '\code{spar.cv}'  model
-#' @param opt_par One of "best", "1se"
-#'
-#' @return A '\code{spar}'  or '\code{spar.cv}'  object where the beta and intercept elements are
-#'  the ones which correspond to the best or the 1se model.
-#' @examples
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
-#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, screencoef = screen_cor(),
-#'   rp = rp_gaussian(), nummods=c(5, 10))
-#' best_model <- get_model(spar_res, opt_par = "best")
-#' \donttest{
-#' spar_cv <- spar.cv(example_data$x, example_data$y,
-#'   screencoef = screen_cor(),
-#'   rp = rp_gaussian(), nummods = c(5, 10), nfolds = 4L)
-#' best_model_cv <- get_model(spar_cv, opt_par = "best")
-#' onese_model_cv <- get_model(spar_cv, opt_par = "1se")
-#' }
-#' @export
-get_model <- function(object, opt_par = c("best", "1se")) {
-  stopifnot(inherits(object, "spar") || inherits(object, "spar.cv"))
-  opt_nunum <- match.arg(opt_par)
-  if (opt_nunum == "1se" & inherits(object, "spar")) {
-    stop("1se model is not available for spar objects, use spar.cv instead.")
-  }
-  # best
-  if(inherits(object, "spar.cv")) {
-    val_table <- compute_val_summary(object$val_res)
-    best_ind <- which.min(val_table$mean_measure)
-  }
-  if(inherits(object, "spar")) {
-    val_table <- object$val_res
-    best_ind <- which.min(val_table$measure)
-  }
-
-
-  parbest <- val_table[best_ind,]
-
-  # 1se model
-  if (inherits(object, "spar.cv")) {
-    allowed_ind <- val_table$mean_measure <
-      (val_table$mean_measure + val_table$sd_measure)[best_ind]
-
-    ind_1cv <- which.min(val_table$mean_numactive[allowed_ind])
-    par1se <- val_table[allowed_ind,][ind_1cv,]
-  }
-
-  nummod <- ifelse(opt_nunum == "best", parbest$nummod,
-                   par1se$nummod)
-  nu <- ifelse(opt_nunum == "best", parbest$nu, par1se$nu)
-
-
-  final_coef <- object$betas[, seq_len(nummod), drop=FALSE]
-  final_coef[abs(final_coef) < nu] <- 0
-  intercepts <- object$intercepts[seq_len(nummod)]
-
-  object$betas <- final_coef
-  object$intercepts <- intercepts
-  object$val_res <- object$val_res[
-    object$val_res$nummod == nummod & object$val_res$nu == nu, ,
-    drop = FALSE]
-
-  return(object)
-}
-
-#' Extractor for (Cross-)Validation Measure from '\code{spar}' or '\code{spar.cv}' Object
-#'
-#' @param object A fitted '\code{spar}' or '\code{spar.cv}'  model
-#' @return data.frame containing the (cross-)validation measure for the considered threshold and number of model combinations.
-#' For '\code{spar}' objects it contains information about the measure  calculated on the validation set (or on the training sample if
-#' xval and yval are missing) and the number of active variables. For '\code{spar.cv}' objects it contains information
-#' on the average measure obtained across folds together with the standard deviation across the folds and the average number of active variables.
-#' the \code{nfolds} of the training set.
-#' @examples
-#' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
-#' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
-#'   yval = example_data$ytest, nummods=c(5, 10))
-#' get_measure(spar_res)
-#'
-#' @seealso [spar], [spar.cv], [get_model]
-#' @export
-get_measure <- function(object) {
-  stopifnot(inherits(object, "spar") || inherits(object, "spar.cv"))
-  if(inherits(object, "spar.cv")) {
-    val_table <- compute_val_summary(object$val_res)
-    colnames(val_table)[4] <- paste0("mean_", object$measure)
-    colnames(val_table)[5] <- paste0("sd_", object$measure)
-    colnames(val_table)[6] <- "mean_numactive"
-  }
-  if(inherits(object, "spar")) {
-    val_table <- object$val_res
-    colnames(val_table)[4] <- object$measure
-    colnames(val_table)[5] <- "numactive"
-  }
-  val_table[, !(colnames(val_table) %in% c("nnu"))]
-}
-

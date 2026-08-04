@@ -4,10 +4,12 @@
 \alias{print.spar.cv}
 \title{Print Method for \code{'spar.cv'} Object}
 \usage{
-\method{print}{spar.cv}(x, ...)
+\method{print}{spar.cv}(x, digits = 4L, ...)
 }
 \arguments{
 \item{x}{result of  \link{spar.cv} function of class  \code{'spar.cv'}.}
+
+\item{digits}{integer digits to be printed, defaults to 4L.}
 
 \item{...}{further arguments passed to or from other methods}
 }
@@ -19,7 +21,7 @@ Print summary of \code{'spar.cv'} object
 }
 \examples{
 \donttest{
-example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+example_data <- simulate_spareg_data(n = 80, p = 200, ntest = 100)
 spar_res <- spareg.cv(example_data$x, example_data$y, nfolds = 3L,
   screencoef = screen_cor(), rp = rp_gaussian(), nummods = c(5, 10))
 print(spar_res)

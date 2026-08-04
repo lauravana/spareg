@@ -46,13 +46,22 @@ Defaults to mean aggregation.}
 Vector of predictions
 }
 \description{
-Predict responses for new predictors from \code{'spar.cv'} object
+Predict responses for new predictors from \code{'spar.cv'} object.
+Only allowed if \code{fast_fit = "fix_rpm_and_inds"} is used when calling \code{spar.cv}.
+In this case the ensemble obtained on the whole data is used for the
+combination of threshold and number of models using the best or the 1se identified through cross-validation.
+Otherwise predictions cannot be generated without refitting on whole data with
+best or 1se parameters. To be able to generate predictions in case \code{fast_fit = "fix_rpm"}
+or \code{fast_fit = "none"}, use \code{spar()} to refit with the desired (nu, M) combination.
 }
 \examples{
 \donttest{
-example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
+example_data <- simulate_spareg_data(n = 80, p = 200, ntest = 100)
 spar_res <- spar.cv(example_data$x, example_data$y, nfolds = 3L,
   rp = rp_gaussian(), nummods = c(5, 10))
 pred <- predict(spar_res, example_data$x)
 }
+}
+\seealso{
+\link{coef.spar.cv}, \link{get_model.spar.cv}
 }
