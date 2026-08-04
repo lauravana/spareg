@@ -197,10 +197,10 @@ model_glm <- function(y, z, object) {
                          return(ols_fun_corrected(y, z))
                        })
   } else {
-    glm_res <- do.call(function(...) glm(y ~ z, ...),
+    glm_res <- do.call(function(...) glm.fit(y = y, x = cbind(1, z), ...),
                        object$control)
-    intercept <- coef(glm_res)[1]
-    gammas <- coef(glm_res)[-1]
+    intercept <- glm_res$coefficients[1]
+    gammas <- glm_res$coefficients[-1]
   }
 
   list(gammas = gammas, intercept = intercept)
