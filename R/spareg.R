@@ -227,7 +227,6 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
   } else {
     mar_inds <- scr_inds <- seq_len(n)
   }
-
   if (is.null(attr(screencoef, "nscreen"))) {
     if (2 * n > p) {
       message("Screening is not performed by default, as 2 * n, the default number of screened variables, is larger than the number of predictors. For performing screening, adjust nscreen in screen_*().")
@@ -238,15 +237,14 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
   }
 
   mslow <- attr(rp, "mslow")
-  if (is.null(mslow)) mslow <- ceiling(log(p))
+  if (is.null(mslow)) mslow <- attr(rp, "mslow") <- ceiling(log(p))
   msup <- attr(rp, "msup")
-  if (is.null(msup)) msup <- ceiling(n/2)
+  if (is.null(msup)) msup <- attr(rp, "msup") <- ceiling(n/2)
   if (!(msup <= nscreen)) {
     message("Provided upper bound on goal dimension of random projection (msup) or its default value (n/2) is larger than nscreen. Setting msup to nscreen.")
     msup <- nscreen
   }
   stopifnot("Provided lower bound on goal dimension of random projection (mslow) or its default value (log(p)) is larger than upper bound (msup)." = mslow <= msup)
-
   # Perform screening
   if (nscreen < p) {
     scr_coef <- screencoef$generate_fun(object = screencoef, x = z[scr_inds, ], y = yz[scr_inds, ])
