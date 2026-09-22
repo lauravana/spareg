@@ -1128,7 +1128,7 @@ An object of class `\code{sparmodel}' is a list with elements:
 \begin{itemize}
 \item an optional character \code{name} for printing;
 %
-\item  \code{model_fun()} -- a function used to generate the coefficients
+\item  \code{generate_fun()} -- a function used to generate the coefficients
 and intercept value for each model in the ensemble.
 %
 \item \code{update_fun()} -- optional function to modify the \class{sparmodel}
@@ -1497,7 +1497,7 @@ rbind("cannings" = get_measure(spar_cs), "cw" = get_measure(spar_cw))
 Finally, we extend the package by implementing a robust GLM as a marginal model
 using the package \pkg{robustbase} \citep{pkg:robustbase}.
 
-We define a \code{model_fun()} that uses \code{robustbase::lmrob()} for Gaussian
+We define a \code{generate_fun()} that uses \code{robustbase::lmrob()} for Gaussian
 models with identity link and \code{robustbase::glmrob()}
 for other family-link combinations.
 The function has arguments are \code{y} (response vector),
@@ -1522,7 +1522,7 @@ Function \code{spar_glmrob()} that builds the `\code{sparmodel}'
 object can be created by:
 %
 <<spar_glmrob>>=
-spar_glmrob <- constructor_sparmodel(model_fun = model_glmrob)
+spar_glmrob <- constructor_sparmodel(generate_fun = model_glmrob)
 @
 %
 We demonstrate this on simulated Poisson data with 25\% contaminated predictors:

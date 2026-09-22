@@ -17,7 +17,7 @@ object of class \code{'sparmodel'} which is a list with elements
 \itemize{
 \item \code{name} (character, optional, used for printing)
 \item \code{control} (list of controls passed as an argument)
-\item \code{model_fun} function for estimating the model coefficients and the intercept.
+\item \code{generate_fun} function for estimating the model coefficients and the intercept.
 This function should have arguments \code{y}, vector of standardized responses,
 \code{z}, a matrix of projected predictors in each marginal model, and
 \code{object}, which is a \code{'sparmodel'} object. Returns a list with

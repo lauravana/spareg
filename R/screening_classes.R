@@ -134,7 +134,7 @@ generate_scrcoef_marglik <- function(y, x, object) {
 #' @export
 #'
 screen_marglik <- constructor_screencoef(
-  "screen_marglik",
+  name = "screen_marglik",
   generate_fun = generate_scrcoef_marglik)
 
 
@@ -206,7 +206,7 @@ generate_scrcoef_cor <- function(y, x, object) {
 #' @export
 #'
 screen_cor <- constructor_screencoef(
-  "screen_cor",
+  name = "screen_cor",
   generate_fun = generate_scrcoef_cor)
 
 #'
@@ -311,7 +311,7 @@ generate_scrcoef_glmnet <- function(y, x, object) {
 #' @export
 #'
 screen_glmnet <- constructor_screencoef(
-  "screen_glmnet",
+  name = "screen_glmnet",
   generate_fun = generate_scrcoef_glmnet)
 
 

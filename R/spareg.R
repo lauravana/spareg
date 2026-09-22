@@ -325,7 +325,7 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
 
     # Marginal model
     znew <- Matrix::tcrossprod(z[mar_inds, ind_use], RPM)
-    res <- model$model_fun(y = yz[mar_inds], z = znew, object = model)
+    res <- model$generate_fun(y = yz[mar_inds], z = znew, object = model)
     out$intercepts <- res$intercept
     out$betas_std_m <- as(numeric(actual_p), "sparseMatrix")
     out$betas_std_m[ind_use] <- crossprod(RPM, res$gammas)

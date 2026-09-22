@@ -1,7 +1,7 @@
 #' Constructor Function for Building \code{'sparmodel'} Object
 #'
 #' Creates an object of class \code{'sparmodel'} using arguments passed by user.
-#' @param model_fun function for estimating the marginal models which returns the
+#' @param generate_fun function for estimating the marginal models which returns the
 #     intercept and the vector of coefficients. This
 #'    function should have arguments  and   \code{y} (vector of responses -- standardized
 #'    for Gaussian family), \code{z} (the matrix of projected predictors) and a
@@ -27,29 +27,29 @@
 #'   list(gammas = gammas, intercept = intercept)
 #' }
 #' spar_glmrob <- constructor_sparmodel(
-#'   model_fun = model_glmrob,name = "glmrob")
+#'   generate_fun = model_glmrob,name = "glmrob")
 #' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
 #'   yval = example_data$ytest,
 #'   model = spar_glmrob())
 #' spar_res
 #' @export
-constructor_sparmodel <- function(model_fun,
+constructor_sparmodel <- function(generate_fun,
                                   name = NULL,
                                   update_fun = NULL) {
   ## Checks
-  args_generate_fun <- formals(model_fun)
-  stopifnot("Function model_fun should contain three arguments: y, z and an object
+  args_generate_fun <- formals(generate_fun)
+  stopifnot("Function generate_fun should contain three arguments: y, z and an object
             of class \"sparmodel\"." =
               length(args_generate_fun) == 3)
-  stopifnot("Function model_fun should contain argument 'y', the vector of responses." =
+  stopifnot("Function generate_fun should contain argument 'y', the vector of responses." =
               "y" %in% names(args_generate_fun))
-  stopifnot("Function model_fun should contain argument 'z', the matrix of reduced predictors." =
+  stopifnot("Function generate_fun should contain argument 'z', the matrix of reduced predictors." =
               "z" %in% names(args_generate_fun))
   ## Function to return
   function(..., control = list()) {
     out <- list(name = name,
-                model_fun = model_fun,
+                generate_fun = generate_fun,
                 update_fun = update_fun,
                 control = control)
     attr <- list2(...)
@@ -70,7 +70,7 @@ constructor_sparmodel <- function(model_fun,
 #' \itemize{
 #'  \item \code{name} (character, optional, used for printing)
 #'  \item \code{control} (list of controls passed as an argument)
-#'  \item \code{model_fun}  for generating the screening coefficient.
+#'  \item \code{generate_fun}  for generating the screening coefficient.
 #'   This function should have arguments \code{y}, vector of standardized responses,
 #'   \code{z}, a matrix of projected predictors in each marginal model, and
 #'   \code{object}, which is a \code{'sparmodel'} object. Returns a list with
@@ -103,7 +103,7 @@ spar_glmnet <- function(..., control = list()) {
     control$alpha <- 0
   }
   out <-  list(name = "glmnet",
-               model_fun = model_glmnet,
+               generate_fun = model_glmnet,
                update_fun = update_sparmodel_glmnet,
                control = control)
   attr <- list2(...)
@@ -160,7 +160,7 @@ model_glmnet <- function(y, z, object) {
 #' \itemize{
 #'  \item \code{name} (character, optional, used for printing)
 #'  \item \code{control} (list of controls passed as an argument)
-#'  \item \code{model_fun} function for estimating the model coefficients and the intercept.
+#'  \item \code{generate_fun} function for estimating the model coefficients and the intercept.
 #'   This function should have arguments \code{y}, vector of standardized responses,
 #'   \code{z}, a matrix of projected predictors in each marginal model, and
 #'   \code{object}, which is a \code{'sparmodel'} object. Returns a list with
@@ -178,7 +178,7 @@ model_glmnet <- function(y, z, object) {
 #'
 spar_glm <- function(..., control = list()) {
   out <-  list(name = "glm",
-               model_fun = model_glm,
+               generate_fun = model_glm,
                control = control)
   attr <- list2(...)
   attributes(out) <- c(attributes(out), attr)

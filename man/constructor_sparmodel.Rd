@@ -4,10 +4,10 @@
 \alias{constructor_sparmodel}
 \title{Constructor Function for Building \code{'sparmodel'} Object}
 \usage{
-constructor_sparmodel(model_fun, name = NULL, update_fun = NULL)
+constructor_sparmodel(generate_fun, name = NULL, update_fun = NULL)
 }
 \arguments{
-\item{model_fun}{function for estimating the marginal models which returns the
+\item{generate_fun}{function for estimating the marginal models which returns the
 function should have arguments  and   \code{y} (vector of responses -- standardized
 for Gaussian family), \code{z} (the matrix of projected predictors) and a
 \code{'sparmodel'} \code{object}.}
@@ -41,7 +41,7 @@ model_glmrob <- function(y, z, object) {
   list(gammas = gammas, intercept = intercept)
 }
 spar_glmrob <- constructor_sparmodel(
-  model_fun = model_glmrob,name = "glmrob")
+  generate_fun = model_glmrob,name = "glmrob")
 example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
   yval = example_data$ytest,

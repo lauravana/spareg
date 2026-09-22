@@ -431,5 +431,5 @@ print.randomprojection <- function(x, ...) {
   cat("* Upper bound on goal dimension m:",
       ifelse(is.null(attr(x, "msup")),
              "not provided, will default to n/2.",
-             attr(x, "mslow")), "\n")
+             attr(x, "msup")), "\n")
 }
