@@ -1414,35 +1414,33 @@ The performance is evaluated using deviance on the test set. Default values can 
 % algorithms). This modified family is
 % added to the list of controls as \code{fit\_family}.
 <<update_cannings>>=
-update_rp_cannings <- function(...) {
-  args <- rlang::list2(...)
-  if (is.null(args$rp$control$alpha)) args$rp$control$alpha <- 0
-  if (is.null(args$rp$control$B2))  args$rp$control$B2 <- 50
-  if (is.null(args$rp$control$xi)) args$rp$control$xi <- 0.25
-  if (is.null(args$rp$control$family)) args$rp$control$family <-
-      args$family
-  args$rp
+update_rp_cannings <- function(object, x, y, family, ...) {
+  if (is.null(object$control$alpha)) object$control$alpha <- 0
+  if (is.null(object$control$B2))  object$control$B2 <- 50
+  if (is.null(object$control$xi)) object$control$xi <- 0.25
+  if (is.null(object$control$family)) object$control$family <- family
+  object
 }
 @
 %
 Next we specify the function for generating the random projection.
 <<generate_cannings>>=
-generate_cannings <- function(rp, m, included_vector, x, y) {
+generate_cannings <- function(object, m, included_vector, x, y) {
   xs <- x[, included_vector]; n <- nrow(x);  p <- ncol(xs)
-  id_test <- sample(n, size = n * rp$control$xi)
+  id_test <- sample(n, size = n * object$control$xi)
   xtrain <- xs[-id_test, ];  xtest <- xs[id_test,]
   ytrain <- y[-id_test];  ytest <- y[id_test]
   control_glm <-
-    rp$control[names(rp$control) %in% names(formals(stats::glm.fit))]
+    object$control[names(object$control) %in% names(formals(stats::glm.fit))]
   best_val <- Inf
-  for (b in seq_len(rp$control$B2)) {
+  for (b in seq_len(object$control$B2)) {
     RM <- simulate_haar(m, p)
     xrp <- tcrossprod(xtrain, RM)
     mod <- do.call(function(...)
       glm.fit(x = cbind(1, xrp), y = ytrain, ...), control_glm)
     eta_test <- (cbind(1, tcrossprod(xtest, RM)) %*% coef(mod))
-    pred <- rp$control$family$linkinv(eta_test)
-    out_dev <- sum(rp$control$family$dev.resid(ytest, pred, wt = 1))
+    pred <- object$control$family$linkinv(eta_test)
+    out_dev <- sum(object$control$family$dev.resid(ytest, pred, wt = 1))
     if (out_dev < best_val) {
       best_val <- out_dev; best_RM <- RM
     }

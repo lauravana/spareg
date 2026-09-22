@@ -4,7 +4,7 @@
 \alias{generate_cw}
 \title{Sparse Embedding Matrix}
 \usage{
-generate_cw(rp, m, included_vector, x = NULL, y = NULL)
+generate_cw(object, m, included_vector, x = NULL, y = NULL)
 }
 \arguments{
 \item{m}{goal dimension, which will be randomly sampled in the SPAR algorithm}

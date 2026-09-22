@@ -264,9 +264,9 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
   attr(screencoef, "importance") <- scr_coef
 
   # Update RP -----
-  thiscall <- match.call(expand.dots = TRUE)
-  thiscall[["screencoef"]] <- screencoef
-  rp <- eval.parent(as.call(c(list(rp$update_fun), as.list(thiscall)[-1])))
+  formal_names <- names(formals(fit_spar_models))
+  all_args <- mget(formal_names, envir = environment())
+  rp <- do.call(rp$update_fun, c(object = list(rp),all_args))
 
   max_num_mod <- max(nummods)
 
@@ -317,9 +317,12 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
     } else {
       RPM <- RPMs[[i]]
       if (drawinds) RPM <- RPM[, c(ind_use)]
-      if (!is.null(rp$update_rpm_w_data)) {
-        RPM <- rp$update_rpm_w_data(rpm = RPM, rp = rp, included_vector = ind_use)
-      }
+      ## Update RPM w data
+      RPM <- do.call(rp$update_rpm_w_data,
+                     c(rpm = list(RPM),
+                       object = list(rp),
+                       included_vector = list(ind_use),
+                       all_args))
     }
     out$RPMs <- RPM
 

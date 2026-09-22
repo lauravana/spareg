@@ -4,10 +4,10 @@
 \alias{generate_gaussian}
 \title{Gaussian Random Projection Matrix}
 \usage{
-generate_gaussian(rp, m, included_vector, x = NULL, y = NULL)
+generate_gaussian(object, m, included_vector, x = NULL, y = NULL)
 }
 \arguments{
-\item{rp}{object of class  \code{'randomprojection'}}
+\item{object}{object of class  \code{'randomprojection'}}
 
 \item{m}{goal dimension, which will be randomly sampled in the SPAR algorithm}
 
