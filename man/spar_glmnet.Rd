@@ -25,7 +25,11 @@ two elements: \code{gammas} which is the vector of regression coefficients
 for the projected predictors and \code{intercept} which is the intercept
 of the model.
 \item \code{update_fun}  optional function for updating the \code{'sparmodel'}
-object before the start of the algorithm. For
+object before the start of the algorithm.This
+function should have arguments \code{object}, which is a \code{'sparmodel'}
+object, \code{x} (the matrix of predictors), \code{y} (the vector of responses),
+\code{family} and \code{...}, whereas all other potentially relevant arguments of \code{spar()}
+are passed internally to this function through \code{...}. For
 \code{spar_glmnet()} this function manipulates the
 \code{'family'} object for compatibility with
 \link[glmnet]{glmnet}. I.e., In the case of families Gaussian,

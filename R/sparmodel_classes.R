@@ -1,3 +1,9 @@
+#' @keywords internal
+update_sparmodel_identity <- function(object, x, y, family, ...) {
+  if (is.null(object$control$family)) object$control$family <- family
+  object
+}
+
 #' Constructor Function for Building \code{'sparmodel'} Object
 #'
 #' Creates an object of class \code{'sparmodel'} using arguments passed by user.
@@ -34,10 +40,9 @@
 #'   model = spar_glmrob())
 #' spar_res
 #' @export
-constructor_sparmodel <- function(generate_fun,
-                                  name = NULL,
-                                  update_fun = NULL) {
-  ## Checks
+constructor_sparmodel <- function(name = NULL, generate_fun,
+                                  update_fun = update_sparmodel_identity) {
+  ## Checks ----
   args_generate_fun <- formals(generate_fun)
   stopifnot("Function generate_fun should contain three arguments: y, z and an object
             of class \"sparmodel\"." =
@@ -46,7 +51,9 @@ constructor_sparmodel <- function(generate_fun,
               "y" %in% names(args_generate_fun))
   stopifnot("Function generate_fun should contain argument 'z', the matrix of reduced predictors." =
               "z" %in% names(args_generate_fun))
-  ## Function to return
+  stopifnot("Function update_fun should have as argument object, x, y, family, ..." = names(formals(update_fun)) %in% c("object","x", "y", "family", "..."))
+
+  ## Function to return  ----
   function(..., control = list()) {
     out <- list(name = name,
                 generate_fun = generate_fun,
@@ -78,7 +85,11 @@ constructor_sparmodel <- function(generate_fun,
 #'    for the projected predictors and \code{intercept} which is the intercept
 #'    of the model.
 #'  \item \code{update_fun}  optional function for updating the \code{'sparmodel'}
-#'   object before the start of the algorithm. For
+#'   object before the start of the algorithm.This
+#'   function should have arguments \code{object}, which is a \code{'sparmodel'}
+#'   object, `x` (the matrix of predictors), `y` (the vector of responses),
+#'   `family` and `...`, whereas all other potentially relevant arguments of `spar()`
+#'    are passed internally to this function through `...`. For
 #'    \code{spar_glmnet()} this function manipulates the
 #'     \code{'family'} object for compatibility with
 #'    \link[glmnet]{glmnet}. I.e., In the case of families Gaussian,
@@ -98,10 +109,6 @@ constructor_sparmodel <- function(generate_fun,
 #' @export
 #'
 spar_glmnet <- function(..., control = list()) {
-  ## Set defaults
-  if (is.null(control$alpha)) {
-    control$alpha <- 0
-  }
   out <-  list(name = "glmnet",
                generate_fun = model_glmnet,
                update_fun = update_sparmodel_glmnet,
@@ -121,20 +128,32 @@ ols_fun_corrected <- function(y, z) {
   solve(ZtZ, crossprod(z,y))
 }
 
-update_sparmodel_glmnet <- function(object) {
-  family <- object$control$family
-  if (family$family == "gaussian" & family$link=="identity") {
+
+
+update_sparmodel_glmnet <- function(object, x, y, family, ...) {
+  # Family compatibility with glmnet
+  if (!is.null(object$control$family)) {
+    fam <- object$control$family
+  } else {
+    fam <- family
+  }
+  if (fam$family == "gaussian" & fam$link=="identity") {
     fit_family <- "gaussian"
   } else {
-    if (family$family=="binomial" & family$link=="logit") {
+    if (fam$family=="binomial" & fam$link=="logit") {
       fit_family <- "binomial"
-    } else if (family$family=="poisson" & family$link=="log") {
+    } else if (fam$family=="poisson" & fam$link=="log") {
       fit_family <- "poisson"
     } else {
-      fit_family <- family
+      fit_family <- fam
     }
   }
-  attr(object, "family") <- fit_family
+  object$control$family <- fit_family
+  ## Set defaults
+  if (is.null(object$control$alpha)) {
+    object$control$alpha <- 0
+  }
+  ## Return
   object
 }
 
@@ -179,6 +198,7 @@ model_glmnet <- function(y, z, object) {
 spar_glm <- function(..., control = list()) {
   out <-  list(name = "glm",
                generate_fun = model_glm,
+               update_fun = update_sparmodel_identity,
                control = control)
   attr <- list2(...)
   attributes(out) <- c(attributes(out), attr)

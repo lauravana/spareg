@@ -175,16 +175,6 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
   # Scaling the x matrix -----
   xcenter <- colMeans(x)
   xscale <- apply(x, 2, sd)
-
-  if (!is.null(seed)) {
-    if (parallel && requireNamespace("doRNG", quietly = TRUE)) {
-      registerDoRNG <- getNamespace("doRNG")$registerDoRNG
-      registerDoRNG(seed = seed)
-    } else {
-      set.seed(seed)
-    }
-  }
-
   if (is.null(inds) || is.null(RPMs)) {
     actual_p <- sum(xscale > 0)
     z <- scale(x[, xscale > 0], center = xcenter[xscale > 0], scale = xscale[xscale > 0])
@@ -193,7 +183,6 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
     xscale[xscale == 0] <- 1
     z <- scale(x, center = xcenter, scale = xscale)
   }
-
   # Scaling the y vector ----
   if (family$family == "gaussian" && family$link == "identity") {
     ycenter <- mean(y)
@@ -204,17 +193,35 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
   }
   yz <- scale(y, center = ycenter, scale = yscale)
 
-  # Setup model ----
-  if (is.null(model$control$family)) {
-    if (is.null(attr(model, "family"))) {
-      model$control$family <- family
+  # Argument names ----
+  formal_names <- names(formals(fit_spar_models))
+  all_args <- mget(formal_names, envir = environment())
+
+  # Set up seed ----
+  if (!is.null(seed)) {
+    if (parallel && requireNamespace("doRNG", quietly = TRUE)) {
+      registerDoRNG <- getNamespace("doRNG")$registerDoRNG
+      registerDoRNG(seed = seed)
     } else {
-      model$control$family <- attr(model, "family")
+      set.seed(seed)
     }
   }
-  if (!is.null(model$update_fun)) {
-    model <- model$update_fun(model)
-  }
+
+
+
+
+  # Update model object ----
+  # if (is.null(model$control$family)) {
+  #   if (is.null(attr(model, "family"))) {
+  #     model$control$family <- family
+  #   } else {
+  #     model$control$family <- attr(model, "family")
+  #   }
+  # }
+  # if (!is.null(model$update_fun)) {
+  model <- do.call(model$update_fun,
+                   c(object = list(model), all_args))
+  #}
 
   # Setup screening ----
   family_str <- family_string <- paste0(family$family, "(", family$link, ")")
@@ -264,8 +271,6 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
   attr(screencoef, "importance") <- scr_coef
 
   # Update RP -----
-  formal_names <- names(formals(fit_spar_models))
-  all_args <- mget(formal_names, envir = environment())
   rp <- do.call(rp$update_fun, c(object = list(rp),all_args))
 
   max_num_mod <- max(nummods)

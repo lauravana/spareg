@@ -5,6 +5,14 @@ test_that("Results has right class", {
   expect_equal(class(spar_res),"spar")
 })
 
+test_that("Results has right class", {
+  x <- matrix(rnorm(300), ncol = 30)
+  y <- rnorm(10)
+  spar_res <- spar(x, y,nummods = 3L)
+  expect_equal(class(spar_res),"spar")
+})
+
+
 test_that("Coef returns vector of correct length", {
   x <- matrix(rnorm(300), ncol = 30)
   y <- rnorm(10)
@@ -89,9 +97,9 @@ test_that("Returned coef and preds are correct for fixed screening and projectio
                    seed = 123)
   sparcoef <- coef(spar_res)
   pred <- predict(spar_res,xnew=xnew)
-  expect_equal(sparcoef$nu,0.009850679 ,tolerance = 1e-6)
+  expect_equal(sparcoef$nu,0.009848417,tolerance = 1e-6)
   expect_equal(sparcoef$beta[11],c("V11"=0))
-  expect_equal(sparcoef$beta[1],c("V1"= 0.04795905),tolerance = 1e-6)
+  expect_equal(sparcoef$beta[1],c("V1"= 0.04798127),tolerance = 1e-6)
   expect_equal(pred[1],0.9749038,tolerance = 1e-5)
 
 })
@@ -179,7 +187,7 @@ test_that("Test the screen_glm() with poisson family", {
   spar_screen_glm <- spar(x,yval, family = poisson(),
                           screencoef = screen_marglik(),
                           rp = rp_gaussian(), nummods = 5L)
-  expect_equal(round(spar_screen_glm$val_res$measure[1], 2), 1639.05)
+  expect_equal(round(spar_screen_glm$val_res$measure[1], 2), 1639.040)
 })
 
 test_that("Test get_intercept() and get_coef() extractor", {

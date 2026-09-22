@@ -4,15 +4,19 @@
 \alias{constructor_sparmodel}
 \title{Constructor Function for Building \code{'sparmodel'} Object}
 \usage{
-constructor_sparmodel(generate_fun, name = NULL, update_fun = NULL)
+constructor_sparmodel(
+  name = NULL,
+  generate_fun,
+  update_fun = update_sparmodel_identity
+)
 }
 \arguments{
+\item{name}{optional string describing the model employed. This is used for printing.}
+
 \item{generate_fun}{function for estimating the marginal models which returns the
 function should have arguments  and   \code{y} (vector of responses -- standardized
 for Gaussian family), \code{z} (the matrix of projected predictors) and a
 \code{'sparmodel'} \code{object}.}
-
-\item{name}{optional string describing the model employed. This is used for printing.}
 
 \item{update_fun}{optional function for updating the \code{'sparmodel'} object
 before the
