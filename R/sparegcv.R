@@ -214,7 +214,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
     fitted_objects = all_fitted_objects,
     nus = nus,
     nummods = nummods,
-    family = paste0(family$family, "(", family$link, ")"),
+    family = family,
     measure = measure,
     avg_type = avg_type,
     nfolds = nfolds,
@@ -764,7 +764,7 @@ predict.spar.cv <- function(object,
   aggregate <- match.arg(aggregate)
   opt_par <- match.arg(opt_par)
 
-  object$family <- eval(parse(text = object$family))
+  # object$family <- eval(parse(text = object$family))
 
   coefs_avg <- coef(object, nummod, nu, opt_par = opt_par,
                     aggregate = aggregate)

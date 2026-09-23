@@ -1,5 +1,6 @@
 example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100, seed = 1234)
 
+# Tests expecting success ----
 test_that("Results has right class", {
   x <- data.frame(matrix(rnorm(300), ncol = 30))
   y <- rnorm(10)
@@ -193,10 +194,10 @@ test_that("Test get_measure() extractor and predictions", {
   b <- get_model(spar_res, "1se")
   expect_equal(nrow(get_measure(a)), 1)
   expect_equal(nrow(get_measure(b)), 1)
-  expect_equal(get_measure(a)$deviance, 270.6122, tolerance = 1e-5)
-  expect_equal(get_measure(a)$numactive, 311, tolerance = 1e-5)
-  expect_equal(get_measure(b)$deviance, 912.6838, tolerance = 1e-5)
-  expect_equal(get_measure(b)$numactive, 253, tolerance = 1e-5)
+  expect_equal(get_measure(a)$deviance, 147.2631, tolerance = 1e-5)
+  expect_equal(get_measure(a)$numactive, 327, tolerance = 1e-5)
+  expect_equal(get_measure(b)$deviance, 1635.645, tolerance = 1e-5)
+  expect_equal(get_measure(b)$numactive, 213, tolerance = 1e-5)
   xnew <- example_data$xtest
   pred  <- predict(spar_res,xnew = xnew)
   pred2 <- predict(spar_res,xnew = xnew, opt_par = "best")
@@ -220,7 +221,7 @@ test_that("Plots work well for case fast_fit = fix_rpm_and_inds", {
   expect_s3_class(plot(spar_res, plot_type = "val_measure", opt_par = "1se"), "ggplot")
   expect_s3_class(plot(spar_res, plot_type = "coefs"), "ggplot")
 })
-# Tests expecting errors
+# Tests expecting errors ----
 
 test_that("Get errors for input x not data.frame or matrix", {
   x <- list("1"=1:10,"2"=(-1)^(1:12),"3"=rnorm(12),

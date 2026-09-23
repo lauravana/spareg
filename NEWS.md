@@ -7,6 +7,7 @@
     - Fixing only the random projections in advance -- fast_fit = "fix_rpm".
     - Sampling both screening indicators and random projections in each fold of the full cross-validation -- fast_fit = "none".
 * Restricted plot.spar.cv, coef.spar.cv, predict.spar.cv to be used only for fast_fit = "fix_rpm_and_inds".
+* Improved consistency across the S3 classes randomporjection, screencoef and sparmodel. They all now rely on an update function and a generate function.
 
 # spareg 1.1.1
 

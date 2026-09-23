@@ -4,15 +4,24 @@
 \alias{constructor_screencoef}
 \title{Constructor Function for Building \code{'screencoef'} Objects}
 \usage{
-constructor_screencoef(generate_fun, name = NULL)
+constructor_screencoef(
+  name = NULL,
+  generate_fun,
+  update_fun = update_screen_default
+)
 }
 \arguments{
+\item{name}{character}
+
 \item{generate_fun}{function for generating the screening coefficient. This
 function should have arguments  and   \code{y} (vector of responses -- standardized
 for Gaussian family), \code{x} (the matrix of standardized predictors) and a
 \code{'screencoef'} object.}
 
-\item{name}{character}
+\item{update_fun}{optional function for updating the \code{'screencoef'} object with
+information from the data passed to \code{spar()}. This
+function should have arguments \code{object}, which is a \code{'randomprojection'}
+object, \code{x}, y\verb{(the predictor matrix and response vector supplied by}spar()\verb{. Both have already been standardized by }spar()\verb{), }family\code{and}...\verb{, whereas all other potentially relevant arguments of }spar()\verb{are passed internally to this function through}...\verb{. If }update_fun` is not provided, the object remains unchanged.}
 }
 \value{
 a function which in turn creates an object of class \code{'screencoef'}
@@ -29,11 +38,11 @@ Creates an object class \code{'screencoef'} using arguments passed by user.
 }
 \examples{
 generate_scr_sirs <- function(y, x, object) {
-  res_screen <- do.call(function(...)
-    VariableScreening::screenIID(x, y, ...),
-    object$control)
-  coefs <- res_screen$measurement
-  coefs
+  ctrl <- object$control[names(object$control) \%in\%
+                          names(formals(VariableScreening::screenIID))]
+ res_screen <- do.call(function(...)
+   VariableScreening::screenIID(x, y, ...), ctrl)
+ res_screen$measurement
 }
 screen_sirs <- constructor_screencoef("screen_sirs",
   generate_fun = generate_scr_sirs)

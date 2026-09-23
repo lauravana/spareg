@@ -1,11 +1,5 @@
 #' @keywords internal
-update_rp <- function(object, x, y, family, ...) {
-  # args <- list2(...)
-  # if (is.null(attr(args$rp, "family"))) {
-  #   family_string <- paste0(args$family$family, "(", args$family$link, ")")
-  #   attr(args$rp, "family_string") <- family_string
-  # }
-  # args$rp
+update_rp_default <- function(object, x, y, family, ...) {
   family_string <- paste0(family$family, "(", family$link, ")")
   attr(object, "family_string") <- family_string
   object
@@ -30,7 +24,8 @@ update_rpm_identity <- function(rpm, object, included_vector, x, y, family, ...)
 #' @param update_fun optional function for updating the \code{'randomprojection'} object with
 #' information from the data passed to `spar()`. This
 #' function should have arguments \code{object}, which is a \code{'randomprojection'}
-#' object, `x` (the matrix of predictors), `y` (the vector of responses),
+#' object, `x, y` (the predictor matrix and response vector supplied by
+#' \code{spar()}; both have already been standardized by `spar()`;)
 #' `family` and `...`, whereas all other potentially relevant arguments of `spar()`
 #' are passed internally to this function through `...`.
 #' If `update_fun` is not provided, the internal function `update_rp()` is
@@ -41,10 +36,12 @@ update_rpm_identity <- function(rpm, object, included_vector, x, y, family, ...)
 #' function should have arguments \code{rpm} (the already generated projection matrix),
 #' \code{object}, which is a \code{'randomprojection'}, \code{included_vector}
 #' (integer vector of column indices for the variables to be
-#' included in the random projection), `x` (the matrix of predictors), `y` (the vector of responses),
+#' included in the random projection),
+#' `x, y` (the predictor matrix and response vector supplied by
+#' \code{spar()}; both have already been standardized by `spar()`;)
 #' `family` and `...`, whereas all other potentially relevant arguments of `spar()`
-#' are passed internally to this function through `...` Defaults
-#' to NULL. If not provided, the values of the provided RPMs do not change.
+#' are passed internally to this function through `...`.
+#' If not provided, the values of the provided RPMs do not change.
 #' @param control list of controls for the generation of the random projection matrix.
 #' Defaults to \code{list()}.
 #' @return a function which in turn creates an object of class \code{'randomprojection'}
@@ -81,7 +78,7 @@ update_rpm_identity <- function(rpm, object, included_vector, x, y, family, ...)
 #' @export
 constructor_randomprojection <- function(name = NULL,
                                          generate_fun,
-                                         update_fun = update_rp,
+                                         update_fun = update_rp_default,
                                          update_rpm_w_data = update_rpm_identity,
                                          control = list()) {
   ## Checks

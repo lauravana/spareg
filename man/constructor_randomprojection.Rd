@@ -7,7 +7,7 @@
 constructor_randomprojection(
   name = NULL,
   generate_fun,
-  update_fun = update_rp,
+  update_fun = update_rp_default,
   update_rpm_w_data = update_rpm_identity,
   control = list()
 )
@@ -26,7 +26,8 @@ due to the fact that screening is employed pre-projection.}
 \item{update_fun}{optional function for updating the \code{'randomprojection'} object with
 information from the data passed to \code{spar()}. This
 function should have arguments \code{object}, which is a \code{'randomprojection'}
-object, \code{x} (the matrix of predictors), \code{y} (the vector of responses),
+object, \verb{x, y} (the predictor matrix and response vector supplied by
+\code{spar()}; both have already been standardized by \code{spar()};)
 \code{family} and \code{...}, whereas all other potentially relevant arguments of \code{spar()}
 are passed internally to this function through \code{...}.
 If \code{update_fun} is not provided, the internal function \code{update_rp()} is
@@ -38,10 +39,12 @@ provided by argument \code{RPMs}. This
 function should have arguments \code{rpm} (the already generated projection matrix),
 \code{object}, which is a \code{'randomprojection'}, \code{included_vector}
 (integer vector of column indices for the variables to be
-included in the random projection), \code{x} (the matrix of predictors), \code{y} (the vector of responses),
+included in the random projection),
+\verb{x, y} (the predictor matrix and response vector supplied by
+\code{spar()}; both have already been standardized by \code{spar()};)
 \code{family} and \code{...}, whereas all other potentially relevant arguments of \code{spar()}
-are passed internally to this function through \code{...} Defaults
-to NULL. If not provided, the values of the provided RPMs do not change.}
+are passed internally to this function through \code{...}.
+If not provided, the values of the provided RPMs do not change.}
 
 \item{control}{list of controls for the generation of the random projection matrix.
 Defaults to \code{list()}.}

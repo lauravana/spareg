@@ -27,7 +27,7 @@ of the model.
 \item \code{update_fun}  optional function for updating the \code{'sparmodel'}
 object before the start of the algorithm.This
 function should have arguments \code{object}, which is a \code{'sparmodel'}
-object, \code{x} (the matrix of predictors), \code{y} (the vector of responses),
+object, \code{z} (the matrix of standardized predictors), \code{yz} (the vector of standardized responses),
 \code{family} and \code{...}, whereas all other potentially relevant arguments of \code{spar()}
 are passed internally to this function through \code{...}. For
 \code{spar_glmnet()} this function manipulates the

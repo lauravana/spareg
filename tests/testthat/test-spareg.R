@@ -1,3 +1,4 @@
+# Tests expecting success ----
 test_that("Results has right class", {
   x <- matrix(rnorm(300), ncol = 30)
   y <- rnorm(10)
@@ -64,11 +65,11 @@ test_that("Returned coef and preds are correct for fixed screening and projectio
   pred4     <- predict(spar_res,xnew=xnew, nu=0.004406174,nummod=2, type = "link")
 
   expect_error(predict(spar_res))
-  expect_equal(sparcoef$nu,0.002285171,tolerance = 1e-6)
+  expect_equal(sparcoef$nu,0.005113931,tolerance = 1e-6)
   expect_equal(sparcoef$beta[53],c("V53"=0))
-  expect_equal(sparcoef$beta[1],c("V1"=0.125971), tolerance = 1e-6)
-  expect_equal(pred[1],20.44922,tolerance = 1e-5)
-  expect_equal(pred2[1],20.6775893,tolerance = 1e-5)
+  expect_equal(sparcoef$beta[1],c("V1"=0.1324804), tolerance = 1e-6)
+  expect_equal(pred[1],20.64897,tolerance = 1e-5)
+  expect_equal(pred2[1],20.71747,tolerance = 1e-5)
   expect_equal(pred2[1],pred3[1],tolerance = 1e-5)
   expect_equal(pred2[1],pred4[1],tolerance = 1e-5)
   expect_equal(pred_median[1],pred[1],tolerance = 1e-5) ## as we have 2 models only
@@ -97,10 +98,10 @@ test_that("Returned coef and preds are correct for fixed screening and projectio
                    seed = 123)
   sparcoef <- coef(spar_res)
   pred <- predict(spar_res,xnew=xnew)
-  expect_equal(sparcoef$nu,0.009848417,tolerance = 1e-6)
+  expect_equal(sparcoef$nu,0.009712359,tolerance = 1e-6)
   expect_equal(sparcoef$beta[11],c("V11"=0))
-  expect_equal(sparcoef$beta[1],c("V1"= 0.04798127),tolerance = 1e-6)
-  expect_equal(pred[1],0.9749038,tolerance = 1e-5)
+  expect_equal(sparcoef$beta[1],c("V1"= 0.05088875),tolerance = 1e-6)
+  expect_equal(pred[1],0.9737881,tolerance = 1e-5)
 
 })
 
@@ -213,7 +214,7 @@ test_that("Test get_measure() extractor", {
   spar_res <- spar(x, y, seed = 123)
   a <- get_model(spar_res, "best")
   expect_equal(nrow(get_measure(a)), 1)
-  expect_equal(get_measure(a)$deviance, 17.39507, tolerance = 1e-5)
+  expect_equal(get_measure(a)$deviance, 14.37777, tolerance = 1e-5)
   expect_equal(get_measure(a)$numactive, 2000, tolerance = 1e-5)
 })
 
@@ -269,7 +270,7 @@ test_that("Get results with parallel option", {
   }
 })
 
-# Tests expecting errors
+# Tests expecting errors ----
 test_that("Get errors for msup > nscreen", {
   x <- matrix(rnorm(300), ncol = 30)
   y <- rnorm(10)

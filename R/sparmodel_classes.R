@@ -1,5 +1,5 @@
 #' @keywords internal
-update_sparmodel_identity <- function(object, x, y, family, ...) {
+update_sparmodel_default <- function(object, z, yz, family, ...) {
   if (is.null(object$control$family)) object$control$family <- family
   object
 }
@@ -9,8 +9,9 @@ update_sparmodel_identity <- function(object, x, y, family, ...) {
 #' Creates an object of class \code{'sparmodel'} using arguments passed by user.
 #' @param generate_fun function for estimating the marginal models which returns the
 #     intercept and the vector of coefficients. This
-#'    function should have arguments  and   \code{y} (vector of responses -- standardized
-#'    for Gaussian family), \code{z} (the matrix of projected predictors) and a
+#'    function should have arguments  and   \code{y} (vector of responses
+#'    supplied by `spar()`, which has already been standardized),
+#'    \code{z} (the matrix of projected predictors) and a
 #'    \code{'sparmodel'} \code{object}.
 #' @param name optional string describing the model employed. This is used for printing.
 #' @param update_fun optional function for updating the \code{'sparmodel'} object
@@ -41,7 +42,7 @@ update_sparmodel_identity <- function(object, x, y, family, ...) {
 #' spar_res
 #' @export
 constructor_sparmodel <- function(name = NULL, generate_fun,
-                                  update_fun = update_sparmodel_identity) {
+                                  update_fun = update_sparmodel_default) {
   ## Checks ----
   args_generate_fun <- formals(generate_fun)
   stopifnot("Function generate_fun should contain three arguments: y, z and an object
@@ -51,7 +52,7 @@ constructor_sparmodel <- function(name = NULL, generate_fun,
               "y" %in% names(args_generate_fun))
   stopifnot("Function generate_fun should contain argument 'z', the matrix of reduced predictors." =
               "z" %in% names(args_generate_fun))
-  stopifnot("Function update_fun should have as argument object, x, y, family, ..." = names(formals(update_fun)) %in% c("object","x", "y", "family", "..."))
+  stopifnot("Function update_fun should have as argument object, z, yz, family, ..." = names(formals(update_fun)) %in% c("object","z", "yz", "family", "..."))
 
   ## Function to return  ----
   function(..., control = list()) {
@@ -87,7 +88,7 @@ constructor_sparmodel <- function(name = NULL, generate_fun,
 #'  \item \code{update_fun}  optional function for updating the \code{'sparmodel'}
 #'   object before the start of the algorithm.This
 #'   function should have arguments \code{object}, which is a \code{'sparmodel'}
-#'   object, `x` (the matrix of predictors), `y` (the vector of responses),
+#'   object, `z` (the matrix of standardized predictors), `yz` (the vector of standardized responses),
 #'   `family` and `...`, whereas all other potentially relevant arguments of `spar()`
 #'    are passed internally to this function through `...`. For
 #'    \code{spar_glmnet()} this function manipulates the
@@ -130,7 +131,7 @@ ols_fun_corrected <- function(y, z) {
 
 
 
-update_sparmodel_glmnet <- function(object, x, y, family, ...) {
+update_sparmodel_glmnet <- function(object, z, yz, family, ...) {
   # Family compatibility with glmnet
   if (!is.null(object$control$family)) {
     fam <- object$control$family
@@ -198,7 +199,7 @@ model_glmnet <- function(y, z, object) {
 spar_glm <- function(..., control = list()) {
   out <-  list(name = "glm",
                generate_fun = model_glm,
-               update_fun = update_sparmodel_identity,
+               update_fun = update_sparmodel_default,
                control = control)
   attr <- list2(...)
   attributes(out) <- c(attributes(out), attr)

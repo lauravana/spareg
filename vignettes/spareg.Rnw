@@ -1351,8 +1351,10 @@ We start by defining the function for generating the screening coefficients
 using function \code{screenIID()} in \pkg{VariableScreening}.
 <<>>=
 generate_scr_sirs <- function(y, x, object) {
+  ctrl <- object$control[names(object$control) %in%
+                           names(formals(VariableScreening::screenIID))]
   res_screen <- do.call(function(...)
-    VariableScreening::screenIID(x, y, ...), object$control)
+    VariableScreening::screenIID(x, y, ...), ctrl)
   res_screen$measurement
 }
 @
@@ -1498,7 +1500,7 @@ using the package \pkg{robustbase} \citep{pkg:robustbase}.
 We define a \code{generate_fun()} that uses \code{robustbase::lmrob()} for Gaussian
 models with identity link and \code{robustbase::glmrob()}
 for other family-link combinations.
-The function has arguments are \code{y} (response vector),
+The function has arguments are \code{yz} (response vector),
 \code{z} (matrix of reduced predictors)
 and a `\code{sparmodel}' \code{object},
 and outputs a list with two elements: \code{gammas} (vector of coefficients)

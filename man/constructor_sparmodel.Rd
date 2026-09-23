@@ -7,15 +7,16 @@
 constructor_sparmodel(
   name = NULL,
   generate_fun,
-  update_fun = update_sparmodel_identity
+  update_fun = update_sparmodel_default
 )
 }
 \arguments{
 \item{name}{optional string describing the model employed. This is used for printing.}
 
 \item{generate_fun}{function for estimating the marginal models which returns the
-function should have arguments  and   \code{y} (vector of responses -- standardized
-for Gaussian family), \code{z} (the matrix of projected predictors) and a
+function should have arguments  and   \code{y} (vector of responses
+supplied by \code{spar()}, which has already been standardized),
+\code{z} (the matrix of projected predictors) and a
 \code{'sparmodel'} \code{object}.}
 
 \item{update_fun}{optional function for updating the \code{'sparmodel'} object

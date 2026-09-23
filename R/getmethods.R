@@ -133,7 +133,7 @@ get_model.spar.cv <- function(object, opt_par = c("best", "1se"),
     }
     # Re-estimation of the model with the selected (nu, M) combination
     final_model <- spar(x = x, y = y,
-                        family = eval(parse(text = object$family)),
+                        family = object$family,
                         model = object$model,
                         rp = object$rp, screencoef = object$screencoef,
                         xval = xval, yval = yval,

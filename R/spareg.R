@@ -177,11 +177,11 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
   xscale <- apply(x, 2, sd)
   if (is.null(inds) || is.null(RPMs)) {
     actual_p <- sum(xscale > 0)
-    z <- scale(x[, xscale > 0], center = xcenter[xscale > 0], scale = xscale[xscale > 0])
+    xz <- scale(x[, xscale > 0], center = xcenter[xscale > 0], scale = xscale[xscale > 0])
   } else {
     actual_p <- p
     xscale[xscale == 0] <- 1
-    z <- scale(x, center = xcenter, scale = xscale)
+    xz <- scale(x, center = xcenter, scale = xscale)
   }
   # Scaling the y vector ----
   if (family$family == "gaussian" && family$link == "identity") {
@@ -195,7 +195,8 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
 
   # Argument names ----
   formal_names <- names(formals(fit_spar_models))
-  all_args <- mget(formal_names, envir = environment())
+  formal_names_wo_x_y <- setdiff(formal_names, c("x", "y"))
+  all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
 
   # Set up seed ----
   if (!is.null(seed)) {
@@ -207,27 +208,23 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
     }
   }
 
-
-
-
   # Update model object ----
-  # if (is.null(model$control$family)) {
-  #   if (is.null(attr(model, "family"))) {
-  #     model$control$family <- family
-  #   } else {
-  #     model$control$family <- attr(model, "family")
-  #   }
-  # }
-  # if (!is.null(model$update_fun)) {
-  model <- do.call(model$update_fun,
-                   c(object = list(model), all_args))
-  #}
+  all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
+  model <- do.call(function(...)
+    model$update_fun(object = model, x = xz, y = yz, ...),
+                     all_args_wo_x_y)
 
   # Setup screening ----
   family_str <- family_string <- paste0(family$family, "(", family$link, ")")
   if (is.null(attr(screencoef, "family"))) {
     attr(screencoef, "family_string") <- family_str
   }
+  all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
+  screencoef <- do.call(function(...)
+    screencoef$update_fun(object = screencoef, x = xz, y = yz, ...),
+                      all_args_wo_x_y)
+
+
   if (!is.null(attr(screencoef, "split_data_prop"))) {
     scr_inds <- sample(n, ceiling(n * attr(screencoef, "split_data_prop")))
     mar_inds <- seq_len(n)[-scr_inds]
@@ -243,6 +240,7 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
     nscreen <- attr(screencoef, "nscreen")
   }
 
+  # Checks for mslow, msup, nscreen ----
   mslow <- attr(rp, "mslow")
   if (is.null(mslow)) mslow <- attr(rp, "mslow") <- ceiling(log(p))
   msup <- attr(rp, "msup")
@@ -252,9 +250,9 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
     msup <- nscreen
   }
   stopifnot("Provided lower bound on goal dimension of random projection (mslow) or its default value (log(p)) is larger than upper bound (msup)." = mslow <= msup)
-  # Perform screening
+  # Perform screening ----
   if (nscreen < p) {
-    scr_coef <- screencoef$generate_fun(object = screencoef, x = z[scr_inds, ], y = yz[scr_inds, ])
+    scr_coef <- screencoef$generate_fun(object = screencoef, x = xz[scr_inds, ], y = yz[scr_inds, ])
     inc_probs <- abs(scr_coef)
     max_inc_probs <- max(inc_probs)
     inc_probs <- inc_probs / max_inc_probs
@@ -271,8 +269,11 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
   attr(screencoef, "importance") <- scr_coef
 
   # Update RP -----
-  rp <- do.call(rp$update_fun, c(object = list(rp),all_args))
+  all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
+  rp <- do.call(function(...)
+    rp$update_fun(object = rp, x = xz, y = yz, ...), all_args_wo_x_y)
 
+  # Flags for draw RPMs -----
   max_num_mod <- max(nummods)
 
   drawRPMs <- FALSE
@@ -317,22 +318,20 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
         m <- p_use
         RPM <- Matrix::Matrix(diag(1, m), sparse = TRUE)
       } else {
-        RPM <- rp$generate_fun(rp, m = m, included_vector = ind_use, x = x, y = y)
+        RPM <- rp$generate_fun(rp, m = m, included_vector = ind_use, x = xz, y = yz)
       }
     } else {
       RPM <- RPMs[[i]]
       if (drawinds) RPM <- RPM[, c(ind_use)]
       ## Update RPM w data
-      RPM <- do.call(rp$update_rpm_w_data,
-                     c(rpm = list(RPM),
-                       object = list(rp),
-                       included_vector = list(ind_use),
-                       all_args))
+      RPM <- do.call(function(...)
+        rp$update_rpm_w_data(rpm = RPM, object = rp, x = xz, y = yz,
+                       included_vector = ind_use, ...), all_args_wo_x_y)
     }
     out$RPMs <- RPM
 
     # Marginal model
-    znew <- Matrix::tcrossprod(z[mar_inds, ind_use], RPM)
+    znew <- Matrix::tcrossprod(xz[mar_inds, ind_use], RPM)
     res <- model$generate_fun(y = yz[mar_inds], z = znew, object = model)
     out$intercepts <- res$intercept
     out$betas_std_m <- as(numeric(actual_p), "sparseMatrix")
@@ -396,7 +395,7 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
     yscale = yscale,
     avg_type = avg_type,
     measure = measure,
-    family = family_str,
+    family = family,
     model = model,
     rp = rp,
     screencoef = screencoef,
@@ -408,7 +407,7 @@ validate_spar <- function(fitted_objects, xval, yval, nus, nummods, measure, avg
   p <- length(fitted_objects$xscale)
   n <- nrow(xval)
   # Get validation measure function
-  val.meas <- get_val_measure_function(measure, eval(parse(text = fitted_objects$family)))
+  val.meas <- get_val_measure_function(measure, fitted_objects$family)
 
   # Initialize validation results
   val_res <- data.frame(nnu = NULL, nu = NULL, nummod = NULL, numactive = NULL, measure = NULL)
@@ -430,7 +429,7 @@ validate_spar <- function(fitted_objects, xval, yval, nus, nummods, measure, avg
       } else {
         tmp_intercept <- fitted_objects$intercepts[seq_len(nummod)] + drop(fitted_objects$ycenter - crossprod(fitted_objects$xcenter, tmp_beta))
         eta_hat <- sweep((xval %*% tmp_beta), tmp_intercept, MARGIN = 2, FUN = "+")
-        y_hat <- rowMeans(eval(parse(text = fitted_objects$family))$linkinv(as.matrix(eta_hat)))
+        y_hat <- rowMeans(fitted_objects$family$linkinv(as.matrix(eta_hat)))
         val_measure <- val.meas(yval, y_hat = y_hat)
         numactive <- sum(rowSums(tmp_beta != 0) > 0)
       }
@@ -797,7 +796,7 @@ predict.spar <- function(object,
   type <- match.arg(type)
   avg_type <- match.arg(avg_type)
   aggregate <- match.arg(aggregate)
-  object$family <- eval(parse(text = object$family))
+  # object$family <- eval(parse(text = object$family))
 
   if (avg_type != object$avg_type && object$family$link != "identity") {
     warning("The best model combination was selected for ",
