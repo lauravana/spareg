@@ -17,17 +17,19 @@ object of class \code{'sparmodel'} which is a list with elements
 \itemize{
 \item \code{name} (character, optional, used for printing)
 \item \code{control} (list of controls passed as an argument)
-\item \code{generate_fun}  for generating the screening coefficient.
-This function should have arguments \code{y}, vector of standardized responses,
-\code{z}, a matrix of projected predictors in each marginal model, and
-\code{object}, which is a \code{'sparmodel'} object. Returns a list with
+\item \code{generate_fun}  function for estimating the marginal models which returns the
+function should have arguments  a
+\code{'sparmodel'} \code{object}, \code{x} and \code{y} (matrix of predictors and
+vector of responses supplied by \code{spar()}, which have already been standardized),
+\code{z} (the matrix of projected predictors) and \code{...}.
+Returns a list with
 two elements: \code{gammas} which is the vector of regression coefficients
 for the projected predictors and \code{intercept} which is the intercept
 of the model.
 \item \code{update_fun}  optional function for updating the \code{'sparmodel'}
 object before the start of the algorithm.This
 function should have arguments \code{object}, which is a \code{'sparmodel'}
-object, \code{z} (the matrix of standardized predictors), \code{yz} (the vector of standardized responses),
+object, \code{x} (the matrix of standardized predictors), \code{y} (the vector of standardized responses),
 \code{family} and \code{...}, whereas all other potentially relevant arguments of \code{spar()}
 are passed internally to this function through \code{...}. For
 \code{spar_glmnet()} this function manipulates the

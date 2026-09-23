@@ -9,13 +9,15 @@ update_screen_default <- function(object, x, y, family, ...) {
 #' Creates an object class \code{'screencoef'} using arguments passed by user.
 #' @param name character
 #' @param generate_fun function for generating the screening coefficient. This
-#'    function should have arguments  and   \code{y} (vector of responses -- standardized
-#'    for Gaussian family), \code{x} (the matrix of standardized predictors) and a
-#'    \code{'screencoef'} object.
+#'    function should have arguments
+#'    `x`, `y` (the predictor matrix and response vector supplied by `spar()`
+#'      where both have already been standardized by `spar()`),
+#'    \code{'screencoef'} object and `...`, whereas all other potentially
+#'    relevant arguments of `spar()` are passed internally to this function through `...`.
 #' @param update_fun optional function for updating the \code{'screencoef'} object with
 #' information from the data passed to `spar()`. This
-#' function should have arguments \code{object}, which is a \code{'randomprojection'}
-#' object, `x`, y` (the predictor matrix and response vector supplied by `spar()`.
+#' function should have arguments \code{object}, which is a \code{'screencoef'}
+#' object, `x`, `y` (the predictor matrix and response vector supplied by `spar()`.
 #' Both have already been standardized by `spar()`),
 #' `family` and `...`, whereas all other potentially relevant arguments of `spar()`
 #' are passed internally to this function through `...`.
@@ -28,7 +30,7 @@ update_screen_default <- function(object, x, y, family, ...) {
 #' probabilistic screening should be employed),
 #' \code{"fixed"} (indicating that the top \code{nscreen} variables should be employed).
 #' @examples
-#' generate_scr_sirs <- function(y, x, object) {
+#' generate_scr_sirs <- function(y, x, object, ...) {
 #'   ctrl <- object$control[names(object$control) %in%
 #'                           names(formals(VariableScreening::screenIID))]
 #'  res_screen <- do.call(function(...)
@@ -43,18 +45,24 @@ update_screen_default <- function(object, x, y, family, ...) {
 #'   rp = rp_sparse())
 #' spar_example
 #' @export
-constructor_screencoef <- function(name = NULL, generate_fun,
+constructor_screencoef <- function(name = NULL,
+                                   generate_fun,
                                    update_fun = update_screen_default) {
   ## Checks
   args_generate_fun <- formals(generate_fun)
-  stopifnot("Function generate_fun should contain three arguments: x, y and an object
-            of class \"screencoef\"." =
-              length(args_generate_fun) == 3)
-  stopifnot("Function generate_fun should contain argument 'y', the vector of responses." =
+  stopifnot("Function generate_fun should contain four arguments: x, y, an object
+            of class \"screencoef\" and ... (ellipsis)." =
+              length(args_generate_fun) == 4)
+  stopifnot("Function generate_fun should contain argument 'y', the vector of standardized responses." =
               "y" %in% names(args_generate_fun))
-  stopifnot("Function generate_fun should contain argument 'x', the matrix of predictors." =
+  stopifnot("Function generate_fun should contain argument 'x', the matrix of standardized predictors." =
               "x" %in% names(args_generate_fun))
-  stopifnot("Function update_fun should have as argument object, x, y, family, ..." = names(formals(update_fun)) %in% c("object","x", "y", "family", "..."))
+  stopifnot("Function generate_fun should contain argument 'object', an object
+            of class \"screencoef\"" = "object" %in% names(args_generate_fun))
+  stopifnot("Function generate_fun should contain argument '...', which allows to pass all other arguments of spar() internally to this function."
+            = "..." %in% names(args_generate_fun))
+  stopifnot("Function update_fun should have as argument object, x, y, family, ..." =
+              names(formals(update_fun)) %in% c("object","x", "y", "family", "..."))
   ## Function to return
   function(..., control = list()) {
     out <- list(name = name,
@@ -89,7 +97,7 @@ update_screen_marglik <- function(object, x, y, family, ...) {
 #' @param object  \code{'screencoef'} object
 #' @return vector of screening coefficients of length p
 #' @keywords internal
-generate_scrcoef_marglik <- function(y, x, object) {
+generate_scrcoef_marglik <- function(object, x, y, ...) {
   ctrl <- object$control[names(object$control) %in%
                            names(formals(glm))]
   coefs <- apply(x, 2, function(xj){
@@ -168,7 +176,7 @@ screen_marglik <- constructor_screencoef(
 #' @param object  \code{'screencoef'} object
 #' @return vector of screening coefficients of length p
 #' @keywords internal
-generate_scrcoef_cor <- function(y, x, object) {
+generate_scrcoef_cor <- function(object, x, y, ...) {
   coefs <- apply(x, 2, function(xj) {
     do.call(function(...) cor(y, xj, ...),
             object$control)
@@ -289,7 +297,7 @@ update_screen_glmnet <- function(object, x, y, family, ...) {
 #' @param object  \code{'screencoef'} object
 #' @return vector of screening coefficients of length p
 #' @keywords internal
-generate_scrcoef_glmnet <- function(y, x, object) {
+generate_scrcoef_glmnet <- function(object, x, y, ...) {
   control_glmnet <-
     object$control[names(object$control) %in% names(formals(glmnet))]
 

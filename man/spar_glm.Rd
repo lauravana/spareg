@@ -18,9 +18,11 @@ object of class \code{'sparmodel'} which is a list with elements
 \item \code{name} (character, optional, used for printing)
 \item \code{control} (list of controls passed as an argument)
 \item \code{generate_fun} function for estimating the model coefficients and the intercept.
-This function should have arguments \code{y}, vector of standardized responses,
-\code{z}, a matrix of projected predictors in each marginal model, and
-\code{object}, which is a \code{'sparmodel'} object. Returns a list with
+This
+function should have arguments  a
+\code{'sparmodel'} \code{object}, \code{x} and \code{y} (matrix of predictors and
+vector of responses supplied by \code{spar()}, which have already been standardized),
+\code{z} (the matrix of projected predictors) and \code{...}. Returns a list with
 two elements: \code{gammas} which is the vector of regression coefficients
 for the projected predictors and \code{intercept} which is the intercept of the model
 }

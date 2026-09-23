@@ -4,14 +4,14 @@
 \alias{generate_scrcoef_cor}
 \title{Generate screening coefficient based  on correlation}
 \usage{
-generate_scrcoef_cor(y, x, object)
+generate_scrcoef_cor(object, x, y, ...)
 }
 \arguments{
-\item{y}{vector of responses}
+\item{object}{\code{'screencoef'} object}
 
 \item{x}{matrix of predictors}
 
-\item{object}{\code{'screencoef'} object}
+\item{y}{vector of responses}
 }
 \value{
 vector of screening coefficients of length p

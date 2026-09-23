@@ -14,14 +14,20 @@ constructor_screencoef(
 \item{name}{character}
 
 \item{generate_fun}{function for generating the screening coefficient. This
-function should have arguments  and   \code{y} (vector of responses -- standardized
-for Gaussian family), \code{x} (the matrix of standardized predictors) and a
-\code{'screencoef'} object.}
+function should have arguments
+\code{x}, \code{y} (the predictor matrix and response vector supplied by \code{spar()}
+where both have already been standardized by \code{spar()}),
+\code{'screencoef'} object and \code{...}, whereas all other potentially
+relevant arguments of \code{spar()} are passed internally to this function through \code{...}.}
 
 \item{update_fun}{optional function for updating the \code{'screencoef'} object with
 information from the data passed to \code{spar()}. This
-function should have arguments \code{object}, which is a \code{'randomprojection'}
-object, \code{x}, y\verb{(the predictor matrix and response vector supplied by}spar()\verb{. Both have already been standardized by }spar()\verb{), }family\code{and}...\verb{, whereas all other potentially relevant arguments of }spar()\verb{are passed internally to this function through}...\verb{. If }update_fun` is not provided, the object remains unchanged.}
+function should have arguments \code{object}, which is a \code{'screencoef'}
+object, \code{x}, \code{y} (the predictor matrix and response vector supplied by \code{spar()}.
+Both have already been standardized by \code{spar()}),
+\code{family} and \code{...}, whereas all other potentially relevant arguments of \code{spar()}
+are passed internally to this function through \code{...}.
+If \code{update_fun} is not provided, the object remains unchanged.}
 }
 \value{
 a function which in turn creates an object of class \code{'screencoef'}
@@ -37,7 +43,7 @@ probabilistic screening should be employed),
 Creates an object class \code{'screencoef'} using arguments passed by user.
 }
 \examples{
-generate_scr_sirs <- function(y, x, object) {
+generate_scr_sirs <- function(y, x, object, ...) {
   ctrl <- object$control[names(object$control) \%in\%
                           names(formals(VariableScreening::screenIID))]
  res_screen <- do.call(function(...)

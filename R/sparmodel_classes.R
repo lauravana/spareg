@@ -1,5 +1,5 @@
 #' @keywords internal
-update_sparmodel_default <- function(object, z, yz, family, ...) {
+update_sparmodel_default <- function(object, x, y, family, ...) {
   if (is.null(object$control$family)) object$control$family <- family
   object
 }
@@ -9,10 +9,10 @@ update_sparmodel_default <- function(object, z, yz, family, ...) {
 #' Creates an object of class \code{'sparmodel'} using arguments passed by user.
 #' @param generate_fun function for estimating the marginal models which returns the
 #     intercept and the vector of coefficients. This
-#'    function should have arguments  and   \code{y} (vector of responses
-#'    supplied by `spar()`, which has already been standardized),
-#'    \code{z} (the matrix of projected predictors) and a
-#'    \code{'sparmodel'} \code{object}.
+#'    function should have arguments  a
+#'    \code{'sparmodel'} \code{object}, \code{x} and \code{y} (matrix of predictors and
+#'    vector of responses supplied by `spar()`, which have already been standardized),
+#'    \code{z} (the matrix of projected predictors) and `...`.
 #' @param name optional string describing the model employed. This is used for printing.
 #' @param update_fun optional function for updating the \code{'sparmodel'} object
 #'  before the
@@ -23,9 +23,8 @@ update_sparmodel_default <- function(object, z, yz, family, ...) {
 #' The created function will return a object of class \code{'sparmodel'} which
 #' constitutes of a list.
 #' @examples
-#' model_glmrob <- function(y, z, object) {
+#' model_glmrob <- function(object, x, y, z, ...) {
 #'   requireNamespace("robustbase")
-#'   fam <- object$control$family
 #'   glmrob_res <- do.call(function(...)
 #'     robustbase::glmrob(y ~ as.matrix(z), ...),
 #'     object$control)
@@ -45,14 +44,18 @@ constructor_sparmodel <- function(name = NULL, generate_fun,
                                   update_fun = update_sparmodel_default) {
   ## Checks ----
   args_generate_fun <- formals(generate_fun)
-  stopifnot("Function generate_fun should contain three arguments: y, z and an object
-            of class \"sparmodel\"." =
-              length(args_generate_fun) == 3)
+  stopifnot("Function generate_fun should contain five arguments: object, x, y, z and ... (ellipsis)." =
+              length(args_generate_fun) == 5)
+  stopifnot("Function generate_fun should contain argument 'x', the matrix of responses." =
+              "x" %in% names(args_generate_fun))
   stopifnot("Function generate_fun should contain argument 'y', the vector of responses." =
               "y" %in% names(args_generate_fun))
   stopifnot("Function generate_fun should contain argument 'z', the matrix of reduced predictors." =
               "z" %in% names(args_generate_fun))
-  stopifnot("Function update_fun should have as argument object, z, yz, family, ..." = names(formals(update_fun)) %in% c("object","z", "yz", "family", "..."))
+  stopifnot("Function generate_fun should contain argument 'object', an object
+            of class \"sparmodel\"" =
+              "object" %in% names(args_generate_fun))
+  stopifnot("Function update_fun should have as argument object, x, y, family, ..." = names(formals(update_fun)) %in% c("object","x", "y", "family", "..."))
 
   ## Function to return  ----
   function(..., control = list()) {
@@ -78,17 +81,20 @@ constructor_sparmodel <- function(name = NULL, generate_fun,
 #' \itemize{
 #'  \item \code{name} (character, optional, used for printing)
 #'  \item \code{control} (list of controls passed as an argument)
-#'  \item \code{generate_fun}  for generating the screening coefficient.
-#'   This function should have arguments \code{y}, vector of standardized responses,
-#'   \code{z}, a matrix of projected predictors in each marginal model, and
-#'   \code{object}, which is a \code{'sparmodel'} object. Returns a list with
+#'  \item \code{generate_fun}  function for estimating the marginal models which returns the
+#     intercept and the vector of coefficients. This
+#'    function should have arguments  a
+#'    \code{'sparmodel'} \code{object}, \code{x} and \code{y} (matrix of predictors and
+#'    vector of responses supplied by `spar()`, which have already been standardized),
+#'    \code{z} (the matrix of projected predictors) and `...`.
+#'   Returns a list with
 #'   two elements: \code{gammas} which is the vector of regression coefficients
 #'    for the projected predictors and \code{intercept} which is the intercept
 #'    of the model.
 #'  \item \code{update_fun}  optional function for updating the \code{'sparmodel'}
 #'   object before the start of the algorithm.This
 #'   function should have arguments \code{object}, which is a \code{'sparmodel'}
-#'   object, `z` (the matrix of standardized predictors), `yz` (the vector of standardized responses),
+#'   object, `x` (the matrix of standardized predictors), `y` (the vector of standardized responses),
 #'   `family` and `...`, whereas all other potentially relevant arguments of `spar()`
 #'    are passed internally to this function through `...`. For
 #'    \code{spar_glmnet()} this function manipulates the
@@ -158,9 +164,9 @@ update_sparmodel_glmnet <- function(object, z, yz, family, ...) {
   object
 }
 
-model_glmnet <- function(y, z, object) {
+model_glmnet <- function(object, x = NULL, y, z, ...) {
   ## y - vector of n responses
-  ## z - matrix with n rows
+  ## z - matrix of reduced predictors with n rows
   glmnet_res <- do.call(function(...) glmnet(x = z, y = y, ...),
                         object$control)
   mar_coef <- coef(glmnet_res, s = min(glmnet_res$lambda))
@@ -181,9 +187,11 @@ model_glmnet <- function(y, z, object) {
 #'  \item \code{name} (character, optional, used for printing)
 #'  \item \code{control} (list of controls passed as an argument)
 #'  \item \code{generate_fun} function for estimating the model coefficients and the intercept.
-#'   This function should have arguments \code{y}, vector of standardized responses,
-#'   \code{z}, a matrix of projected predictors in each marginal model, and
-#'   \code{object}, which is a \code{'sparmodel'} object. Returns a list with
+#'  This
+#'    function should have arguments  a
+#'    \code{'sparmodel'} \code{object}, \code{x} and \code{y} (matrix of predictors and
+#'    vector of responses supplied by `spar()`, which have already been standardized),
+#'    \code{z} (the matrix of projected predictors) and `...`. Returns a list with
 #'    two elements: \code{gammas} which is the vector of regression coefficients
 #'    for the projected predictors and \code{intercept} which is the intercept of the model
 #' }
@@ -207,7 +215,7 @@ spar_glm <- function(..., control = list()) {
   out
 }
 
-model_glm <- function(y, z, object) {
+model_glm <- function(object, x = NULL, y, z, ...) {
   ## y - vector of n responses
   ## z - matrix with n rows
   family <- object$control$family

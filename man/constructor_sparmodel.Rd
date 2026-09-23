@@ -14,10 +14,10 @@ constructor_sparmodel(
 \item{name}{optional string describing the model employed. This is used for printing.}
 
 \item{generate_fun}{function for estimating the marginal models which returns the
-function should have arguments  and   \code{y} (vector of responses
-supplied by \code{spar()}, which has already been standardized),
-\code{z} (the matrix of projected predictors) and a
-\code{'sparmodel'} \code{object}.}
+function should have arguments  a
+\code{'sparmodel'} \code{object}, \code{x} and \code{y} (matrix of predictors and
+vector of responses supplied by \code{spar()}, which have already been standardized),
+\code{z} (the matrix of projected predictors) and \code{...}.}
 
 \item{update_fun}{optional function for updating the \code{'sparmodel'} object
 before the
@@ -35,9 +35,8 @@ constitutes of a list.
 Creates an object of class \code{'sparmodel'} using arguments passed by user.
 }
 \examples{
-model_glmrob <- function(y, z, object) {
+model_glmrob <- function(object, x, y, z, ...) {
   requireNamespace("robustbase")
-  fam <- object$control$family
   glmrob_res <- do.call(function(...)
     robustbase::glmrob(y ~ as.matrix(z), ...),
     object$control)

@@ -212,7 +212,7 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
   all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
   model <- do.call(function(...)
     model$update_fun(object = model, x = xz, y = yz, ...),
-                     all_args_wo_x_y)
+    all_args_wo_x_y)
 
   # Setup screening ----
   if (!is.null(attr(screencoef, "split_data_prop"))) {
@@ -229,12 +229,6 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
   } else {
     nscreen <- attr(screencoef, "nscreen")
   }
-  if (nscreen < p) {
-    all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
-    screencoef <- do.call(function(...)
-      screencoef$update_fun(object = screencoef, x = xz, y = yz, ...),
-      all_args_wo_x_y)
-  }
 
   # Checks for mslow, msup, nscreen ----
   mslow <- attr(rp, "mslow")
@@ -248,7 +242,16 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
   stopifnot("Provided lower bound on goal dimension of random projection (mslow) or its default value (log(p)) is larger than upper bound (msup)." = mslow <= msup)
   # Perform screening ----
   if (nscreen < p) {
-    scr_coef <- screencoef$generate_fun(object = screencoef, x = xz[scr_inds, ], y = yz[scr_inds, ])
+    # First update the object
+    all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
+    screencoef <- do.call(function(...)
+      screencoef$update_fun(object = screencoef, x = xz, y = yz, ...),
+      all_args_wo_x_y)
+    # Then compute the screening coefs
+    scr_coef <- do.call(function(...)
+      screencoef$generate_fun(object = screencoef,
+                              x = xz[scr_inds, ],
+                              y = yz[scr_inds, ], ...), all_args_wo_x_y)
     inc_probs <- abs(scr_coef)
     max_inc_probs <- max(inc_probs)
     inc_probs <- inc_probs / max_inc_probs
@@ -314,6 +317,7 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
         m <- p_use
         RPM <- Matrix::Matrix(diag(1, m), sparse = TRUE)
       } else {
+        all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
         RPM <- rp$generate_fun(rp, m = m, included_vector = ind_use, x = xz, y = yz)
       }
     } else {
@@ -322,13 +326,16 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
       ## Update RPM w data
       RPM <- do.call(function(...)
         rp$update_rpm_w_data(rpm = RPM, object = rp, x = xz, y = yz,
-                       included_vector = ind_use, ...), all_args_wo_x_y)
+                             included_vector = ind_use, ...), all_args_wo_x_y)
     }
     out$RPMs <- RPM
 
     # Marginal model
     znew <- Matrix::tcrossprod(xz[mar_inds, ind_use], RPM)
-    res <- model$generate_fun(y = yz[mar_inds], z = znew, object = model)
+    all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
+    res <- do.call(function(...)
+      model$generate_fun(y = yz[mar_inds], z = znew, object = model, ...),
+      all_args_wo_x_y)
     out$intercepts <- res$intercept
     out$betas_std_m <- as(numeric(actual_p), "sparseMatrix")
     out$betas_std_m[ind_use] <- crossprod(RPM, res$gammas)
