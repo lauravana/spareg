@@ -215,29 +215,25 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
                      all_args_wo_x_y)
 
   # Setup screening ----
-  family_str <- family_string <- paste0(family$family, "(", family$link, ")")
-  if (is.null(attr(screencoef, "family"))) {
-    attr(screencoef, "family_string") <- family_str
-  }
-  all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
-  screencoef <- do.call(function(...)
-    screencoef$update_fun(object = screencoef, x = xz, y = yz, ...),
-                      all_args_wo_x_y)
-
-
   if (!is.null(attr(screencoef, "split_data_prop"))) {
     scr_inds <- sample(n, ceiling(n * attr(screencoef, "split_data_prop")))
     mar_inds <- seq_len(n)[-scr_inds]
   } else {
     mar_inds <- scr_inds <- seq_len(n)
   }
+  if (2 * n > p) {
+    message("Screening is not performed by default, as 2 * n, the default number of screened variables, is larger than the number of predictors. For performing screening, adjust nscreen in screen_*().")
+  }
   if (is.null(attr(screencoef, "nscreen"))) {
-    if (2 * n > p) {
-      message("Screening is not performed by default, as 2 * n, the default number of screened variables, is larger than the number of predictors. For performing screening, adjust nscreen in screen_*().")
-    }
     nscreen <- attr(screencoef, "nscreen") <- min(p, 2 * n)
   } else {
     nscreen <- attr(screencoef, "nscreen")
+  }
+  if (nscreen < p) {
+    all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
+    screencoef <- do.call(function(...)
+      screencoef$update_fun(object = screencoef, x = xz, y = yz, ...),
+      all_args_wo_x_y)
   }
 
   # Checks for mslow, msup, nscreen ----

@@ -299,24 +299,28 @@ update_rp_cw <- function(object, x, y, family, ...) {
       !is.null(attr(args$screencoef, "importance"))) {
     scr_coef <- attr(args$screencoef, "importance")
     inc_probs <- attr(args$screencoef, "inc_prob")
-    attr(args$rp, "diagvals") <- scr_coef/max(inc_probs)
+    attr(object, "diagvals") <- scr_coef/max(inc_probs)
   } else {
-    if (is.null(object$control$family)) {
-      family_string <- paste0(family$family, "(", family$link, ")")
-      object$control$family_string <- family_string
+    if (!is.null(object$control$family)) {
+      stopifnot("Family provided in control should be of class family." = class(object$control$family) == "family")
+      fam <- object$control$family
+      object$control$family <- NULL
+    } else {
+      fam <- family
     }
-    if (family$family=="gaussian" & family$link=="identity") {
+    object$control$family_string <- paste0(fam$family, "(", fam$link, ")")
+    if (fam$family=="gaussian" & fam$link=="identity") {
       fit_family <- "gaussian"
     } else {
-      if (family$family=="binomial" & family$link=="logit") {
+      if (fam$family=="binomial" & fam$link=="logit") {
         fit_family <- "binomial"
-      } else if (family$family=="poisson" & family$link=="log") {
+      } else if (fam$family=="poisson" & fam$link=="log") {
         fit_family <- "poisson"
       } else {
-        fit_family <- family
+        fit_family <- fam
       }
     }
-    if (family$family=="gaussian") {
+    if (fam$family=="gaussian") {
       dev.ratio_cutoff <- 0.999
     } else {
       dev.ratio_cutoff <- 0.8
@@ -324,13 +328,9 @@ update_rp_cw <- function(object, x, y, family, ...) {
 
     if (is.null(object$control$alpha)) object$control$alpha <-  0
     if (is.null(object$control$lambda.min.ratio)) {
-      tmp_sc <- apply(x, 2, function(col) sqrt(var(col)*(n-1)/n))
-      x2 <- scale(x, center = colMeans(x), scale = tmp_sc)
-      ytX <- crossprod(y, x2[,tmp_sc > 0])
-      lam_max <- 1000 * max(abs(ytX))/n *
-        family$mu.eta(family$linkfun(mean(y)))/
-        family$variance(mean(y))
-      object$control$lambda.min.ratio <- min(0.01, 1e-4 / lam_max)
+      object$control$lambda.min.ratio <-
+        compute_default_lambda_min_ratio(
+          x, y, family = fam)
     }
 
     control_glmnet <- object$control[names(object$control)  %in% names(formals(glmnet))]
@@ -345,6 +345,7 @@ update_rp_cw <- function(object, x, y, family, ...) {
   }
   return(object)
 }
+
 
 update_rpm_w_data_cw <- function(rpm, object, included_vector, x, y, family, ...) {
   rpm@x <-  attr(object, "diagvals")[included_vector]

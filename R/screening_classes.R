@@ -91,7 +91,7 @@ update_screen_marglik <- function(object, x, y, family, ...) {
 #' @keywords internal
 generate_scrcoef_marglik <- function(y, x, object) {
   ctrl <- object$control[names(object$control) %in%
-                         names(formals(glm))]
+                           names(formals(glm))]
   coefs <- apply(x, 2, function(xj){
     glm_res <- do.call(function(...) glm(y ~ xj,  ...),
                        ctrl)
@@ -244,53 +244,42 @@ screen_cor <- constructor_screencoef(
 #' @return  vector of screening coefficients of length p
 #' @keywords internal
 update_screen_glmnet <- function(object, x, y, family, ...) {
-   # Family compatibility with glmnet
-  if (is.null(object$control$family)) {
-    object$control$family <-  eval(parse(text=attr(object, "family_string")))
+  # Family compatibility with glmnet
+  if (!is.null(object$control$family)) {
+    stopifnot("Family provided in control should be of class family." = class(object$control$family) == "family")
+    fam <- object$control$family
+    object$control$family <- NULL
+  } else {
+    fam <- family
   }
-#   if (!is.null(object$control$family)) {
-#     fam <- object$control$family
-#   } else {
-#     fam <- family
-#   }
-#   if (fam$family == "gaussian" & fam$link=="identity") {
-#     fit_family <- "gaussian"
-#   } else {
-#     if (fam$family=="binomial" & fam$link=="logit") {
-#       fit_family <- "binomial"
-#     } else if (fam$family=="poisson" & fam$link=="log") {
-#       fit_family <- "poisson"
-#     } else {
-#       fit_family <- fam
-#     }
-#   }
-#   object$control$family <- family# fit_family
+  object$control$family_string <- paste0(fam$family, "(", fam$link, ")")
+  if (fam$family=="gaussian" & fam$link=="identity") {
+    fit_family <- "gaussian"
+  } else {
+    if (fam$family=="binomial" & fam$link=="logit") {
+      fit_family <- "binomial"
+    } else if (fam$family=="poisson" & fam$link=="log") {
+      fit_family <- "poisson"
+    } else {
+      fit_family <- fam
+    }
+  }
+  object$control$fit_family <- fit_family
   # Set alpha by default to 0
   if (is.null(object$control$alpha)) object$control$alpha <- 0
   # Set default for lambda.min.ratio
-  fam <- object$control$family
   if (is.null(object$control$lambda.min.ratio)) {
-    n <- NROW(x)
-    tmp_sc <- apply(x, 2, function(col) sqrt(var(col)*(n-1)/n))
-    # TODO: allow for weights in the future
-    x2 <- scale(x, center = colMeans(x), scale = tmp_sc)
-    mu0 <- glm(y ~ 1, family = fam)$fitted.values
-    r <- y - mu0
-    eta <- fam$linkfun(mu0)
-    v <- fam$variance(mu0)
-    me <- fam$mu.eta(eta)
-    rv <- 1/n * r / v * me
-    lam_max <- 1000 * max(abs(crossprod(rv, x2[,tmp_sc > 0])))
-    object$control$lambda.min.ratio <- min(0.01, 1e-4 / lam_max)
+    object$control$lambda.min.ratio <-
+      compute_default_lambda_min_ratio(
+        x, y, family = fam)
   }
 
   # Set cutoff ratio for deviance
-   if (is.null(object$control$dev.ratio_cutoff)) {
-     object$control$dev.ratio_cutoff <- ifelse(fam$family == "gaussian", 0.999, 0.8)
-   }
-#
-   object
-#
+  if (is.null(object$control$dev.ratio_cutoff)) {
+    object$control$dev.ratio_cutoff <- ifelse(fam$family == "gaussian", 0.999, 0.8)
+  }
+
+  object
 }
 
 #'
@@ -305,7 +294,9 @@ generate_scrcoef_glmnet <- function(y, x, object) {
     object$control[names(object$control) %in% names(formals(glmnet))]
 
   # Obtain penalized coefs GLMNET
-  glmnet_res <- do.call(function(...) glmnet(x = x, y = y, ...),
+  glmnet_res <- do.call(function(...) glmnet(x = x, y = y,
+                                             family = object$control$fit_family,
+                                             ...),
                         control_glmnet)
 
   lam <- min(glmnet_res$lambda[glmnet_res$dev.ratio <= object$control$dev.ratio_cutoff])

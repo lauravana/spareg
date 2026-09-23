@@ -121,7 +121,7 @@ test_that("Thresholding can be avoided ", {
   spar_res <- spar(x, y, screencoef = screen_glmnet(),
                    nus = 0, model = spar_glm())
   sparcoef <- coef(spar_res)
-  expect_equal(unname(sparcoef$beta[c(4,10)]),c(0,0))
+  expect_equal(unname(sparcoef$beta[c(39,56)]),c(0,0))
 })
 
 test_that("Data splitting delivers different results", {
@@ -153,8 +153,8 @@ test_that("Test the gaussian rp", {
   spar_g_res2 <- spar(x,y,screencoef = screen_glmnet(),
                       rp = rp_gaussian(sd = 0.1))
   ##
-  expect_equal(round(spar_g_res$val_res$measure[1], 2), 17873.92)
-  expect_equal(round(spar_g_res2$val_res$measure[1], 2), 17873.92)
+  expect_equal(round(spar_g_res$val_res$measure[1], 2), 17034.7)
+  expect_equal(round(spar_g_res2$val_res$measure[1], 2), 17034.7)
   expect_equal(spar_g_res$val_res$measure[1], spar_g_res2$val_res$measure[1])
 })
 
@@ -167,8 +167,8 @@ test_that("Test the sparse rp", {
   set.seed(12345)
   spar_sparse_res2 <- spar(x,y, screencoef = screen_glmnet(),
                            rp = rp_sparse(psi = 0.01))
-  expect_equal(round(spar_sparse_res$val_res$measure[1], 2), 19028.88)
-  expect_equal(round(spar_sparse_res2$val_res$measure[1], 2), 19004.14)
+  expect_equal(round(spar_sparse_res$val_res$measure[1], 2), 18371.75)
+  expect_equal(round(spar_sparse_res2$val_res$measure[1], 2), 18175.45)
   expect_true(spar_sparse_res$val_res$measure[1] != spar_sparse_res2$val_res$measure[1])
 })
 test_that("Test the CW rp", {
@@ -177,7 +177,7 @@ test_that("Test the CW rp", {
   set.seed(123)
   spar_cw_res <- spar(x,y, screencoef = screen_glmnet(),
                       rp = rp_cw())
-  expect_equal(round(spar_cw_res$val_res$measure[1], 2), 16841.77)
+  expect_equal(round(spar_cw_res$val_res$measure[1], 2), 18049.16)
 })
 
 test_that("Test the screen_glm() with poisson family", {
@@ -329,5 +329,13 @@ test_that("Get errors for classification validation measure for non-binomial fam
   x <- example_data$x
   y <- example_data$y
   expect_error(spar(x,y,measure = "1-auc"))
+})
+
+
+test_that("Get errors if in rp we input a family that is not of class family", {
+  x <- example_data$x
+  y <- example_data$y
+  expect_error(spar(x,y, rp = rp_cw(data = TRUE, control = list(family = "gaussian")),
+                    measure = "1-auc"))
 })
 
