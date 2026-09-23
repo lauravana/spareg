@@ -17,8 +17,11 @@ constructor_randomprojection(
 
 \item{generate_fun}{function for generating the random projection matrix. This
 function should have with arguments \code{object}, which is a \code{'randomprojection'}
-object, \code{m}, the target dimension and a vector of indexes
-\code{included_vector}, \code{x} matrix of predictors and \code{y} matrix of predictors.
+object, \code{x} matrix of standardized predictors and
+\code{y} vector of standardized responses computed by \code{spar()},
+\code{m} (the target dimension) and a vector of indexes
+\code{included_vector}, as well as \code{...}
+(which allows passing any information from other objects used in the algorithm).
 Vector \code{included_vector} shows the column index of the original variables in the
 \code{x} matrix to be projected using the random projection. This is needed
 due to the fact that screening is employed pre-projection.}
@@ -70,7 +73,7 @@ random elements of the projection matrices in each fold, to reduce the
 computational burden.
 }
 \examples{
-generate_cauchy <- function(object, m, included_vector, x = NULL, y = NULL) {
+generate_cauchy <- function(object, x, y, m, included_vector, ...) {
   p <- length(included_vector)
   control_rcauchy <- c(object$control[names(object$control) \%in\% names(formals(rcauchy))],
     attributes(object)[names(attributes(object)) \%in\% names(formals(rcauchy))])

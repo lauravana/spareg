@@ -4,20 +4,20 @@
 \alias{generate_gaussian}
 \title{Gaussian Random Projection Matrix}
 \usage{
-generate_gaussian(object, m, included_vector, x = NULL, y = NULL)
+generate_gaussian(object, x = NULL, y = NULL, m, included_vector, ...)
 }
 \arguments{
 \item{object}{object of class  \code{'randomprojection'}}
+
+\item{x}{matrix of standardized predictors}
+
+\item{y}{vector of standardized response variable}
 
 \item{m}{goal dimension, which will be randomly sampled in the SPAR algorithm}
 
 \item{included_vector}{integer vector of column indices for the variables to be
 included in the random projection. These indices are produced in the
 screening step of the SPAR algorithm.}
-
-\item{x}{matrix of predictors}
-
-\item{y}{vector of response variable}
 }
 \value{
 matrix with m rows and

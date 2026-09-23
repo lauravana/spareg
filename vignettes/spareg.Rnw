@@ -1427,7 +1427,7 @@ update_rp_cannings <- function(object, x, y, family, ...) {
 %
 Next we specify the function for generating the random projection.
 <<generate_cannings>>=
-generate_cannings <- function(object, m, included_vector, x, y) {
+generate_cannings <- function(object, x, y, m, included_vector, ...) {
   xs <- x[, included_vector]; n <- nrow(x);  p <- ncol(xs)
   id_test <- sample(n, size = n * object$control$xi)
   xtrain <- xs[-id_test, ];  xtest <- xs[id_test,]
@@ -1500,11 +1500,10 @@ using the package \pkg{robustbase} \citep{pkg:robustbase}.
 We define a \code{generate_fun()} that uses \code{robustbase::lmrob()} for Gaussian
 models with identity link and \code{robustbase::glmrob()}
 for other family-link combinations.
-This function must have by design the following arguments:
-a `\code{sparmodel}' \code{object}, \code{yz} (response vector),
-\code{z} (matrix of reduced predictors)
-and a `\code{sparmodel}' \code{object},
-and outputs a list with two elements: \code{gammas} (vector of coefficients)
+The function must have by design the arguments \code{object} (of class \class{sparmodel}),
+\code{x} and \code{y} (standardized predictors and response vector passed by \code{spar()}),
+\code{z} (matrix of reduced predictors) as well as \code{...}.
+It outputs a list with two elements: \code{gammas} (vector of coefficients)
 and the \code{intercept} value.
 <<>>=
 model_glmrob <- function(object, x, y, z, ...) {

@@ -288,6 +288,7 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
     drawinds <- TRUE
   }
 
+  all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
   # SPAR algorithm -----
   marginal_model_function <- function(i) {
     out <- list()
@@ -317,8 +318,9 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
         m <- p_use
         RPM <- Matrix::Matrix(diag(1, m), sparse = TRUE)
       } else {
-        all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
-        RPM <- rp$generate_fun(rp, m = m, included_vector = ind_use, x = xz, y = yz)
+        RPM <- do.call(function(...)
+          rp$generate_fun(object = rp, x = xz, y = yz, m = m,
+                          included_vector = ind_use, ...), all_args_wo_x_y)
       }
     } else {
       RPM <- RPMs[[i]]
@@ -332,7 +334,6 @@ fit_spar_models <- function(x, y, family, model, rp, screencoef,
 
     # Marginal model
     znew <- Matrix::tcrossprod(xz[mar_inds, ind_use], RPM)
-    all_args_wo_x_y <- mget(formal_names_wo_x_y, envir = environment())
     res <- do.call(function(...)
       model$generate_fun(y = yz[mar_inds], z = znew, object = model, ...),
       all_args_wo_x_y)

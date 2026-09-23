@@ -16,8 +16,11 @@ update_rpm_identity <- function(rpm, object, included_vector, x, y, family, ...)
 #' @param name optional string describing the random projection method. This is used for printing.
 #' @param generate_fun function for generating the random projection matrix. This
 #' function should have with arguments \code{object}, which is a \code{'randomprojection'}
-#' object, \code{m}, the target dimension and a vector of indexes
-#' \code{included_vector}, \code{x} matrix of predictors and \code{y} matrix of predictors.
+#' object, \code{x} matrix of standardized predictors and
+#'  \code{y} vector of standardized responses computed by `spar()`,
+#'  \code{m} (the target dimension) and a vector of indexes
+#' \code{included_vector}, as well as `...`
+#'  (which allows passing any information from other objects used in the algorithm).
 #' Vector \code{included_vector} shows the column index of the original variables in the
 #' \code{x} matrix to be projected using the random projection. This is needed
 #' due to the fact that screening is employed pre-projection.
@@ -59,7 +62,7 @@ update_rpm_identity <- function(rpm, object, included_vector, x, y, family, ...)
 #' random elements of the projection matrices in each fold, to reduce the
 #' computational burden.
 #' @examples
-#' generate_cauchy <- function(object, m, included_vector, x = NULL, y = NULL) {
+#' generate_cauchy <- function(object, x, y, m, included_vector, ...) {
 #'   p <- length(included_vector)
 #'   control_rcauchy <- c(object$control[names(object$control) %in% names(formals(rcauchy))],
 #'     attributes(object)[names(attributes(object)) %in% names(formals(rcauchy))])
@@ -82,8 +85,8 @@ constructor_randomprojection <- function(name = NULL,
                                          update_rpm_w_data = update_rpm_identity,
                                          control = list()) {
   ## Checks
-  stopifnot("Function generate_fun needs arguments object, m, included_vector, x, y."=
-              names(formals(generate_fun)) %in% c("object", "m", "included_vector", "x", "y"))
+  stopifnot("Function generate_fun needs arguments object,x,y,m,included_vector and ...(ellipsis)."=
+              names(formals(generate_fun)) %in% c("object", "m", "included_vector", "x", "y", "..."))
   stopifnot("Function update_fun should have as argument object, x, y, family, ..." = names(formals(update_fun)) %in% c("object","x", "y", "family", "..."))
   stopifnot("Function update_rpm_w_data should have arguments rpm, object, included_vector, x, y, family, ... ."=names(formals(update_rpm_w_data)) %in% c("rpm", "object", "included_vector", "x", "y", "family", "..."))
   ## Function to return
@@ -105,16 +108,16 @@ constructor_randomprojection <- function(name = NULL,
 #' Gaussian Random Projection Matrix
 #'
 #' @param object object of class  \code{'randomprojection'}
+#' @param x matrix of standardized predictors
+#' @param y vector of standardized response variable
 #' @param m goal dimension, which will be randomly sampled in the SPAR algorithm
 #' @param included_vector integer vector of column indices for the variables to be
 #' included in the random projection. These indices are produced in the
 #' screening step of the SPAR algorithm.
-#' @param x matrix of predictors
-#' @param y vector of response variable
 #' @return matrix with m rows and
 #'  \code{length(included_vector)} columns sampled from the normal distribution.
 #' @keywords internal
-generate_gaussian <- function(object, m, included_vector, x = NULL, y = NULL) {
+generate_gaussian <- function(object,x = NULL, y = NULL, m, included_vector, ...) {
   p <- length(included_vector)
   control_rnorm <- c(
     object$control[names(object$control) %in% names(formals(rnorm))],
@@ -173,16 +176,16 @@ rp_gaussian <- constructor_randomprojection(
 #' Sparse Random Projection Matrix
 #'
 #' @param object object of class  \code{'randomprojection'}
+#' @param x matrix of standardized predictors
+#' @param y vector of standardized response variable
 #' @param m goal dimension, which will be randomly sampled in the SPAR algorithm
 #' @param included_vector integer vector of column indices for the variables to be
 #' included in the random projection. These indices are produced in the
 #' screening step of the SPAR algorithm.
-#' @param x matrix of predictors
-#' @param y vector of response variable
 #' @return (possibly sparse) matrix with m rows and
 #'  \code{length(included_vector)} columns.
 #' @keywords internal
-generate_sparse <- function(object, m, included_vector, x = NULL, y = NULL) {
+generate_sparse <-  function(object,x = NULL, y = NULL, m, included_vector, ...)  {
   p <- length(included_vector)
   psi <- object$control$psi
   if (is.null(psi)) psi <- attr(object, "psi")
@@ -250,16 +253,17 @@ rp_sparse <- constructor_randomprojection(
 #'
 #' Sparse Embedding Matrix
 #'
+#' @param object object of class  \code{'randomprojection'}
+#' @param x matrix of standardized predictors
+#' @param y vector of standardized response variable
 #' @param m goal dimension, which will be randomly sampled in the SPAR algorithm
 #' @param included_vector integer vector of column indices for the variables to be
 #' included in the random projection. These indices are produced in the
 #' screening step of the SPAR algorithm.
-#' @param x matrix of predictors
-#' @param y vector of response variable
 #' @return (possibly sparse) matrix with m rows and
 #'  \code{length(included_vector)} columns.
 #' @keywords internal
-generate_cw <- function(object, m, included_vector, x = NULL, y = NULL) {
+generate_cw <-  function(object, x, y, m, included_vector, ...)  {
   p <- length(included_vector)
   use_data <- attr(object, "data")
   if (is.null(use_data)) {
