@@ -160,7 +160,7 @@ data-driven random projection, the algorithm performs superiorly in terms of
 predictions and variable ranking in settings with different degrees of
 sparsity in the coefficients and with correlated predictors.
 
-% \textcolor{red}{TODO: clarify that data driven is good in certain settings, others in other settings etc. check dunson paper on theoretical results.}
+% \textcolor{red}{TODO: clarify that data-driven is good in certain settings, others in other settings etc. check dunson paper on theoretical results.}
 Package \pkg{spareg} \citep{pkg:spareg}  implements this flexible framework,
 offering a diverse selection of screening coefficients, random projection
 matrices, and (un)penalized marginal GLMs and
@@ -699,12 +699,12 @@ with 100 non-zero entries uniformly
 sampled from $\{-3,-2,-1,1,2,3\}$:
 <<eval=FALSE>>=
 set.seed(1234)
-example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 200)
 str(example_data)
 @
 <<echo=FALSE>>=
 set.seed(1234)
-example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 200)
 str(example_data, list.len = 4)
 @
 \begin{table}[t!]
@@ -864,8 +864,16 @@ among the \code{fast_fit} options are in general not large for the investigated
 settings. However, if
 users want to avoid target leakage \code{fast_fit = "none"} should be selected.
 %
+\subsection[Extensible S3 objects]{Extensible \proglang{S}3 objects}\label{sec:soft:S3}
+The \code{spar()} framework is organized around a common extensible structure comprising three method-specification objects:
+\class{screencoef} for screening coefficients, \class{randomprojection} for random projection matrices and \code{sparmodel} for the marginal model to be used in the ensemble.
 
-\subsection{Screening coefficients}\label{sec:soft:screen}
+We will explain in the following how each object is created to store the selected method and its initial \code{control} parameters. These objects are created before data is passed to \code{spar()}. Once the relevant training data and response family are available, \code{spar()} invokes the object's \code{update_fun()} to resolve context- or data-dependent settings, adjust controls, and store any required state;
+it then invokes the corresponding generation function \code{generate_fun()} to perform the primary computation.
+As a convention, \code{control} is a list of parameters to be passed to the main generating function, while parameters related to the procedure itself (such as the number of variables to be screened or the minimum dimension to which the variables should be projected) are to be saved as attributes to the objects.
+The shared interfaces allow users to extend the framework with custom screening, projection, and modeling methods while preserving consistent behavior across the three object types.
+
+\subsubsection{Screening coefficients}\label{sec:soft:screen}
 %
 Screening coefficients in \pkg{spareg} are implemented as \proglang{S}3 classes \class{screencoef}.
 These objects are created using functions like \code{screen_*()} which accept as arguments:
@@ -930,9 +938,11 @@ projection. Defaults to \code{FALSE}. This attribute is ignored if a data-agnost
 %
 All implemented \code{screen_*()} functions return an object of class
 \class{screencoef}
-which in turn is a list with three elements containing a \code{generate_fun}
+which in turn is a list containing an \code{update_fun}
+function which in the default case updates the object with the \code{family} information,
+a \code{generate_fun}
 function, the \code{control} list passed by the user in
-\code{screen_*()}, and optional metadata like \code{name}. A user-friendly \fct{print} method of the \class{screencoef} object is also provided.
+\code{screen_*()}, and an optional \code{name} string. A user-friendly \fct{print} method of the \class{screencoef} object is also provided.
 % %
 % <<>>=
 % screen_marglik()
@@ -957,12 +967,12 @@ function, the \code{control} list passed by the user in
 % \code{family} argument in \code{stats::glm()} will be set to the ``global''
 % family of the SPAR algorithm which is assigned
 % inside the \code{spar()} function as an attribute for the \class{screencoef} object).
-For convenience, a constructor function \code{constructor\_screencoef()}
+For convenience, \code{constructor\_screencoef()}, a constructor function
 is provided, which can be used to create new \code{screen_*()} functions.
 An example is presented in Section~\ref{sec-extensscrcoef}.
 %
 %
-\subsection{Random projections}\label{sec:soft:rps}
+\subsubsection{Random projections}\label{sec:soft:rps}
 %
 Random projection objects are
 implemented as \proglang{S}3
@@ -1009,16 +1019,24 @@ $n/2$ or. if $p < n/2$, to $p$.
 % $1 - n^{-\tau}$).
 %
 The \code{rp_*()} functions return an object of class \class{randomprojection}
-which is a list of five elements. The most important elements contain
+which is a list of five elements. A constructor function
+\code{constructor\_randomprojection()} for creating these objects is provided
+(as will be shown in Section~\ref{sec-ext-rp}).
+The most important elements contain
 \code{generate_fun()}, the function for generating the random projection
 matrix, and \code{control}, the list of controls passed by the user in
-\code{rp_*()}.  Optional elements include \code{name},
-function \code{update_fun()} for updating the
-\class{randomprojection} objects with further relevant information
-(such as \class{family} or precomputed screening coefficients), or function
+\code{rp_*()}.
+As previously mentioned, objects of class \class{randomprojection}
+are constructed before the data are available. Consequently,
+settings that depend on the data cannot always be resolved by the
+constructor. Before calling \code{generate_fun()}, \code{spar()} calls
+\code{update_fun} to resolve such settings and to store any (data-dependent)
+information in the object (such as \class{family} or precomputed screening coefficients). If argument \code{update_fun} is not specified when using a constructor, the default will only add the family information to the  \class{randomprojection} object.
+Further optional elements include \code{name}, or function
 \code{update_rpm_w_data()}, which specifies how to update the pre-computed
-matrices (when \code{fast_fit} is \code{fix_rpm_and_inds} or \code{fix_rpm})  with data
-information in each fold of the cross-validation procedure.
+matrices (when \code{fast_fit} is \code{fix_rpm_and_inds} or \code{fix_rpm})  with data information in each fold of the cross-validation procedure.
+Note that \code{update_fun()} updates the RP specification before
+generating matrices while \code{update_rpm_w_data()} modifies an already-generated matrix, usually during cross-validation.
 % \begin{itemize}
 % \item a optional character \code{name}
 % for printing;
@@ -1058,7 +1076,7 @@ information in each fold of the cross-validation procedure.
 % certain data-dependent quantities--such as ridge coefficients--are estimated once at the start and reused across all projections. To support this, the \code{update_fun()} can be used to attach data information as attributes to the \class{randomprojection} object, which are then accessed by \code{generate_fun()}. If provided, \code{update_fun()} should accept \code{...} as its argument; the \code{spar()} function will then internally pass all its own arguments to it. The function must return a \class{randomprojection} object.
 % %
 % \item In the case where a list of predefined \code{RPMs} is provided in \code{spar()},
-% for the data driven random projections we allow the user to
+% for the data-driven random projections we allow the user to
 % specify whether some parts of the given \code{RPMs} should be updated with
 % the provided data. This is possible through another optional function
 % \code{update_rpm_w_data()}.
@@ -1094,10 +1112,8 @@ information in each fold of the cross-validation procedure.
 % string and adds it as an attribute. Function \code{update_rpm_w_data()} is
 % \code{NULL} as this random projection is data-agnostic.
 
-A constructor function \code{constructor\_randomprojection()} is provided,
-as will be shown in Section~\ref{sec-ext-rp}.
 %
-\subsection{Marginal models}\label{sec:soft:sparmodel}
+\subsubsection{Marginal models}\label{sec:soft:sparmodel}
 %
 The \pkg{spareg} package uses the \class{sparmodel} class to define marginal
 models for each ensemble element. These models assume a linear predictor
@@ -1124,17 +1140,13 @@ with the minimal penalty considered in \pkg{glmnet}\footnote{
 By default, \code{spar_glm()} is used for Gaussian family with identity link,
 while \code{spar_glmnet()} is used for all other families.
 
-An object of class `\code{sparmodel}' is a list with elements:
-\begin{itemize}
-\item an optional character \code{name} for printing;
-%
-\item  \code{generate_fun()} -- a function used to generate the coefficients
-and intercept value for each model in the ensemble.
-%
-\item \code{update_fun()} -- optional function to modify the \class{sparmodel}
+Similar to the already presented \proglang{S}3 objects, an object of class `\code{sparmodel}' is a list containing
+ an optional character \code{name} for printing, \code{generate_fun()} -- a function used to generate the coefficients
+and intercept value for each model in the ensemble, \code{update_fun()} -- an (optional) function to modify the \class{sparmodel}
 object at the start of the SPAR algorithm (e.g.,~adjusting the \class{family}
-object for \pkg{glmnet} compatibility).
-\end{itemize}
+object for \pkg{glmnet} compatibility) and
+\code{control}, the list of controls passed by the user in \code{spar_*()}.
+
 %
 An example for implementing a new marginal model class using the constructor
 function \code{constructor\_sparmodel()} is presented in
@@ -1256,10 +1268,10 @@ on response level (available for \class{spar} objects and
 %
 \item \code{"coefs"}  produces a plot of the value of the standardized
 coefficients for each predictor in each marginal model (before thresholding).
-For each predictor, the coefficient values are sorted from largest to
-smallest across the marginal models and their value is represented in the plot
-using a color scale  (available for \class{spar} objects and
-\class{spar.cv} object with \code{fast_fit = "fix_rpm_and_inds"}).
+For each predictor, the coefficients are sorted from largest to
+smallest in absolute value across the marginal models and their value is
+represented in the plot using a color scale  (available for \class{spar}
+objects and \class{spar.cv} object with \code{fast_fit = "fix_rpm_and_inds"}).
 \end{itemize}
 \item \code{plot_along} -- for
 \code{plot_type = "val_measure"} or
@@ -1291,7 +1303,7 @@ shown in Figure~\ref{fig:plot_example}.
 \begin{figure}[t!]
 \centering
 \setkeys{Gin}{width=\textwidth}
-<<plotmethod, echo=FALSE, fig=TRUE, width=14, height=4.5,prefix.string=spareg>>=
+<<plotmethod, echo=FALSE, fig=TRUE, width=14, height=7,prefix.string=spareg>>=
 library(ggplot2)
 p1 <- plot(spar_res)+
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))
@@ -1301,12 +1313,12 @@ p4 <- plot(spar_res, plot_type = "res_vs_fitted", xfit = example_data$xtest,
   yfit = example_data$ytest)
 p3 <- plot(spar_res,  plot_type = "coefs")
 p <- ggpubr::ggarrange(p1, p2, p3, p4,
-  ncol = 4, nrow = 1)
+  ncol = 2, nrow = 2)
 p
 @
-\caption{\fct{plot} methods for \class{spar} object. The red dots in the first
-two figures show the best $\nu$ chosen on the validation set for the optimal number
-of models $M=5$.
+\caption{\fct{plot} methods for \class{spar} object. The red dots in the top
+figures show the best $\nu$ chosen on the validation set for the optimal number
+of models.
 \label{fig:plot_example}}
 \end{figure}
 %
@@ -1407,7 +1419,12 @@ data-agnostic, the entire dataset is required to identify the best projection.
 
 In the implementation, we
 fit a GLM as a marginal model on the training data.
-The performance is evaluated using deviance on the test set. Default values can be specified in \code{update_fun()}:
+The performance is evaluated using deviance on the test set. Default values
+can be specified in \code{update_fun()}, which must have arguments
+\code{object}, \code{x} and \code{y} (predictor matrix and response vector
+already standardized and supplied by `spar()`), \code{family} and  \code{...},
+whereas all other relevant arguments from \code{spar()} will be passed
+through the ellipsis.
 % related to the family. Given that we will rely again on
 % \code{glmnet::glmnet()} in each iteration~$b$,
 % the family object is modified to a
@@ -1440,7 +1457,7 @@ generate_cannings <- function(object, x, y, m, included_vector, ...) {
     xrp <- tcrossprod(xtrain, RM)
     mod <- do.call(function(...)
       glm.fit(x = cbind(1, xrp), y = ytrain, ...), control_glm)
-    eta_test <- (cbind(1, tcrossprod(xtest, RM)) %*% coef(mod))
+    eta_test <- cbind(1, tcrossprod(xtest, RM)) %*% coef(mod)
     pred <- object$control$family$linkinv(eta_test)
     out_dev <- sum(object$control$family$dev.resid(ytest, pred, wt = 1))
     if (out_dev < best_val) {
@@ -1484,7 +1501,7 @@ spar_cw <- spar(x = ex2$x, y = ys, family = binomial(),
   rp = rp_cw(data = FALSE, msup = 20), model = spar_glm(),
   nus = 0, nummods = 50, xval = ex2$xtest, yval = ysval)
 @
-We can compare the two approaches by directly looking at the validation measure
+The two approaches are compared by directly looking at the validation measure
 achieved by the two ensembles on the provided validation set.
 The extractor function \code{get_measure()} can be used to extract the
 following information from the \class{spar} object:
@@ -1727,7 +1744,7 @@ deviation in the MSE across folds. \label{fig:facesplot_valmeasure}}
 \end{figure}
 %
 The coefficients of the different variables (in this example pixels) obtained by
-averaging over the coefficients the marginal models can be extracted by \fct{coef}. For the ensemble chosen by the 1SE rule we have:
+averaging over the coefficients in the marginal models can be extracted by \fct{coef}. For the ensemble chosen by the 1SE rule we have:
 %
 <<facecoef1se, eval=FALSE>>=
 face_coef_1se <- coef(spar_faces, opt_par = "1se")
@@ -1750,7 +1767,7 @@ predictive for orientation.
 Finally we compare the performance of the estimated version of the SPAR algorithm
 with another version proposed in \cite{Dunson2020TargRandProj}, where the sparse
 random projection in \cite{ACHLIOPTAS2003JL} is combined with
-probabilistic marginal correlation screening.
+probabilistic marginal correlation screening and no thresholding is performed.
 We also use the values of $m_l=2\log p$ and $m_u=3/4 n$ as recommended in \cite{Dunson2020TargRandProj} to define the lower and upper bounds for the random projection dimension.
 %
 <<tarp_comparison_true,eval=FALSE>>=
@@ -1758,7 +1775,7 @@ set.seed(123)
 m_l <- 2 * log(ncol(xtrain)); m_u <- 3/4 * nrow(xtrain)
 tarp_faces <-  spar.cv(xtrain, ytrain, screencoef = screen_cor(),
   rp = rp_sparse(psi = 1/3, mslow = m_l, msup = m_u), model = spar_glm(),
-  nummods = c(5, 10, 20, 50), measure = "mse")
+  nus = 0, nummods = c(5, 10, 20, 50), measure = "mse")
 @
 <<tarp_comparison_true,echo=FALSE>>=
 if(is_paper) {
@@ -1767,6 +1784,7 @@ if(is_paper) {
   tarp_faces <-  spar.cv(xtrain, ytrain,
                          model = spar_glm(),
                          screencoef = screen_cor(),
+                          nus = 0,
                          rp = rp_sparse(psi = 1/3, mslow = m_l, msup = m_u),
                          nummods = c(5, 10, 20, 50), measure = "mse")
   ynew_tarp <- predict(tarp_faces, xnew = xtest, opt_par = "1se")
@@ -1919,7 +1937,8 @@ being active (some variables can be inactive at $\nu=0$
 as they may never be screened).
 The 1se rule  achieves that a much sparser model with a cross-validation measure
 of around 0.075. The average number of active variables for the grid of thresholds
-$\nu$ and $M = 20$ models is shown in Figure~\ref{fig:darwin_activevars}.
+$\nu$ and $M = 20$ models is obtained by the following call and
+shown in Figure~\ref{fig:darwin_activevars}.
 <<plotdarwinact, eval=FALSE>>=
 plot(spar_darwin, plot_type = "val_numactive")
 @
@@ -2137,13 +2156,13 @@ The results for increasing $n$ are presented in
 Figure~\ref{fig:bench_sim_n} while Figure~\ref{fig:bench_sim_p} shows the results
 for increasing $p$.
 Increasing $n$ leads to the largest increase in computation time and memory usage for the SPAR CV methods.
- In terms of predictive performance, SPAR and its variants using the data driven
+ In terms of predictive performance, SPAR and its variants using the data-driven
  projections outperform on average ElNet for lower $n$, while
  elastic net is superior when $n$ increases.
 
 When increasing $p$, we observe that SPAR and its variants maintain their computational efficiency and memory usage, while ElNetCV's scales worse.
 Performance deteriorates in terms of both rMSPE and pAUC when increasing $p$
-but SPAR and its data driven variants projections do remain on average superior
+but SPAR and its data-driven projection variants do remain on average superior
 to ElNet in terms of predictive performance and variable ranking.
 %
 \begin{figure}[t!]
