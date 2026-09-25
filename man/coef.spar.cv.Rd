@@ -15,42 +15,48 @@
 }
 \arguments{
 \item{object}{result of \link{spar.cv} function of class \code{'spar.cv'}. Refitting
-can be done using \code{get_model().}}
+can be done using \code{get_model()}.}
 
-\item{nummod}{optional number of models used to form coefficients}
+\item{nummod}{optional number of models used to form coefficients.}
 
-\item{nu}{optional threshold level used to form coefficients}
+\item{nu}{optional threshold level used to form coefficients.}
 
 \item{opt_par}{one of \code{c("1se","best")}, chooses whether to select the
 best pair of \code{nus} and \code{nummods} according to cross-validated
 (CV) measure, or the sparsest solution within one sd of that optimal
 CV measure;
-ignored when \code{nummod} and \code{nu} are given}
+ignored when \code{nummod} and \code{nu} are given.}
 
-\item{aggregate}{character one of c("mean", "median", "none"). If set to "none"
+\item{aggregate}{character one of \code{c("mean", "median", "none")}.
+If set to \code{"none"}
 the coefficients are not aggregated over the marginal models, otherwise
 the coefficients are aggregated using the specified method (mean or median).
 Defaults to mean aggregation.}
 
-\item{...}{further arguments passed to or from other methods}
+\item{...}{further arguments passed to or from other methods.}
 }
 \value{
 List with elements
 \itemize{
-\item \code{intercept} intercept value
-\item \code{beta} vector of length p of averaged coefficients
-\item \code{nummod} number of models based on which the coefficient is computed
-\item \code{nu}  threshold based on which the coefficient is computed
+\item \code{intercept} average intercept value or vector intercepts
+(one for each marginal model) if \code{aggregate = "none"}.
+\item \code{beta} vector of length \eqn{p} of averaged coefficients or a
+\eqn{p} x \code{max(nummods)} matrix of coefficients if \code{agregate = "none"}.
+\item \code{nummod} number of models based on which the coefficient is computed.
+\item \code{nu}  threshold based on which the coefficients is computed.
 }
 }
 \description{
-Extract coefficients from \code{'spar.cv'} object
-Only allowed if \code{fast_fit = "fix_rpm_and_inds"} is used when calling \code{spar.cv}.
-In this case the ensemble obtained on the whole data is used for the
-combination of threshold and number of models using the best or the 1se identified through cross-validation.
-Otherwise coefficients cannot be extracted without refitting on whole data with
-best or 1se parameters. To be able to extract coefficients in case \code{fast_fit = "fix_rpm"}
-or \code{fast_fit = "none"}, use \code{spar()} to refit with the desired (nu, M) combination.
+Extract coefficients from \code{'spar.cv'} object.
+This function extracts coefficients only if
+\code{precompute_mode = "precompute_all"}. In this case, coefficients
+are derived from the initial run on the full dataset using the optimal
+\eqn{M} and \eqn{\nu} combination identified via cross-validation
+(best or 1se rule). For other modes (\code{"precompute_proj"} or
+\code{"full_cv"}), coefficients cannot be directly extracted because
+screening or projections vary across folds. To obtain coefficients in
+these cases, refit the model on the full dataset using \code{spar()}
+with the selected \eqn{M} and \eqn{\nu}  values.
 }
 \examples{
 \donttest{

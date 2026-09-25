@@ -2,41 +2,25 @@
 % Please edit documentation in R/sparmodel_classes.R
 \name{spar_glmnet}
 \alias{spar_glmnet}
-\title{Penalized  GLM Marginal  \code{'sparmodel'}}
+\title{Penalized  GLM Marginal  \code{\link[=sparmodel-class]{sparmodel}}}
 \usage{
 spar_glmnet(..., control = list())
 }
 \arguments{
 \item{...}{includes arguments which can be passed as attributes to the
-\code{'sparmodel'} object}
+\code{\link[=sparmodel-class]{sparmodel}} object}
 
 \item{control}{list of controls to be passed to the model function}
 }
 \value{
-object of class \code{'sparmodel'} which is a list with elements
-\itemize{
-\item \code{name} (character, optional, used for printing)
-\item \code{control} (list of controls passed as an argument)
-\item \code{generate_fun}  for generating the screening coefficient.
-This function should have arguments \code{y}, vector of standardized responses,
-\code{z}, a matrix of projected predictors in each marginal model, and
-\code{object}, which is a \code{'sparmodel'} object. Returns a list with
-two elements: \code{gammas} which is the vector of regression coefficients
-for the projected predictors and \code{intercept} which is the intercept
-of the model.
-\item \code{update_fun}  optional function for updating the \code{'sparmodel'}
-object before the start of the algorithm. For
-\code{spar_glmnet()} this function manipulates the
-\code{'family'} object for compatibility with
-\link[glmnet]{glmnet}. I.e., In the case of families Gaussian,
-binomial and Poisson with  canonical link, the family object is
-replaced by a string containing the name of the family.
-This leads to  \link[glmnet]{glmnet} using the faster
-specialized algorithms rather than the general algorithm.
-}
+Returns an object of class \code{\link[=sparmodel-class]{sparmodel}}.
 }
 \description{
-Creates an object class \code{'sparmodel'} using arguments passed by user.
+Creates an object class \code{\link[=sparmodel-class]{sparmodel}} using arguments passed by user, where
+the generating function computes the coefficients of the marginal models
+based on a penalized GLM. Computation relies on \code{\link[glmnet:glmnet]{glmnet::glmnet}}.
+By default, the models assume \eqn{\alpha=0} and return the coefficients
+obtained with the penalty \eqn{\lambda_\text{min}}.
 }
 \details{
 Relies on \link[glmnet]{glmnet}.
@@ -47,4 +31,7 @@ spar_res <- spar(example_data$x, example_data$y,
   xval = example_data$xtest, yval = example_data$ytest,
   model = spar_glmnet(alpha = 0.1))
 
+}
+\seealso{
+\code{\link[=sparmodel-class]{sparmodel}}, \code{\link[glmnet:glmnet]{glmnet::glmnet}}
 }

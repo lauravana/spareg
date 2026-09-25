@@ -13,33 +13,34 @@
 )
 }
 \arguments{
-\item{object}{result of \link{spar} function of class \code{'spar'}.}
+\item{object}{result of \link{spar} of class \code{'spar'}.}
 
 \item{nummod}{number of models used to form coefficients; value with minimal
 validation \code{measure} is used if not provided.}
 
-\item{nu}{threshold level used to form coefficients; value with minimal
+\item{nu}{threshold level used to compute the coefficients; value with minimal
 validation \code{measure} is used if not provided.}
 
-\item{aggregate}{character, one of c("mean", "median", "none"), giving the method of aggregating
-the coefficients over the marginal models. If set to "none",
+\item{aggregate}{character, one of \code{c("mean", "median", "none")},
+giving the method of aggregating
+the coefficients over the marginal models. If set to \code{"none"},
 the coefficients are not aggregated over the marginal models and a
-matrix of coefficients, one column for each marginal model is returned.
+matrix of coefficients, one column for each marginal model, is returned.
 Otherwise
 the coefficients are aggregated using the specified method (mean or median).
 Defaults to mean aggregation.}
 
-\item{...}{further arguments passed to or from other methods}
+\item{...}{further arguments passed to or from other methods.}
 }
 \value{
-object of class  \code{'coefspar'} which is a list with elements
+Returns an object of class  \code{'coefspar'}, which is a list with elements
 \itemize{
-\item \code{intercept} average intercept value or vector intercepts (one for
+\item \code{intercept}: The average intercept value or vector intercepts (one for
 each marginal model) if \code{aggregate = "none"}.
-\item \code{beta} vector of length p of averaged coefficients or a
-p x \code{max(nummods)} matrix of coefficients if \code{agregate = "none"}.
-\item \code{nummod} number of models based on which the coefficients are computed
-\item \code{nu}  threshold based on which the coefficients are computed
+\item \code{beta}: Vector of length \eqn{p} of averaged coefficients or a
+\eqn{p} x \code{max(nummods)} matrix of coefficients if \code{agregate = "none"}.
+\item \code{nummod}: Number of models based on which the coefficients are computed.
+\item \code{nu}:  Threshold value based on which the coefficients are computed.
 }
 }
 \description{

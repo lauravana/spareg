@@ -35,7 +35,7 @@
 #'        logical indicating whether the function should use it in parallelizing the
 #'        estimation of the marginal models. Defaults to FALSE.
 #' @param seed integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.
-#' @param fast_fit character, one of \code{c("fix_rpm_and_inds", "fix_rpm", "none")}, indicating whether to use the same random projection matrix and/or the same indices for screening across folds. Defaults to \code{"fix_rpm_and_inds"}.
+#' @param precompute_mode character, one of \code{c("precompute_all", "precompute_rpm", "full_cv")}, indicating whether to use the same random projection matrix and/or the same indices for screening across folds. Defaults to \code{"precompute_all"}.
 #' @param ... further arguments mainly to ensure back-compatibility
 #' @returns object of class \code{'spar.cv'} with elements
 #' \itemize{
@@ -67,7 +67,7 @@
 #'  \item \code{rp} an object of class \code{'randomprojection'}
 #'  \item \code{screencoef} an object of class \code{'screeningcoef'}
 #'  \item \code{model} an object of class \code{'sparmodel'}
-#'  \item \code{fast_fit} character, one of \code{c("fix_rpm_and_inds", "fix_rpm", "none")}, indicating whether the same random projection matrix and/or the same indices for screening across folds were used.
+#'  \item \code{precompute_mode} character, one of \code{c("precompute_all", "precompute_rpm", "full_cv")}, indicating whether the same random projection matrix and/or the same indices for screening across folds were used.
 #'  \item \code{seed} integer seed used at the beginning of the algorithm.
 #'  }
 #' @examples
@@ -86,7 +86,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
                     measure = c("deviance","mse","mae","class","1-auc"),
                     avg_type = c("link","response"),
                     parallel = FALSE, seed = NULL,
-                    fast_fit = c("fix_rpm_and_inds", "fix_rpm", "none"),
+                    precompute_mode = c("precompute_all", "precompute_rpm", "full_cv"),
                     ...) {
   # Set up and checks ----
   n <- length(y)
@@ -100,7 +100,7 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
   }
 
   measure <- match.arg(measure)
-  fast_fit <- match.arg(fast_fit)
+  precompute_mode <- match.arg(precompute_mode)
   avg_type <- match.arg(avg_type)
 
   # Ensure back compatibility ----
@@ -112,8 +112,8 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
 
   # Run initial spar algorithm ----
   ## Precompute nus if not provided ----
-  #if (is.null(nus) | !(fast_fit == "none")) {
-  if (fast_fit == "fix_rpm") {
+  #if (is.null(nus) | !(precompute_mode == "full_cv")) {
+  if (precompute_mode == "precompute_rpm") {
     temp_screencoef <- NULL
     temp_arg_list <- check_and_set_args(
       args, x, y, family, model,
@@ -130,16 +130,19 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
     nummods = nummods, measure = measure, avg_type = avg_type,
     parallel = parallel, seed = seed
   )
-  temp_val_res <- validate_spar(temp_fit, x, y, temp_fit$nus,
-                                nummods, measure, avg_type)
+  temp_val_res <- validate_spar(fitted_objects = temp_fit,
+                                xval = x, yval = y,
+                                nus = temp_fit$nus,
+                                nummods = nummods, measure = measure,
+                                avg_type = avg_type)
 
   if (is.null(nus)) nus <- temp_fit$nus
-  if (!(fast_fit == "none")) {
+  if (!(precompute_mode == "full_cv")) {
     RPMs <- temp_fit$RPMs
   } else {
     RPMs <- NULL
   }
-  if (fast_fit == "fix_rpm_and_inds") {
+  if (precompute_mode == "precompute_all") {
     inds <- temp_fit$inds
   } else {
     inds <- NULL
@@ -195,8 +198,8 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
       list("betas_std"  = fitted_objects$"betas_std",
            "intercepts" = fitted_objects$"intercepts",
            "scr_coef"   = fitted_objects$"scr_coef",
-           "inds"       = if (fast_fit == "fix_rpm_and_inds") NULL else fitted_objects$"inds",
-           "RPMs"       = if (fast_fit %in% c("fix_rpm_and_inds", "fix_rpm")) NULL else fitted_objects$"RPMs",
+           "inds"       = if (precompute_mode == "precompute_all") NULL else fitted_objects$"inds",
+           "RPMs"       = if (precompute_mode %in% c("precompute_all", "precompute_rpm")) NULL else fitted_objects$"RPMs",
            "xcenter"    = fitted_objects$"xcenter",
            "xscale"     = fitted_objects$"xscale",
            "ycenter"    = fitted_objects$"ycenter",
@@ -214,14 +217,14 @@ spar.cv <- function(x, y, family = gaussian("identity"), model = spar_glmnet(),
     fitted_objects = all_fitted_objects,
     nus = nus,
     nummods = nummods,
-    family = paste0(family$family, "(", family$link, ")"),
+    family = family,
     measure = measure,
     avg_type = avg_type,
     nfolds = nfolds,
     rp = rp,
     screencoef = screencoef,
     model = model,
-    fast_fit = fast_fit,
+    precompute_mode = precompute_mode,
     seed = seed
   )
   attr(res,"class") <- "spar.cv"
@@ -254,11 +257,11 @@ spareg.cv <- spar.cv
 #'  \code{plot_type="val_measure"} or  \code{"val_numactive"};
 #' @param nu fixed value for \eqn{\nu} when  \code{plot_along="nummod"}
 #' for  \code{plot_type="val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar.cv}} when  \code{plot_type="res_vs_fitted"}.
-#' @param xfit optional vector of fitted values to be used for  \code{plot_type="res_vs_fitted"}; if not provided, the fitted values are computed using the best parameters. Argument is used only if \code{fast_fit = "fix_rpm_and_inds"} and \code{plot_type = "res_vs_fitted"}.
-#' @param yfit optional vector of response values to be used for  \code{plot_type="res_vs_fitted"}; if not provided, the response values are computed using the best parameters. Argument is used only if \code{fast_fit = "fix_rpm_and_inds"} and \code{plot_type = "res_vs_fitted"}.
-#' @param opt_par one of \code{c("1se","best")}, chooses whether to select the best pair of \code{nus} and \code{nummods} according to cross-validated (CV) measure, or the sparsest solution within one sd of that optimal CV measure. Argument is used only if \code{fast_fit = "fix_rpm_and_inds"} and \code{plot_type = "res_vs_fitted"}.
-#' @param prange optional vector of length 2 indicating the range of predictors to be plotted for \code{plot_type = "coefs"}; defaults to \code{c(1, p)} where \code{p} is the number of predictors. Argument can be used only if \code{fast_fit = "fix_rpm_and_inds"}.
-#' @param coef_order optional vector of length \code{p} indicating the order of predictors to be plotted for \code{plot_type = "coefs"}; defaults to \code{seq_len(p)} where \code{p} is the number of predictors. Argument can be used only if \code{fast_fit = "fix_rpm_and_inds"}.
+#' @param xfit optional vector of fitted values to be used for  \code{plot_type="res_vs_fitted"}; if not provided, the fitted values are computed using the best parameters. Argument is used only if \code{precompute_mode = "precompute_all"} and \code{plot_type = "res_vs_fitted"}.
+#' @param yfit optional vector of response values to be used for  \code{plot_type="res_vs_fitted"}; if not provided, the response values are computed using the best parameters. Argument is used only if \code{precompute_mode = "precompute_all"} and \code{plot_type = "res_vs_fitted"}.
+#' @param opt_par one of \code{c("1se","best")}, chooses whether to select the best pair of \code{nus} and \code{nummods} according to cross-validated (CV) measure, or the sparsest solution within one sd of that optimal CV measure. Argument is used only if \code{precompute_mode = "precompute_all"} and \code{plot_type = "res_vs_fitted"}.
+#' @param prange optional vector of length 2 indicating the range of predictors to be plotted for \code{plot_type = "coefs"}; defaults to \code{c(1, p)} where \code{p} is the number of predictors. Argument can be used only if \code{precompute_mode = "precompute_all"}.
+#' @param coef_order optional vector of length \code{p} indicating the order of predictors to be plotted for \code{plot_type = "coefs"}; defaults to \code{seq_len(p)} where \code{p} is the number of predictors. Argument can be used only if \code{precompute_mode = "precompute_all"}.
 #' @param digits number of significant digits to be displayed in the axis; defaults to 2L.
 #' @param ... further arguments passed to or from other methods
 #' @return \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
@@ -287,7 +290,7 @@ plot.spar.cv <- function(x,
                          coef_order = NULL, digits = 2L, ...)  {
   spar_res <- x
   plot_type <- match.arg(plot_type)
-  if (plot_type %in% c("res_vs_fitted", "coefs") && spar_res$fast_fit != "fix_rpm_and_inds") {
+  if (plot_type %in% c("res_vs_fitted", "coefs") && spar_res$precompute_mode != "precompute_all") {
     stop("Plot types 'res_vs_fitted' and 'coefs' are not yet implemented!")
   }
   plot_along <- match.arg(plot_along)
@@ -301,10 +304,12 @@ plot.spar.cv <- function(x,
     if (plot_along=="nu") {
       if (is.null(nummod)) {
         mynummod <- my_val_sum$nummod[which.min(my_val_sum$Meas)]
-        tmp_title <- "Fixed optimal nummod="
+        tmp_title <- "Optimal~number~of~models~M[best]=="
       } else {
-        tmp_title <- "Fixed given nummod="
+        tmp_title <- "Given~number~of~models~M=="
       }
+      tmp_title_text <- paste0(tmp_title,mynummod)
+
       tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$Meas)
       allowed_ind <- tmp_df$Meas<=tmp_df$Meas[ind_min]+
@@ -318,10 +323,11 @@ plot.spar.cv <- function(x,
         ggplot2::geom_line() +
         ggplot2::theme_bw() +
         ggplot2::labs(x=expression(nu),y=spar_res$measure) +
+        ggplot2::geom_vline(xintercept = tmp_df$nu[ind_min],linetype=2,linewidth=0.5)+
         ggplot2::geom_point(data=data.frame(x=tmp_df$nu[ind_min],
                                             y=tmp_df$Meas[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red") +
-        ggplot2::ggtitle(paste0(tmp_title,mynummod)) +
+        ggplot2::ggtitle(parse(text = tmp_title_text)) +
         ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$Meas-.data$sd_measure,
                                           ymax=.data$Meas+.data$sd_measure),
                              alpha=0.2,linetype=2,show.legend = FALSE) +
@@ -338,11 +344,15 @@ plot.spar.cv <- function(x,
     } else {
       if (is.null(nu)) {
         nu <- my_val_sum$nu[which.min(my_val_sum$Meas)]
-        tmp_title <- "Fixed optimal "
+        tmp_title <- "Optimal~threshold~nu[best]=="
       } else {
-        tmp_title <- "Fixed given "
+        tmp_title <- "Given~threshold~nu=="
       }
-      tmp_df <- my_val_sum[my_val_sum$nu==nu, ]
+      tmp_title_text <- paste0(tmp_title, round(nu, 3))
+
+      nu_grid <- max(spar_res$nus[spar_res$nus <= nu])
+      tmp_df <- my_val_sum[my_val_sum$nu==nu_grid, ]
+
       ind_min <- which.min(tmp_df$Meas)
       allowed_ind <- tmp_df$Meas<=tmp_df$Meas[ind_min]+
         tmp_df$sd_measure[ind_min]
@@ -355,7 +365,8 @@ plot.spar.cv <- function(x,
         ggplot2::labs(y=spar_res$measure) +
         ggplot2::geom_point(data=data.frame(x=tmp_df$nummod[ind_min],y=tmp_df$Meas[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red")+
-        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3)))) +
+        ggplot2::ggtitle(parse(text = tmp_title_text)) +
+        ggplot2::geom_vline(xintercept = tmp_df$nummod[ind_min],linetype=2,linewidth=0.5)+
         ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$Meas-.data$sd_measure,
                                           ymax=.data$Meas+.data$sd_measure),
                              alpha=0.2,linetype=2,show.legend = FALSE)+
@@ -378,12 +389,13 @@ plot.spar.cv <- function(x,
     if (plot_along=="nu") {
       if (is.null(nummod)) {
         mynummod <- my_val_sum$nummod[which.min(my_val_sum$Meas)]
-        tmp_title <- "Fixed optimal nummod="
+        tmp_title <- "Optimal~number~of~models~M[best]=="
       } else {
-        tmp_title <- "Fixed given nummod="
+        tmp_title <- "Given~number~of~models~M=="
       }
       tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$Meas)
+      tmp_title_text <- paste0(tmp_title,mynummod)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sd_measure[ind_min]
       ind_1se <- which.min(tmp_df$numactive[allowed_ind])
@@ -392,20 +404,24 @@ plot.spar.cv <- function(x,
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         ggplot2::labs(x=expression(nu)) +
+        ggplot2::geom_vline(xintercept = tmp_df$nu[ind_min],linetype=2,linewidth=0.5)+
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
                             color=2,show.legend = FALSE,
                             data=data.frame(x = c(tmp_df$nu[ind_min],tmp_df$nu[allowed_ind][ind_1se]),
                                             y = c(tmp_df$numactive[ind_min],tmp_df$numactive[allowed_ind][ind_1se]))) +
         ggplot2::theme_bw() +
-        ggplot2::ggtitle(paste0(tmp_title,mynummod))
+        ggplot2::ggtitle(parse(text = tmp_title_text))
     } else {
       if (is.null(nu)) {
         nu <- my_val_sum$nu[which.min(my_val_sum$Meas)]
-        tmp_title <- "Fixed optimal "
+        tmp_title <- "Optimal~threshold~nu[best]=="
       } else {
-        tmp_title <- "Fixed given "
+        tmp_title <- "Given~threshold~nu=="
       }
-      tmp_df <- my_val_sum[my_val_sum$nu==nu, ]
+      tmp_title_text <- paste0(tmp_title,nu)
+      nu_grid <- max(spar_res$nus[spar_res$nus <= nu])
+      tmp_df <- my_val_sum[my_val_sum$nu==nu_grid, ]
+
       ind_min <- which.min(tmp_df$Meas)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sd_measure[ind_min]
@@ -415,13 +431,15 @@ plot.spar.cv <- function(x,
                              ggplot2::aes(x=.data$nummod,y=.data$numactive)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() + ggplot2::theme_bw() +
+        ggplot2::geom_vline(xintercept = tmp_df$nummod[ind_min],linetype=2,linewidth=0.5)+
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
                             color=2,show.legend = FALSE,
                             data=data.frame(x = c(tmp_df$nummod[ind_min],tmp_df$nummod[allowed_ind][ind_1se]),
                                             y = c(tmp_df$numactive[ind_min],tmp_df$numactive[allowed_ind][ind_1se]))) +
         ggplot2::scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
                                     minor_breaks = NULL)+
-        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3))))
+        ggplot2::ggtitle(parse(text = tmp_title_text))
+
 
     }
   }
@@ -537,33 +555,39 @@ print.spar.cv <- function(x, digits = 4L, ...) {
 
 #' Coef Method for \code{'spar.cv'} Object
 #'
-#' Extract coefficients from \code{'spar.cv'} object
-#' Only allowed if \code{fast_fit = "fix_rpm_and_inds"} is used when calling \code{spar.cv}.
-#' In this case the ensemble obtained on the whole data is used for the
-#' combination of threshold and number of models using the best or the 1se identified through cross-validation.
-#' Otherwise coefficients cannot be extracted without refitting on whole data with
-#'  best or 1se parameters. To be able to extract coefficients in case \code{fast_fit = "fix_rpm"}
-#'  or \code{fast_fit = "none"}, use \code{spar()} to refit with the desired (nu, M) combination.
+#' Extract coefficients from \code{'spar.cv'} object.
+#' This function extracts coefficients only if
+#' \code{precompute_mode = "precompute_all"}. In this case, coefficients
+#' are derived from the initial run on the full dataset using the optimal
+#' \eqn{M} and \eqn{\nu} combination identified via cross-validation
+#' (best or 1se rule). For other modes (\code{"precompute_proj"} or
+#' \code{"full_cv"}), coefficients cannot be directly extracted because
+#' screening or projections vary across folds. To obtain coefficients in
+#' these cases, refit the model on the full dataset using \code{spar()}
+#' with the selected \eqn{M} and \eqn{\nu}  values.
 #' @param object result of [spar.cv] function of class \code{'spar.cv'}. Refitting
-#' can be done using \code{get_model().}
-#' @param nummod optional number of models used to form coefficients
-#' @param nu optional threshold level used to form coefficients
+#' can be done using \code{get_model()}.
+#' @param nummod optional number of models used to form coefficients.
+#' @param nu optional threshold level used to form coefficients.
 #' @param opt_par one of \code{c("1se","best")}, chooses whether to select the
 #'        best pair of \code{nus} and \code{nummods} according to cross-validated
 #'        (CV) measure, or the sparsest solution within one sd of that optimal
 #'        CV measure;
-#'        ignored when \code{nummod} and \code{nu} are given
-#' @param aggregate character one of c("mean", "median", "none"). If set to "none"
+#'        ignored when \code{nummod} and \code{nu} are given.
+#' @param aggregate character one of \code{c("mean", "median", "none")}.
+#'        If set to \code{"none"}
 #'        the coefficients are not aggregated over the marginal models, otherwise
 #'        the coefficients are aggregated using the specified method (mean or median).
 #'        Defaults to mean aggregation.
-#' @param ... further arguments passed to or from other methods
+#' @param ... further arguments passed to or from other methods.
 #' @return List with elements
 #' \itemize{
-#'  \item \code{intercept} intercept value
-#'  \item \code{beta} vector of length p of averaged coefficients
-#'  \item \code{nummod} number of models based on which the coefficient is computed
-#'  \item \code{nu}  threshold based on which the coefficient is computed
+#'  \item \code{intercept} average intercept value or vector intercepts
+#'  (one for each marginal model) if \code{aggregate = "none"}.
+#'  \item \code{beta} vector of length \eqn{p} of averaged coefficients or a
+#'        \eqn{p} x \code{max(nummods)} matrix of coefficients if \code{agregate = "none"}.
+#'  \item \code{nummod} number of models based on which the coefficient is computed.
+#'  \item \code{nu}  threshold based on which the coefficients is computed.
 #' }
 #' @examples
 #' \donttest{
@@ -581,8 +605,8 @@ coef.spar.cv <- function(object,
                          opt_par = c("best","1se"),
                          aggregate = c("mean", "median", "none"),
                          ...) {
-  if (object$fast_fit != "fix_rpm_and_inds") {
-    stop("Coefficients cannot be extracted without refitting on whole data with best or 1se parameters. To be able to extract coefficients, set fast_fit to 'fix_rpm_and_inds' when calling spar.cv or use spar() to refit with the desired (nu, M) combination. ")
+  if (object$precompute_mode != "precompute_all") {
+    stop("Coefficients cannot be extracted without refitting on whole data with best or 1se parameters. To be able to extract coefficients, set precompute_mode to 'precompute_all' when calling spar.cv or use spar() to refit with the desired (nu, M) combination. ")
   }
   opt_nunum <- match.arg(opt_par)
   aggregate <- match.arg(aggregate)
@@ -704,12 +728,12 @@ coef.spar.cv <- function(object,
 #' Predict Method for \code{'spar.cv'} Object
 #'
 #' Predict responses for new predictors from \code{'spar.cv'} object.
-#' Only allowed if \code{fast_fit = "fix_rpm_and_inds"} is used when calling \code{spar.cv}.
+#' Only allowed if \code{precompute_mode = "precompute_all"} is used when calling \code{spar.cv}.
 #' In this case the ensemble obtained on the whole data is used for the
 #' combination of threshold and number of models using the best or the 1se identified through cross-validation.
 #' Otherwise predictions cannot be generated without refitting on whole data with
-#'  best or 1se parameters. To be able to generate predictions in case \code{fast_fit = "fix_rpm"}
-#'  or \code{fast_fit = "none"}, use \code{spar()} to refit with the desired (nu, M) combination.
+#'  best or 1se parameters. To be able to generate predictions in case \code{precompute_mode = "precompute_rpm"}
+#'  or \code{precompute_mode = "full_cv"}, use \code{spar()} to refit with the desired (nu, M) combination.
 #' @param object result of spar function of class \code{'spar.cv'}.
 #' @param xnew matrix of new predictor variables; must have same number of columns as  \code{x}.
 #' @param type the type of required predictions; either on response level (default) or on link level
@@ -745,8 +769,8 @@ predict.spar.cv <- function(object,
                             nu = NULL,
                             aggregate = c("mean", "median"),
                             ...) {
-  if (object$fast_fit != "fix_rpm_and_inds") {
-    stop("Predictions cannot be generated without refitting on whole data with best or 1se parameters. To be able to generate predictions, set fast_fit to 'fix_rpm_and_inds' when calling spar.cv or use spar() to refit with the desired (nu, M) combination. ")
+  if (object$precompute_mode != "precompute_all") {
+    stop("Predictions cannot be generated without refitting on whole data with best or 1se parameters. To be able to generate predictions, set precompute_mode to 'precompute_all' when calling spar.cv or use spar() to refit with the desired (nu, M) combination. ")
   }
 
   if (is.null(xnew)) {
@@ -764,7 +788,7 @@ predict.spar.cv <- function(object,
   aggregate <- match.arg(aggregate)
   opt_par <- match.arg(opt_par)
 
-  object$family <- eval(parse(text = object$family))
+  # object$family <- eval(parse(text = object$family))
 
   coefs_avg <- coef(object, nummod, nu, opt_par = opt_par,
                     aggregate = aggregate)

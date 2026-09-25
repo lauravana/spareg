@@ -23,9 +23,9 @@
 \item \code{"1se"}: Selects the simplest model within 1 standard error of the best model.
 }}
 
-\item{x}{A matrix or data frame of predictors. Required if \code{fast_fit != "fix_rpm_and_inds"}.}
+\item{x}{A matrix or data frame of predictors. Required if \code{precompute_mode != "precompute_all"}.}
 
-\item{y}{A response vector. Required if \code{fast_fit != "fix_rpm_and_inds"}.}
+\item{y}{A response vector. Required if \code{precompute_mode != "precompute_all"}.}
 
 \item{xval}{A matrix or data frame of validation predictors. If \code{NULL}, \code{x} is used.}
 
@@ -39,7 +39,7 @@ An updated \code{spar} or \code{spar.cv} object containing:
 \item \code{betas}: Coefficients of the selected model.
 \item \code{intercepts}: Intercepts for the selected model.
 \item \code{val_res}: Validation results filtered for the selected \code{nummod} and \code{nu}.
-\item Additional fields like \code{xscale}, \code{yscale}, \code{xcenter}, and \code{ycenter} if \code{fast_fit == "fix_rpm_and_inds"}.
+\item Additional fields like \code{xscale}, \code{yscale}, \code{xcenter}, and \code{ycenter} if \code{precompute_mode == "precompute_all"}.
 }
 }
 \description{

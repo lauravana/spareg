@@ -3,7 +3,7 @@
 \name{spar}
 \alias{spar}
 \alias{spareg}
-\title{Sparse Projected Averaged Regression}
+\title{Sparse Projected Averaged Regression (SPAR)}
 \usage{
 spar(
   x,
@@ -14,9 +14,9 @@ spar(
   screencoef = NULL,
   xval = NULL,
   yval = NULL,
-  nnu = 20,
+  nnu = 20L,
   nus = NULL,
-  nummods = c(20),
+  nummods = 20L,
   measure = c("deviance", "mse", "mae", "class", "1-auc"),
   avg_type = c("link", "response"),
   parallel = FALSE,
@@ -35,9 +35,9 @@ spareg(
   screencoef = NULL,
   xval = NULL,
   yval = NULL,
-  nnu = 20,
+  nnu = 20L,
   nus = NULL,
-  nummods = c(20),
+  nummods = 20L,
   measure = c("deviance", "mse", "mae", "class", "1-auc"),
   avg_type = c("link", "response"),
   parallel = FALSE,
@@ -48,108 +48,109 @@ spareg(
 )
 }
 \arguments{
-\item{x}{n x p numeric matrix of predictor variables.}
+\item{x}{An \verb{n x p} numeric matrix of predictor variables.}
 
-\item{y}{quantitative response vector of length n.}
+\item{y}{A quantitative response vector of length \code{n}.}
 
-\item{family}{a \link[stats]{family}  object used for the marginal generalized linear model,
+\item{family}{A \link[stats]{family}  object used for the marginal generalized linear model,
 default \code{gaussian("identity")}.}
 
-\item{model}{function creating a \code{'sparmodel'} object;
-defaults to \code{spar_glm()} for gaussian family with identity link and to
-\code{spar_glmnet()} for all other family-link combinations.}
+\item{model}{A function that creates a \code{'sparmodel'} object. Defaults to:
+\itemize{
+\item \code{spar_glm()} for gaussian family with identity link.
+\item \code{spar_glmnet()} for all other family-link combinations.
+}}
 
-\item{rp}{function creating a \code{'randomprojection'} object. Defaults to NULL.
-In this case \code{rp_cw(data = TRUE)} is used.}
+\item{rp}{A function that creates a \code{'randomprojection'} object. Defaults to \code{NULL}.
+If \code{NULL}, \code{rp_cw(data = TRUE)} is used.}
 
-\item{screencoef}{function creating a \code{'screeningcoef'} object. Defaults to NULL.
-In this case no screening is used.}
+\item{screencoef}{function that creates a \code{'screencoef'} object. Defaults to \code{NULL}.
+If \code{NULL}, no screening is used.}
 
-\item{xval}{optional matrix of predictor variables observations used for
-validation of threshold nu and number of models; \code{x} is used
-if not provided.}
+\item{xval}{An optional matrix of predictor variables used for
+validation. If \code{NULL}, \code{x} is used.}
 
-\item{yval}{optional response observations used for validation of
-threshold nu and number of models; \code{y} is used if not provided.}
+\item{yval}{An optional response vector for validation.
+If \code{NULL}, \code{y} is used.}
 
-\item{nnu}{number of different threshold values \eqn{\nu} to consider for thresholding;
-ignored when nus are given; defaults to 20.}
+\item{nnu}{number of different threshold values \eqn{\nu} for thresholding.
+Ignored if \code{nus} is provided. Defaults to \code{20L}.}
 
-\item{nus}{optional vector of \eqn{\nu}'s to consider for thresholding;
-if not provided, \code{nnu} values ranging from 0 to the maximum absolute
-marginal coefficient are used.}
+\item{nus}{An optional vector of thresholds \eqn{\nu}.
+If \code{NULL}, \code{nnu} values between \code{0} and the maximum absolute marginal
+coefficient equally spaced  on the probability scale are used (i.e.,
+we use as grid for the thresholds
+zero and \code{nnu-1} quantiles of the
+absolute values of the estimated non-zero coefficients
+from the marginal models).}
 
-\item{nummods}{vector of numbers of marginal models to consider for
-validation; defaults to \code{c(20)}.}
+\item{nummods}{A vector of integers specifying the number of marginal models to consider for validation.
+Defaults to \code{20L}.}
 
-\item{measure}{loss to use for validation; defaults to \code{"deviance"}
-available for all families. Other options are \code{"mse"} or \code{"mae"}
-(between responses and predicted means, for all families),
-\code{"class"} (misclassification error) and
-\code{"1-auc"} (one minus area under the ROC curve) both just for
-binomial family.}
+\item{measure}{The loss function for validation. Options:
+\itemize{
+\item \code{"deviance"} (default, available for all families).
+\item \code{"mse"} or \code{"mae"} (mean squared/absolute error, for all families).
+\item \code{"class"} (misclassification error, for binomial family only).
+\item \code{"1-auc"} (one minus area under the ROC curve for binomial family only).
+}}
 
-\item{avg_type}{type of averaging the marginal models; either on link (default)
-or on response level. This is used in computing the validation measure.}
+\item{avg_type}{The type of averaging for marginal models. Options:
+\itemize{
+\item \code{"link"} (default): Averaging on the link scale.
+\item \code{"response"}: Averaging on the response scale.
+}}
 
-\item{parallel}{assuming a parallel backend is loaded and available, a
-logical indicating whether the function should use it in parallelizing the
-estimation of the marginal models. Defaults to FALSE.}
+\item{parallel}{A logical indicating whether to use parallel
+estimation of the marginal models. Defaults to \code{FALSE}.}
 
-\item{inds}{optional list of index-vectors corresponding to variables kept
-after screening in each marginal model of length \code{max(nummods)};
-dimensions need to fit those of RPMs.}
+\item{inds}{An optional list of index vectors corresponding to variables retained after screening for each marginal model.
+Must have length \code{max(nummods)}.}
 
-\item{RPMs}{optional list of projection matrices used in each
-marginal model of length \code{max(nummods)}, diagonal elements will be
-overwritten with a coefficient only depending on the given \code{x} and \code{y}.}
+\item{RPMs}{An optional list of projection matrices for each marginal model.
+Must have length \code{max(nummods)}.}
 
-\item{seed}{integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.}
+\item{seed}{An optional integer seed for reproducibility. Default: \code{NULL}.}
 
-\item{...}{further arguments mainly to ensure back-compatibility}
+\item{...}{Additional arguments for backward compatibility.}
 }
 \value{
-object of class \code{'spar'} with elements
+An object of class \code{\link{spar}} with the following components:
 \itemize{
-\item \code{betas} p x \code{max(nummods)} sparse matrix of class
-\code{'\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}'} containing the
-standardized coefficients from each marginal model
-\item \code{intercepts} used in each marginal model
-\item \code{scr_coef} vector of length p with coefficients used for screening the standardized predictors
-\item \code{inds} list of index-vectors corresponding to variables kept after screening in each marginal model of length max(nummods)
-\item \code{RPMs} list of projection matrices used in each marginal model of length \code{max(nummods)}
-\item \code{val_res} \code{data.frame} with validation results (validation measure
-and number of active variables) for each element of \code{nus} and \code{nummods}
-\item \code{val_set} logical flag, whether validation data were provided;
-if \code{FALSE}, training data were used for validation
-\item \code{family}  a character corresponding to \link[stats]{family}  object used for the marginal generalized linear model e.g.,
-\code{"gaussian(identity)"}
-\item \code{nus} vector of \eqn{\nu}'s considered for thresholding
-\item \code{nummods} vector of numbers of marginal models considered for validation
-\item \code{ycenter} empirical mean of initial response vector
-\item \code{yscale} empirical standard deviation of initial response vector
-\item \code{xcenter} p-vector of empirical means of initial predictor variables
-\item \code{xscale} p-vector of empirical standard deviations of initial predictor variables
-\item \code{avg_type} character, averaging type for computing the validation measure
-\item \code{measure} character, type of validation measure used
-\item \code{rp} an object of class \code{"randomprojection"}
-\item \code{screencoef} an object of class \code{"screeningcoef"}
-\item \code{x_rows_for_fitting_marginal_models} vector of row indicators from
-\code{x} which were used for fitting the marginal models, if screening was performed
-using \code{screencoef} with \code{split_data_prop} argument. Is \code{NULL} otherwise.
+\item \strong{\code{betas}}: A \verb{p x max(nummods)} sparse matrix of standardized coefficients for each marginal model.
+\item \strong{\code{intercepts}}: Intercepts for each marginal model.
+\item \strong{\code{scr_coef}}: A vector of length \code{p} with screening coefficients for standardized predictors.
+\item \strong{\code{inds}}: A list of index vectors for variables retained after screening.
+\item \strong{\code{RPMs}}: A list of projection matrices for each marginal model.
+\item \strong{\code{val_res}}: A \code{data.frame} with validation results (measure and number of active variables) for each \eqn{M} and \eqn{\nu}.
+\item \strong{\code{val_set}}: A logical flag indicating whether validation data were provided.
+\item \strong{\code{family}}: The family object used for the GLM.
+\item \strong{\code{nus}}: The vector of thresholds considered.
+\item \strong{\code{nummods}}: The vector of numbers of marginal models considered.
+\item \strong{\code{ycenter}}: The empirical mean of the initial response vector.
+\item \strong{\code{yscale}}: The empirical standard deviation of the initial response vector.
+\item \strong{\code{xcenter}}: A vector of empirical means for the initial predictors.
+\item \strong{\code{xscale}}: A vector of empirical standard deviations for the initial predictors.
+\item \strong{\code{avg_type}}: The averaging type used for validation.
+\item \strong{\code{measure}}: The validation measure used.
+\item \strong{\code{rp}}: The \code{'randomprojection'} object.
+\item \strong{\code{screencoef}}: The \code{'screencoef'} object.
+\item \strong{\code{x_rows_for_fitting_marginal_models}}: A vector of row indices from \code{x} used for fitting marginal models (if screening splits data).
 }
+}
+\description{
+Fits a \strong{Sparse Projected Averaged Regression (SPAR)} model to high-dimensional data.
+SPAR builds an ensemble of generalized linear models (GLMs) where high-dimensional predictors
+are first screened (using a screening coefficient) and then projected using random projection matrices.
+This function evaluates the model over a grid of thresholds (\code{nus}) and a grid of the number of marginal models (\code{nummods}).
+It is also used internally by the cross-validated procedure \code{\link{spar.cv}}.
+}
+\details{
+If a parallel backend (e.g., \code{doParallel}) is registered and \code{parallel = TRUE},
+the \code{\link[foreach:foreach]{foreach}} package is used to parallelize the estimation of marginal models.
 If a parallel backend is registered and \code{parallel = TRUE},
 the \link[foreach]{foreach} function
 is used to estimate the marginal models in parallel.
-}
-\description{
-Apply Sparse Projected Averaged Regression to high-dimensional data by
-building an ensemble of generalized linear models, where the high-dimensional
-predictors can be screened using a screening coefficient and then projected
-using data-agnostic or data-informed random projection matrices.
-This function performs the procedure for a given grid of thresholds \eqn{\nu}
-and a grid of the number of marginal models to be employed in the ensemble.
-This function is also used in the cross-validated procedure \link{spar.cv}.
 }
 \examples{
 example_data <- simulate_spareg_data(n = 200, p = 400, ntest = 100)

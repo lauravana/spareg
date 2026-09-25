@@ -1,5 +1,6 @@
 example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100, seed = 1234)
 
+# Tests expecting success ----
 test_that("Results has right class", {
   x <- data.frame(matrix(rnorm(300), ncol = 30))
   y <- rnorm(10)
@@ -17,7 +18,7 @@ test_that("Coef returns vector of correct length", {
   expect_equal(length(sparcoef$beta),30)
 })
 
-test_that("No screening: fast_fit = fix_rpm delivers different results than fix_rpm_and_inds but same threshold", {
+test_that("No screening: precompute_mode = precompute_rpm delivers different results than precompute_all but same threshold", {
   x <- matrix(rnorm(300), ncol = 30)
   y <- rnorm(10)
   spar_res <- spar.cv(x, y, rp = rp_gaussian(),
@@ -26,7 +27,7 @@ test_that("No screening: fast_fit = fix_rpm delivers different results than fix_
   spar_res2 <- spar.cv(x, y, rp = rp_gaussian(),
                        model = spar_glm(),
                        nfolds = 4L, seed = 1234,
-                       fast_fit = "fix_rpm")
+                       precompute_mode = "precompute_rpm")
   a <- get_model(spar_res, "best",, x = x, y = y)
   b <- get_model(spar_res2, "best", x = x, y = y)
   expect_true(get_measure(a)[,3] == get_measure(b)[,3])
@@ -36,7 +37,7 @@ test_that("No screening: fast_fit = fix_rpm delivers different results than fix_
 })
 
 
-test_that("With screening: fast_fit = fix_rpm delivers diff results than fix_rpm_and_inds", {
+test_that("With screening: precompute_mode = precompute_rpm delivers diff results than precompute_all", {
   x <- matrix(rnorm(300), ncol = 30)
   y <- rnorm(10)
   spar_res <- spar.cv(x, y, rp = rp_gaussian(),
@@ -47,12 +48,12 @@ test_that("With screening: fast_fit = fix_rpm delivers diff results than fix_rpm
                        model = spar_glm(),
                        screencoef = screen_cor(),
                        nfolds = 4L, seed = 1234,
-                       fast_fit = "fix_rpm")
+                       precompute_mode = "precompute_rpm")
   spar_res3 <- spar.cv(x, y, rp = rp_gaussian(),
                        model = spar_glm(),
                        screencoef = screen_cor(),
                        nfolds = 4L, seed = 1234,
-                       fast_fit = "none")
+                       precompute_mode = "full_cv")
 
   a <- get_model(spar_res, "best")
   b <- get_model(spar_res2, "best", x = x, y = y)
@@ -61,7 +62,7 @@ test_that("With screening: fast_fit = fix_rpm delivers diff results than fix_rpm
   expect_error(predict(spar_res2, x))
 })
 
-test_that("No screening: fast_fit = fix_rpm delivers same results as none due to seeds ", {
+test_that("No screening: precompute_mode = precompute_rpm delivers same results as none due to seeds ", {
   set.seed(123)
   x <- matrix(rnorm(50*60), ncol = 60)
   y <- rnorm(50)
@@ -70,12 +71,12 @@ test_that("No screening: fast_fit = fix_rpm delivers same results as none due to
   spar_res <- spar.cv(x, y, rp = rp_gaussian(),
                       model = spar_glm(),
                       nfolds = 4L, seed = 1234,
-                      fast_fit = "none")
+                      precompute_mode = "full_cv")
 
   spar_res2 <- spar.cv(x, y, rp = rp_gaussian(),
                        model = spar_glm(),
                        nfolds = 4L, seed = 1234,
-                       fast_fit = "fix_rpm")
+                       precompute_mode = "precompute_rpm")
   a <- get_model(spar_res, "best", x = x, y = y,
                  xval = xnew, yval = ynew)
   b <- get_model(spar_res2, "best", x = x, y = y,
@@ -85,7 +86,7 @@ test_that("No screening: fast_fit = fix_rpm delivers same results as none due to
   expect_error(predict(spar_res, x))
 })
 
-test_that("No screening: fast_fit = fix_rpm delivers diff results than none with given thresholds ", {
+test_that("No screening: precompute_mode = precompute_rpm delivers diff results than none with given thresholds ", {
   x <- matrix(rnorm(50*60), ncol = 60)
   xnew <- matrix(rnorm(50*60), ncol = 60)
   y <- rnorm(50)
@@ -96,13 +97,13 @@ test_that("No screening: fast_fit = fix_rpm delivers diff results than none with
                       nus = nu,
                       screencoef = screen_cor(nscreen = 30),
                       nfolds = 4L, seed = 1234,
-                      fast_fit = "none")
+                      precompute_mode = "full_cv")
   spar_res2 <- spar.cv(x, y, rp = rp_gaussian(),
                        model = spar_glm(),
                        nus = nu,
                        screencoef = screen_cor(nscreen = 30),
                        nfolds = 4L, seed = 1234,
-                       fast_fit = "fix_rpm")
+                       precompute_mode = "precompute_rpm")
   spar_res3 <- spar.cv(x, y, rp = rp_gaussian(),
                        model = spar_glm(),
                        nus = nu,
@@ -129,8 +130,8 @@ test_that("Test get_intercept(), get_coef(), get_model() extractors and that coe
   sparcoef2 <- coef(spar_res,opt_par = "1se")
   a <- get_model(spar_res, "best")
   b <- get_model(spar_res, "1se")
-  expect_equal(unname(get_intercept(sparcoef)), 1.824784, tolerance = 1e-5)
-  expect_equal(unname(get_coef(sparcoef)[1]), 0.2364498, tolerance = 1e-5)
+  expect_equal(unname(get_intercept(sparcoef)), 1.833058, tolerance = 1e-5)
+  expect_equal(unname(get_coef(sparcoef)[1]), 0.2475962, tolerance = 1e-5)
   expect_equal(all(which(sparcoef$beta==0) %in% which(sparcoef2$beta==0)),TRUE)
   expect_equal(nrow(a$val_res), 1)
   expect_equal(nrow(b$val_res), 1)
@@ -169,13 +170,13 @@ test_that("Columns with zero sd get coefficient 0", {
   expect_s3_class(plot(spar_res, plot_type = "val_numactive"), "ggplot")
 })
 
-test_that("Columns with zero sd get coefficient 0 when fast_fit = none", {
+test_that("Columns with zero sd get coefficient 0 when precompute_mode = full_cv", {
   x <- example_data$x
   x[,c(1,11,111)] <- 2
   y <- example_data$y
   spar_res <- spar.cv(x, y, screencoef = screen_cor(),
                       measure = "mae", model = spar_glm(),
-                      nfolds = 4L, fast_fit = "none")
+                      nfolds = 4L, precompute_mode = "full_cv")
   a <- get_model(spar_res, "best", x = x, y = y)
   sparcoef <- coef(a, opt_par = "best")
   sparcoef2 <- coef(a)
@@ -193,10 +194,10 @@ test_that("Test get_measure() extractor and predictions", {
   b <- get_model(spar_res, "1se")
   expect_equal(nrow(get_measure(a)), 1)
   expect_equal(nrow(get_measure(b)), 1)
-  expect_equal(get_measure(a)$deviance, 276.0395, tolerance = 1e-5)
-  expect_equal(get_measure(a)$numactive, 311, tolerance = 1e-5)
-  expect_equal(get_measure(b)$deviance, 920.7225, tolerance = 1e-5)
-  expect_equal(get_measure(b)$numactive, 252, tolerance = 1e-5)
+  expect_equal(get_measure(a)$deviance, 148.0186, tolerance = 1e-5)
+  expect_equal(get_measure(a)$numactive, 327, tolerance = 1e-5)
+  expect_equal(get_measure(b)$deviance, 1630.086, tolerance = 1e-5)
+  expect_equal(get_measure(b)$numactive, 213, tolerance = 1e-5)
   xnew <- example_data$xtest
   pred  <- predict(spar_res,xnew = xnew)
   pred2 <- predict(spar_res,xnew = xnew, opt_par = "best")
@@ -208,7 +209,7 @@ test_that("Test get_measure() extractor and predictions", {
   expect_lt(pred3[1], pred2[1])
 })
 
-test_that("Plots work well for case fast_fit = fix_rpm_and_inds", {
+test_that("Plots work well for case precompute_mode = precompute_all", {
   x <- example_data$x
   y <- example_data$y
   spar_res <- spar.cv(x, y, nfolds = 2L, seed = 123)
@@ -220,7 +221,7 @@ test_that("Plots work well for case fast_fit = fix_rpm_and_inds", {
   expect_s3_class(plot(spar_res, plot_type = "val_measure", opt_par = "1se"), "ggplot")
   expect_s3_class(plot(spar_res, plot_type = "coefs"), "ggplot")
 })
-# Tests expecting errors
+# Tests expecting errors ----
 
 test_that("Get errors for input x not data.frame or matrix", {
   x <- list("1"=1:10,"2"=(-1)^(1:12),"3"=rnorm(12),
@@ -262,7 +263,7 @@ test_that("Get errors for classification validation measure for non-binomial fam
   y <- rnorm(10)
   spar_res <- spar.cv(x,y,screencoef = screen_glmnet(),
                       nummods=c(10,15), model = spar_glm(),
-                      nfolds = 4L, fast_fit = "none")
+                      nfolds = 4L, precompute_mode = "full_cv")
 
   expect_error(plot(spar_res, plot_type = "res_vs_fitted", xfit = x,
                     yfit = y))

@@ -2,31 +2,23 @@
 % Please edit documentation in R/sparmodel_classes.R
 \name{spar_glm}
 \alias{spar_glm}
-\title{GLM Marginal \code{'sparmodel'}}
+\title{GLM Marginal \code{\link[=sparmodel-class]{sparmodel}}}
 \usage{
 spar_glm(..., control = list())
 }
 \arguments{
 \item{...}{includes arguments which can be passed as attributes to the
-\code{'sparmodel'} object}
+\code{\link[=sparmodel-class]{sparmodel}} object}
 
 \item{control}{list of controls to be passed to the model function}
 }
 \value{
-object of class \code{'sparmodel'} which is a list with elements
-\itemize{
-\item \code{name} (character, optional, used for printing)
-\item \code{control} (list of controls passed as an argument)
-\item \code{generate_fun} function for estimating the model coefficients and the intercept.
-This function should have arguments \code{y}, vector of standardized responses,
-\code{z}, a matrix of projected predictors in each marginal model, and
-\code{object}, which is a \code{'sparmodel'} object. Returns a list with
-two elements: \code{gammas} which is the vector of regression coefficients
-for the projected predictors and \code{intercept} which is the intercept of the model
-}
+Returns an object of class \code{\link[=sparmodel-class]{sparmodel}}.
 }
 \description{
-Creates an object class \code{'sparmodel'} using arguments passed by user.
+Creates an object class \code{\link[=sparmodel-class]{sparmodel}} using arguments passed by user.
+The generating function computes the coefficients of the marginal models
+based on a GLM. Computation relies on \code{\link[stats:glm]{stats::glm}}.
 }
 \details{
 Relies on \link[stats]{glm}.
@@ -36,4 +28,7 @@ example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 spar_res <- spar(example_data$x, example_data$y,
   xval = example_data$xtest, yval = example_data$ytest,
   model = spar_glm())
+}
+\seealso{
+\code{\link[=sparmodel-class]{sparmodel}}, \code{\link[stats:glm]{stats::glm}}
 }

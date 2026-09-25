@@ -35,23 +35,6 @@ The function \code{generate_fun} relies on \link[stats]{cor}.
 Arguments related to the screening procedure can
 be passed to the \code{screen_cor()} function through \code{...}, and
 will be saved as attributes of the \code{'screencoef'} object.
-The following attributes are relevant for \link{spar} and \link{spar.cv}:
-\itemize{
-\item \code{nscreen} integer giving the number of variables to be retained
-after screening; if not specified, defaults to $2n$.
-\item \code{split_data_prop}, double between 0 and 1 which indicates the
-proportion of the data that should be used for computing the screening
-coefficient. The remaining data will be used for estimating the marginal
-models in the SPAR algorithm; if not specified, the whole data will be used
-for estimating the screening coefficient and the marginal models.
-\item \code{type} character - either \code{"prob"} (indicating that
-probabilistic screening should be employed)  or \code{"fixed"} (indicating
-that a fixed set of \code{nscreen} variables should be employed across the
-ensemble); defaults to \code{type = "prob"}.
-\item \code{reuse_in_rp} logical - indicates whether the screening
-coefficient should be reused at a later stage in the construction of the random
-projection. Defaults to \code{FALSE}.
-}
 }
 \examples{
 example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
@@ -59,4 +42,7 @@ spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
   yval = example_data$ytest, nummods=c(5, 10, 15, 20, 25, 30),
   screencoef = screen_cor(control = list(method = "kendall")))
 
+}
+\seealso{
+\code{\link{constructor_screencoef}}, \code{\link[=screencoef-class]{screencoef}}
 }
