@@ -133,8 +133,8 @@ The motivation of such an algorithm, which performs what we call a
 \emph{sparse projected averaged regression} (SPAR) for both discrete and
 continuous data in the GLM framework, lies in its computational
 efficiency.
-Random projection is a computationally-efficient method which linearly maps a
-set of points in high dimensions into a much lower-dimensional space and
+Random projection is a computationally efficient method which linearly maps a
+set of points in high dimensions into a much lower-dimensional space, and
 random projection matrices have been traditionally generated from suitable
 distributions in a data-agnostic fashion.
 By projecting the original predictors to a dimension lower than $p$, estimation
@@ -163,7 +163,7 @@ sparsity in the coefficients and with correlated predictors.
 % \textcolor{red}{TODO: clarify that data-driven is good in certain settings, others in other settings etc. check dunson paper on theoretical results.}
 Package \pkg{spareg} \citep{pkg:spareg}  implements this flexible framework,
 offering a diverse selection of screening coefficients, random projection
-matrices, and (un)penalized marginal GLMs and
+matrices, and (un)penalized marginal GLMs, and
 is available from the Comprehensive \proglang{R} Archive Network (CRAN) at
 \url{https://CRAN.R-project.org/package=spareg}.
 A key feature of the software is its extensibility:  users can tailor the
@@ -192,7 +192,7 @@ other packages focus on building ensembles where the dimensionality of the
 predictors is reduced.
 Most notably, package \pkg{RPEnsemble}  \citep{RPEnsembleR}
 implements the procedure in \cite{cannings2017random}, where
-``carefully-selected'' random projections are used for projecting the predictors
+``carefully selected'' random projections are used for projecting the predictors
 before they are employed in a classifier such as $k$~nearest neighbor, linear or
 quadratic discriminant analysis.
 On the other hand, package \pkg{RaSEn} \citep{pkg:RaSEn} implements an
@@ -202,7 +202,7 @@ weak learner on the basis of some criterion.
 Similarly, package \pkg{randomGLM} \citep{pkg:randomGLM} implements
 an ensemble predictor based on bootstrap aggregation (bagging) of GLMs
 whose covariates are first randomly selected and then further reduced
-using forward regression according to AIC criterion.
+using forward regression according to the Akaike information criterion (AIC).
 For \proglang{Python} \citep{Python}, a similar workflow could be set up
 for building ensembles using the
 package \pkg{pycobra} \citep{pkg:pycobra} by integrating \pkg{scikit-learn}
@@ -237,7 +237,7 @@ The rest of the paper is organized as follows:
 Section~\ref{sec-models} provides an overview of the methods and the
 methodological details of the implemented algorithm. The package is described
 in Section~\ref{sec-software} while Section~\ref{sec-extensibility} exemplifies
-how a new screening coefficient, a new random projection and a new marginal model
+how a new screening procedure, a new random projection and a new marginal model
 can be integrated in the package.
 \ifPositive
 Section~\ref{sec-illustrations} contains two examples of employing the package
@@ -281,14 +281,14 @@ set $\mathcal{A}_\delta$, which contains
 all variables for which $|\hat\omega_j|>\delta$, with $\delta$ being a suitable
 threshold.
 %
-Under certain technical conditions,  this screening coefficient has the
-\emph{sure screening property}, i.e.,~that the set of truly active variables
+Under certain technical conditions,  this screening coefficient vector has the
+\emph{sure screening property}, i.e.,~the set of truly active variables
 is included in $\mathcal{A}_{\delta_n}$ with probability converging to one as
 $n\to \infty$.
 Extensions to SIS include modifications for GLMs \citep{Fan2010sisglms}, where
 screening is performed based on the log-likelihood $\ell(.)$ or the slope
 coefficient of the GLM containing only $\boldsymbol X_{j}$ as a predictor:
-$\hat\omega_j=: \text{argmin}_{\beta_j\in\mathbb{R}}\text{min}_{{\beta_0}\in
+$\hat\omega_j:= \text{argmin}_{\beta_j\in\mathbb{R}}\text{min}_{{\beta_0}\in
 \mathbb{R}}\sum_{i=1}^n -\ell(\beta_j,\beta_0;y_i,x_{ij})$, where
 $x_{ij}$ is the $j$-th entry of the vector $\boldsymbol x_i$.
 
@@ -303,7 +303,7 @@ Additionally, in a linear regression setting, \cite{cho2012high} propose using t
 correlation of a tilted version of $\boldsymbol X_{j}$ with $\boldsymbol y$ where the effect of other
 variables is reduced. \cite{Wang2015HOLP}
 propose to take into account the correlation among the predictors by
-employing the  high-dimensional ordinary least squares projection (HOLP) $\hat{\boldsymbol w}=X^\top (XX^\top)^{-1}\boldsymbol y$, which is a ridge estimator where the penalty term converges to zero.  For GLMs, joint feature screening via a sparsity-restricted maximum likelihood estimator -- under an $\ell_0$ norm -- has been proposed in \cite{SMLE2014}.
+employing the  high-dimensional ordinary least squares projection (HOLP) $\hat{\boldsymbol w}=X^\top (XX^\top)^{-1}\boldsymbol y$, which is a ridge estimator where the penalty term converges to zero.  For GLMs, joint feature screening via a sparsity-restricted maximum likelihood estimator--under an $\ell_0$ norm--has been proposed in \cite{SMLE2014}.
 
 In order to tackle potential model misspecification, a rich stream of literature
 focuses on developing semi- or non-parametric alternatives to SIS. For linear
@@ -315,7 +315,7 @@ generalized additive model with B-splines. Further extensions for discrete
 (or categorical) outcomes include the fused Kolmogorov filter
 \citep{mai2013kolmogorov}, the mean conditional variance, i.e.,~the expectation
 in $\boldsymbol X_{j}$ of the variance in the response of the empirical distribution function of each predictor conditional on the response \citep{cui2015model}.
-\cite{ke2023sufficient} propose a model free method where the contribution of
+\cite{ke2023sufficient} proposes a model-free method where the contribution of
 each individual predictor is quantified marginally and conditionally in the
 presence of the control variables as well as the other candidates by
 reproducing-kernel-based $R^2$ and partial
@@ -326,19 +326,20 @@ is very rich. An overview of some notable packages on the Comprehensive
 \proglang{R} Archive Network (CRAN) includes the following packages.
 Package \pkg{SIS} \citep{SISR}, which implements
 the (iterative) sure independence screening procedure and its extensions, as
-detailed in \cite{Fan2007SISforUHD,Fan2010sisglms,fan2010high}. This package
+detailed in \cite{Fan2007SISforUHD},
+\cite{Fan2010sisglms}, \cite{fan2010high}. This package
 also provides functionality for estimating a penalized generalized linear model
 or a cox regression model for the variables selected by the screening procedure.
 Package \pkg{VariableScreening} \citep{pkg:VariableScreening} offers screening
 methods for independent and identically distributed (iid) data,
-varying-coefficient models, and longitudinal data and includes techniques such
+varying-coefficient models, and longitudinal data, and includes techniques such
 as sure independent ranking and screening (SIRS), which ranks the predictors by
 their correlation with the rank-ordered response, or distance correlation sure
 independence screening (DC-SIS), a non-parametric extension of the correlation
 coefficient.
 Package \pkg{MFSIS} \citep{pkg:MFSIS} provides a collection of model-free
 screening techniques including SIRS, DC-SIS, the fused Kolmogorov filter
-\citep{mai2015fusedkolmogorov} the projection correlation method using knock-off
+\citep{mai2015fusedkolmogorov}, the projection correlation method using knock-off
 features \citep{liu2020knockoff}, among others. Additional packages implement
 specific procedures but their review is beyond the scope of the current paper.
 
@@ -352,9 +353,9 @@ screening strategies, which can be
 particularly useful in ensembles, as they enhance the diversity of predictors
 across ensemble models. Instead of relying on a fixed threshold $\delta$,
 predictors are sampled with probabilities
-proportional to their screening coefficient
+proportional to their screening coefficients
 \citep[see][]{Dunson2020TargRandProj,parzer2024glms}.
-Note that this is different than the random subspace sampling employed
+Note that this is different from the random subspace sampling employed
 in, e.g.,~random forests.
 %
 %
@@ -368,7 +369,7 @@ random projections.
 
 The random projection method relies on the Johnson-Lindenstrauss (JL) lemma
 \citep{JohnsonLindenstrauss1984}, which asserts that for each set of
-points in $p$~dimensional Euclidean space collected in the rows of
+points in $p$-dimensional Euclidean space collected in the rows of
 $X\in \mathbb{R}^{n\times p}$ there exists a linear map
 $\Phi\in \mathbb{R}^{m \times p}$ such that all pairwise distances are
 approximately preserved within a factor of $(1\pm\epsilon)$ for
@@ -399,7 +400,7 @@ sparse matrices.
 Further approaches include using the Haar measure to generate random orthogonal
 matrices \citep{cannings2017random} or
 a non-sub-Gaussian distribution like the standard Cauchy,
-proposed by \cite{LiHastie2006VerySparseRP} for preserving approximate $\ell_1$
+proposed by \cite{LiHastie2006VerySparseRP}, for preserving approximate $\ell_1$
 distances in settings where the data is high-dimensional, non-sparse, and heavy-tailed.
 Structured matrices, which allow for more efficient multiplication, have also been proposed
 \citep[see e.g.,][]{ailon2009fast,Clarkson2013LowRankApprox}.
@@ -415,7 +416,7 @@ selecting the one that minimizes the test error of the
 classification problem among a set of data-agnostic random projections.
 %
 Another data-driven approach to random projection for  regression has been
-proposed by  \cite{ryder2019asymmetric}, who introduced a data-informed random
+proposed by  \cite{ryder2019asymmetric}, who introduce a data-informed random
 projection using an asymmetric transformation of the predictor matrix without
 using information of the response.
 %
@@ -425,8 +426,8 @@ to use a random projection matrix for GLMs which directly incorporates
 information about the relationship between the predictors and
 the response, rather than a projection matrix
 which satisfies the JL lemma. In the linear regression case
-\cite{parzer2024sparse} provide  a theoretical bound on the expected gain in
-prediction error when using a
+\cite{parzer2024sparse} provide  a theoretical bound on the expected reduction
+in prediction error when using a
 projection which incorporates information
 about the true regression coefficients compared to a conventional random projection.
 In particular, they rely on the sparse embedding (CW) matrix of
@@ -446,28 +447,29 @@ with entries $d_j \sim \text{Unif}(\{-1, 1\})$.
 results when replacing the diagonal entries of $D$ with the true regression
 coefficients.
 Motivated by this result, they propose to construct such a projection matrix
-where the random diagonal elements are replaced in practice by HOLP,
-i.e., the ridge coefficient with a penalty converging to zero.
-The constructed random projection has the advantage of approximately
+where the random diagonal elements are replaced in practice by
+the HOLP estimates, i.e., the ridge coefficients with a penalty converging to
+zero. The constructed random projection has the advantage of approximately
 capturing the true regression coefficients in the span of the random projection,
 i.e.,~it ensures that the true regression coefficients can be
 recovered
 approximately after the projection.
 In \cite{parzer2024glms}, the authors extend this idea to the GLM framework by
-investigating how a similar ridge coefficient can be used to construct a
+investigating how similar ridge coefficients can be used to construct a
 suitable data-informed projection matrix.
-Through simulations, they demonstrate that for non-Gaussian families, allowing the penalty to converge to zero is not always optimal. Instead, they propose selecting the smallest penalty value such that the deviance ratio—the proportion of the null deviance explained—remains below a specified threshold. Specifically, they suggest using a threshold of 0.8 for non-Gaussian families and 0.99 for Gaussian families.
+Through simulations, they demonstrate that for non-Gaussian families, allowing the penalty to converge to zero is not always optimal. Instead, they propose selecting the smallest penalty value such that the deviance ratio
+(the proportion of the null deviance explained) remains below a specified threshold. Specifically, they suggest using a threshold of 0.8 for non-Gaussian families and 0.99 for Gaussian families.
 %
 
 
 Several packages in \proglang{R} provide functionality for random
 projections. For instance, package \pkg{RandPro}
 \citep{RandProR,SIDDHARTH2020100629} allows a Gaussian random matrix
-(i.e, where entries are simulated from a standard normal), a sparse matrix
+(i.e.,~where entries are simulated from a standard normal), a sparse matrix
 \citep{ACHLIOPTAS2003JL,LiHastie2006VerySparseRP}
 or a matrix generated using the equal probability distribution with the
 elements $\{-1,1\}$, to be applied to the predictor matrix before
-employing one of $k$ nearest neighbors, support vector machine or naive
+employing one of $k$~nearest neighbors, support vector machine or naive
 Bayes classifier on the projected features.
 Package \pkg{SPCAvRP} \citep{SPCAvRPR}
 implements sparse
@@ -520,15 +522,15 @@ f(y_i|\theta_i,\phi) = \exp\Bigl\{\frac{y_i\theta_i- b(\theta_i)}{a(\phi)} + c(y
 \quad
 g(\E[y_i|\boldsymbol{z}_i]) = \gamma_0 + (\Phi\boldsymbol{x}_i)^\top\boldsymbol{\gamma}=:\eta_i,
 \end{align*}
-where $\theta_i$ is the natural parameter,  $a(.)>0$ and $c(.)$ are specific
-real-valued functions determining different families, $\phi$ is a dispersion
-parameter, and
+where $\theta_i$ is the natural parameter, $\phi$ is a dispersion
+parameter,  $a(.)>0$ and $c(.)$ are specific
+real-valued functions determining different families, and
 $b(.)$ is the log-partition function normalizing the density to integrate to one.
 If $\phi$ is known, we obtain densities in the natural exponential family for
-our responses. The responses are related to the $m$~dimensional reduced and
+our responses. The responses are related to the $m$-dimensional reduced and
 projected predictors through the conditional mean, i.e.,~the conditional mean
 of $y_i$ given ${\boldsymbol{z}}_i$
-depends on a linear combination of the predictors through a (invertible) link
+depends on a linear combination of the predictors through (invertible) link
 function $g(.)$, where $\gamma_0\in\mathbb{R}$ is the intercept and
 $\boldsymbol{\gamma}\in\mathbb{R}^m$ is a vector of regression coefficients
 for the $m$ projected predictors. We can see that the original coefficients of the
@@ -544,7 +546,7 @@ where $\theta_i(\beta_0,\boldsymbol{\beta},\boldsymbol{x}_i) =
 (b')^{-1}(g^{-1}(\eta_i))$.
 However, even if $m < n$
 it might still be desirable to add a (e.g.,~small $\ell_2$) penalty to the
-likelihood of the marginal models -- for the binomial family this can alleviate
+likelihood of the marginal models--for the binomial family this can alleviate
 problems related to separation while keeping the bias low. Moreover, if outlier
 influence should be reduced,
 $M$- or trimmed estimators could be employed for obtaining  robust
@@ -562,14 +564,14 @@ estimates of the regression coefficients
 \subsection{SPAR algorithm} \label{sec-algo}
 
 We present the general algorithm for sparse projected averaged regression (SPAR)
-implemented in package \pkg{spareg}.
-%A diagram of the algorithm is shown in Figure~\ref{fig:algo}.
+implemented in package \pkg{spareg}. A diagram of the algorithm is shown in
+Figure~\ref{fig:algo}.
 %%
 \ifPositive
 \begin{figure}[t!]
 \centering
 \setkeys{Gin}{width=\textwidth}
-\includegraphics{spareg_algo.pdf}
+\includegraphics{spareg-flowchart4th-v2}
 \caption{Flowchart of the SPAR algorithm.\label{fig:algo}}
 \end{figure}
 \fi
@@ -586,29 +588,31 @@ sample mean and dividing by the sample standard deviation of each variable.
 %%
 \item  For $k=1,\dots,M$ models:
 \begin{enumerate}
-\item   If $p>p_0$, where $p_0$ is the number of variables to be screened, screen $p_0$ predictors based on the screening coefficient
+\item   If $p>p_0$, where $p_0$ is the number of variables to be screened, screen $p_0$ predictors based on the screening coefficients
 $\hat{\boldsymbol\omega}$, which yields for model $k$ the screening index set
-$I_k=\{j_1^k,\dots,j_{p_0}^k\}\subset \{1,\dots,p\}$;
-if probabilistic screening should
+$I_k=\{j_1^k,\dots,j_{p_0}^k\}\subset \{1,\dots,p\}$.
+If probabilistic screening should
 be employed, draw the predictors sequentially without replacement using an
-initial vector of probabilities $\pi_j\propto |\hat\omega_j|$. Otherwise,
-select the $p_0$ variables with the highest $|\hat\omega_j|$. If $p < p_0$,
+initial vector of probabilities $\boldsymbol{\pi}$ with $\pi_j\propto |\hat\omega_j|$; otherwise,
+select the $p_0$ variables with the largest $|\hat\omega_j|$. If $p \leq p_0$,
 perform no screening and set $I_k=\{1,\dots,p\}$.
 \item  Project the screened variables to a randomly drawn dimension
-$m_k\sim \text{Unif}\{m_l,\dots,m_u\}$ using \emph{projection matrix}
+$m_k\sim \text{Unif}(\{m_l,\dots,m_u\})$ using \emph{projection matrix}
 $\Phi_k$ to obtain $Z_k=X_{\cdot I_k}\Phi_k^\top \in \mathbb{R}^{n\times m_k}$,
 where $X_{\cdot I_k}$ contains the columns in $X$ having a column index in
 $I_k$.
 \item  Fit a \emph{GLM}-type model of $\boldsymbol y$ on $Z_k$ to obtain estimated
 coefficients $\widehat{\boldsymbol\gamma}^k\in\mathbb{R}^{m_k}$ and
 $\hat {\boldsymbol\beta}_{I_k}^k=\Phi_k^\top\widehat
-{\boldsymbol\gamma}^k$, $\hat {\boldsymbol\beta}_{\bar I_k}^k=0$.
+{\boldsymbol\gamma}^k$, $\hat {\boldsymbol\beta}_{\bar I_k}^k=0$, where
+$\bar I_k=\{1,\dots,p\}\setminus I_k$.
 \end{enumerate}
 \item  For a given threshold $\nu\geq 0$, set all $\hat\beta_j^k$ with $|\hat\beta_j^k|\leq\nu$ to $0$ for all $j,k$.
 \item  Choose $M$ and $\nu$ via a validation set or cross-validation
 evaluating a two-dimensional
-grid of values. For each training fold, repeat Steps 2 to 6 using fixed
-index sets $I_k$ and projections $\Phi_k$ and assess the performance on the
+grid of values. If cross-validation is performed,  repeat Steps~2 to 6
+for each training fold using the fixed
+index set $I_k$ and projection matrix $\Phi_k$, and assess the performance on the
 test fold by a  loss function $K(M, \nu)$:
 \begin{align*}
 (M_{\text{best}},\nu_{\text{best}}) = \text{argmin}_{M,\nu}K(M,\nu).
@@ -619,15 +623,16 @@ $\hat{\boldsymbol\beta} = \sum_{k=1}^M\hat {\boldsymbol\beta}^k / M$ (this resul
 models on the \emph{link level}) or via the fitted values by taking a
 \emph{simple average} on the \emph{response level} i.e.,~$\hat y = \sum_{k=1}^Mg^{-1}(\boldsymbol x_i^\top\hat{\boldsymbol\beta}^k) / M$ (here we omit the intercept for
 the sake of notational simplicity).
-\item Output the averaged estimated coefficients and predictions for the chosen $M$ and $\nu$.
+\item Output the averaged estimated coefficients and predictions for
+$(M_{\text{best}},\nu_{\text{best}})$.
 \end{enumerate}
 %
 The proposed algorithm is flexible, allowing for various choices of
 screening coefficients $\hat{\boldsymbol w}$, random projection matrices
 $\Phi$ and marginal models. Several variants have been introduced in the literature.
-For example, \cite{Dunson2020TargRandProj} proposes a version
+For example, \cite{Dunson2020TargRandProj} propose a version
 that uses probabilistic marginal correlation screening along with the sparse random projection method from \cite{ACHLIOPTAS2003JL}, without applying thresholding.
-More recent work by \cite{parzer2024sparse,parzer2024glms} extends this approach by employing data-informed random projection that leverages information from the ridge coefficients. In their method, the ridge penalty is chosen as the smallest value such that the deviance ratio (the proportion of null deviance explained) remains below a family-specific threshold. They complement the projection step with
+More recent work by \cite{parzer2024sparse,parzer2024glms} extends this approach by employing data-informed random projection that leverages information from the ridge coefficients and complement the projection step with
 probabilistic screening based on the same ridge regression coefficients
 (see details in Section~\ref{sec-rps}).
 
@@ -646,11 +651,11 @@ while \cite{parzer2024glms} use slightly smaller goal dimensions ($m_l=\log(p)$,
 On the other hand, for random projection matrices satisfying the JL lemma, $m_l$ can be derived from the theoretical bounds for preserving the distances between all pairs of points approximately. We employ as default values the ones proposed in \cite{parzer2024sparse}.
 
 A further modification of the algorithm above is to
-employ part of the data for estimating the screening coefficients (Step~3) and the remaining data to estimate the ensemble models (Step~4). Such a strategy could avoid issues related to overfitting. Even though \cite{parzer2024sparse} find that in the linear regression case such a splitting approach does not improve performance, the implementation in \pkg{spareg}
+employ part of the data for estimating the screening coefficients (Step~3) and the remaining data for estimating the ensemble models (Step~4). Such a strategy could avoid issues related to overfitting. Even though \cite{parzer2024sparse} find that in the linear regression case such a splitting approach does not improve performance, the implementation in \pkg{spareg}
 allows for data splitting.
 
 \cite{parzer2024sparse} find that, when using their proposed data-driven
-random projection and HOLP screening coefficient in a linear regression setting,
+random projection and HOLP screening coefficients in a linear regression setting,
 the gain in predictive performance when using more than $M=20$ models is marginal.
 We use therefore $M=20$ as a default value in the algorithm. However, for ultra
 high-dimensional settings, larger values of $M$ can be beneficial to explore
@@ -666,7 +671,7 @@ values of the estimated coefficients, generally yields reasonable performance.
 However, in high-dimensional settings with high expected sparsity, thresholding
 becomes particularly useful for larger $n$ values and especially when employing the CW data-dependent projection with ridge coefficients, as it helps identify zero coefficients in the recovered signal.
 
-Finally, when choosing the optimal $\nu$ and $M$ in Step~6 given a grid of values
+Finally, when choosing the optimal $M$ and $\nu$ in Step~6 given a grid of values
 for each parameter, one can pick the combination delivering the lowest loss
 function or the combination delivering
 the sparsest model with a loss within one standard deviation of the minimum
@@ -674,7 +679,7 @@ the sparsest model with a loss within one standard deviation of the minimum
 in penalized regression). We note that the cross-validation on the grid of
 number of models is not computationally intensive as we only need to train the
 maximum number of models considered in the grid on each training fold and
-evaluate performance by aggregating the first $M_1$, then the first $M_2$, and so on.
+evaluate performance by aggregating the first $M_1$ models, then the first $M_2$, and so on.
 
 \section{Software} \label{sec-software}
 %
@@ -694,7 +699,8 @@ and $p=2000$ predictors where $n=200$ observations are
 used as training and
 $n=100$ observations are used as test data. The data is generated using
 \code{simulate_spareg_data()}, which simulates by default a linear regression
-model with $\sigma^2=83$, intercept $\mu=1$ and $\boldsymbol\beta$ coefficients
+model with $\sigma^2=83$, intercept $\mu=1$ and
+coefficients $\boldsymbol\beta$
 with 100 non-zero entries uniformly
 sampled from $\{-3,-2,-1,1,2,3\}$:
 <<eval=FALSE>>=
@@ -714,14 +720,14 @@ str(example_data, list.len = 4)
 \toprule
 \textbf{Function} & \textbf{Description} \\
 \midrule
-\multicolumn{2}{l}{\emph{High-level functions -- return \proglang{S}3  objects of class \class{spar} and \class{spar.cv}}} \\
+\multicolumn{2}{l}{\emph{High-level functions--return \proglang{S}3  objects of class \class{spar} and \class{spar.cv}}} \\
 % \midrule
 \code{spar()} &
 Fits the ensemble. Supports parallelization and validation-set tuning for $M$ and $\nu$. \\
 \code{spar.cv()} &
 Cross-validated wrapper for optimal $M$ and $\nu$ selection. \\
 \midrule
-\multicolumn{2}{l}{\emph{Screening functions \code{screen\_*(..., control = list())} -- return \proglang{S}3  objects of class \class{screencoef}}} \\
+\multicolumn{2}{l}{\emph{Screening functions \code{screen\_*(..., control = list())}--return \proglang{S}3  objects of class \class{screencoef}}} \\
 %%
 \addlinespace[1ex]
 %%
@@ -739,7 +745,7 @@ Correlation-based screening using \code{stats::cor}; accepts \code{method} for c
 \textbf{\code{screen\_glmnet()}} &
 Multivariate screening using \code{glmnet::glmnet} and its controls.  \emph{Default:} elastic net mixing parameter \code{alpha = 0} (ridge regression). \\
 \midrule
-\multicolumn{2}{l}{\emph{Random projection functions \code{rp\_*(..., control = list())} -- return \proglang{S}3 objects of class \class{randomprojection}}} \\
+\multicolumn{2}{l}{\emph{Random projection functions \code{rp\_*(..., control = list())}--return \proglang{S}3 objects of class \class{randomprojection}}} \\
 %%
 \addlinespace[1ex]
 %%
@@ -750,13 +756,13 @@ Multivariate screening using \code{glmnet::glmnet} and its controls.  \emph{Defa
 \addlinespace[1ex]
 %%
 \code{rp\_gaussian()} &
-Projection with i.i.d. normal entries using \code{stats::rnorm()}. \emph{Default:} \code{mean=0, sd=1}. \\
+Projection with iid normal entries using \code{stats::rnorm()}. \emph{Default:} \code{mean = 0, sd = 1}. \\
 \code{rp\_sparse()} &
 Sparse projection with entries from the Rademacher distribution (parameter \code{psi} passed through \code{control}). \emph{Default:}  \code{psi = 1}. \\
 \code{rp\_cw()}$^\dagger$ &
 Sparse embedding matrix. \emph{Default:} \code{rp\_cw(data = TRUE)} for data-driven diagonals, otherwise randomly generated. \\
 \midrule
-\multicolumn{2}{l}{\emph{Marginal model functions \code{spar\_*(..., control = list())} --  return \proglang{S}3  objects of class \class{sparmodel}}} \\
+\multicolumn{2}{l}{\emph{Marginal model functions \code{spar\_*(..., control = list())}--return \proglang{S}3  objects of class \class{sparmodel}}} \\
 %%
 \addlinespace[1ex]
 %%
@@ -813,89 +819,123 @@ cross-validation and returns an \class{spar} object.
 Additionally, the aliases \fct{spareg} and \fct{spareg.cv} are available for convenience.
 Both functions accept the following key arguments: \\
 \begin{itemize}
-    \item \code{x} -- an \( n \times p \) numeric matrix of predictors and
-    \code{y} -- a numeric vector of length \( n \).
+    \item \code{x}--an \( n \times p \) numeric matrix of predictors and
+    \code{y}--a numeric vector of length \( n \).
 %
-    \item \textbf{\code{family}}: An object from \fct{stats::family}; defaults to \fct{gaussian}.
+    \item \textbf{\code{family}}--an object from \fct{stats::family}; defaults to \fct{gaussian}.
 
-    \item \textbf{\code{model}}: An object of class \class{sparmodel} specifying the model for each element of the ensemble. Defaults to \code{spar\_glm()} for Gaussian-identity and to \code{spar\_glmnet()} for others.
+    \item \textbf{\code{model}}--an object of class \class{sparmodel} specifying the model for each element of the ensemble. Defaults to \code{spar\_glm()} for Gaussian-identity and to \code{spar\_glmnet()} for others.
 
-    \item \textbf{\code{rp}}: An object of class \class{randomprojection}. Defaults to \code{rp\_cw(data = TRUE)}.
+    \item \textbf{\code{rp}}--an object of class \class{randomprojection}. Defaults to \code{rp\_cw(data = TRUE)}.
 
-    \item \textbf{\code{screencoef}}: An object of class \class{screencoef}. Defaults to \code{NULL} (no screening).
+    \item \textbf{\code{screencoef}}--an object of class \class{screencoef}. Defaults to \code{NULL} (no screening).
 
-    \item \textbf{\code{nnu}}: Number of threshold values \( \nu \) to consider. Defaults to 20.
+    \item \textbf{\code{nnu}}--number of threshold values \( \nu \) to consider. Defaults to 20.
 
-    \item \textbf{\code{nus}}: An optional vector of threshold values \( \nu \). If not provided, defaults to a grid of \code{nnu} values: zero and \code{nnu - 1} equally spaced quantiles of the absolute values of the non-zero marginal coefficients.
+    \item \textbf{\code{nus}}--an optional vector of threshold values \( \nu \). If not provided, defaults to a grid of \code{nnu} values: zero and \code{nnu - 1} equally spaced quantiles of the absolute values of the non-zero marginal coefficients.
 
-    \item \textbf{\code{nummods}}: Number of models in the ensemble. Defaults to 20. Also allows for a vector of ensemble sizes.
+    \item \textbf{\code{nummods}}--number of models in the ensemble. Defaults to 20. Also allows for a vector of ensemble sizes.
 
-    \item \textbf{\code{measure}}: Performance measure for selecting \( \nu \) and \( M \). Options: \code{"deviance"} (default), \code{"mse"} (mean squared error), \code{"mae"} (mean absolute error), \code{"class"} (misclassification error), or \code{"1-auc"} (one minus area under the ROC curve).
+    \item \textbf{\code{measure}}--performance measure for selecting $M$ and $\nu$. Options: \code{"deviance"} (default), \code{"mse"} (mean squared error), \code{"mae"} (mean absolute error), \code{"class"} (misclassification error), or \code{"1-auc"} (one minus area under the ROC curve).
 
-    \item \textbf{\code{avg\_type}}: Stage of aggregation for computing the performance measure---either on \code{"link"} or \code{"response"} level.
+    \item \textbf{\code{avg\_type}}--stage of aggregation for computing the performance measure---either on \code{"link"} or \code{"response"} level.
 
-    \item \textbf{\code{parallel}}: Logical: use parallel backend if available. Defaults to \code{FALSE}.
+    \item \textbf{\code{parallel}}--use parallel backend if available. Defaults to \code{FALSE}.
 \end{itemize}
 %
-Furthermore, \code{spar()} has the specific arguments \code{xval} and  \code{yval} -- validation data for choosing $\nu_\text{best}$ and $M_\text{best}$ (if not provided, \code{x} and
-\code{y} will be employed).
+Furthermore, \code{spar()} has the arguments \code{xval} and  \code{yval}--validation data for choosing  $M_\text{best}$ and $\nu_\text{best}$ (if not provided, \code{x} and
+\code{y} will be employed). Optional argument \code{inds} can be used to pass a list specifying columns of variables to retain in each marginal model
+while  projection matrices to be used in each marginal model can be passed as a list through optional argument \code{RPMs}.
 %
 
 Function~\code{spar.cv()} has specific arguments
 \code{nfolds}, the
 number of folds to be used (defaults to 10) and
-\code{precompute_mode = c("precompute_all", "precompute_rpm", "full_cv")},
-indicating whether to use the same random projection matrix and/or
+\code{precompute_mode = c("precompute_all", "precompute_rpm", "full_cv")}. Argument
+\code{precompute_mode} indicates whether to use the same random projection matrix and/or
 the same indices for screening across folds
 (defaults to \code{"precompute_all"}).
 %
 If one of the first two options is selected,  \code{spar.cv()} uses a
-lightweight version of \code{spar()} in each fold to reduce computational
-overhead. Random projections and/or screening indicators are computed once on
-the full dataset before cross-validation and remain fixed throughout. This is
+lightweight version of \code{spar()} in each fold. Here, random projection
+matrices and/or screening indicators are computed once on
+the full dataset before cross-validation.
+This is
 achieved by an initial call to \code{spar()} on the entire dataset.
-If data-driven projections are used, the training data for each fold will be
-used to update the corresponding entries of the projection matrix.
+If \code{"precompute_all"}, screening indicators remain fixed throughout the
+analysis. The random elements of the projection matrices are also held
+fixed in all folds for \code{"precompute_all"} and \code{"precompute_rpm"}
+However, if data-driven projections are used, the training data for each
+fold will be used to update the data-dependent entries of the projection matrix
+in all cases.
 If \code{precompute_mode = "full_cv"} is selected, the random projection and screening
 indicators are recomputed in each fold.
+Fixing the screening indicators and/or (random elements of)
+projection matrices prior to
+cross-validation reduces computational overhead in some settings. On the other
+hand, fixing these components removes a source of variability from the
+cross-validation process which can lead to a more stable and interpretable
+selection of $M$ and $\nu$, as the cross-validation results are not confounded
+by variations in the screening or projection steps. However, this approach can
+be affected by target leakage, as estimates obtained on the whole data are used
+in the cross-validation exercise. This is particularly relevant when performing
+screening.
+To avoid target leakage \code{precompute_mode = "full_cv"} or
+\code{precompute_mode = "precompute_rpm"}
+can be selected.
 %
 \subsection[Extensible S3 objects]{Extensible \proglang{S}3 objects}\label{sec:soft:S3}
 The \code{spar()} framework is organized around a common extensible structure comprising three method-specification objects:
-\class{screencoef} for screening coefficients, \class{randomprojection} for random projection matrices and \code{sparmodel} for the marginal model to be used in the ensemble.
+\class{screencoef} for screening coefficients, \class{randomprojection} for
+random projection matrices and \code{sparmodel} for the marginal model to be
+used in the ensemble.
 
-We will explain in the following how each object is created to store the selected method and its initial \code{control} parameters. These objects are created before data is passed to \code{spar()}. Once the relevant training data and response family are available, \code{spar()} invokes the object's \code{update_fun()} to resolve context- or data-dependent settings, adjust controls, and store any required state;
-it then invokes the corresponding generation function \code{generate_fun()} to perform the primary computation.
-As a convention, \code{control} is a list of parameters to be passed to the main generating function, while parameters related to the procedure itself (such as the number of variables to be screened or the minimum dimension to which the variables should be projected) are to be saved as attributes to the objects.
-The shared interfaces allow users to extend the framework with custom screening, projection, and modeling methods while preserving consistent behavior across the three object types.
+We will explain in the following how each object is created to store the
+selected method and its initial \code{control} parameters. These objects are
+created before data is passed to \code{spar()}. Once the relevant training data
+and response family are available, \code{spar()} invokes the object's
+\code{update_fun()} to resolve context- or data-dependent settings, adjust
+controls, and store any required state;
+it then invokes the corresponding generation function \code{generate_fun()} to
+perform the primary computation.
+As a convention, \code{control} is a list of parameters to be passed to the main
+generating function, while parameters related to the procedure itself (such as
+the number of variables to be screened or the minimum dimension to which the
+variables should be projected) are to be saved as attributes to the objects.
+The shared interfaces allow users to extend the framework with custom screening,
+projection, and modeling methods while preserving consistent behavior across the
+three object types.
 
 \subsubsection{Screening coefficients}\label{sec:soft:screen}
 %
 Screening coefficients in \pkg{spareg} are implemented as \proglang{S}3 classes \class{screencoef}.
 These objects are created using functions like \code{screen_*()} which accept as arguments:
-\code{...} (additional arguments saved as attributes of the object) and
+\code{...} (i.e.,~ellipsis) and
 \code{control} (a list of parameters for computing the screening coefficients).
+Additional arguments passed through the ellipsis will be saved as
+attributes of the object.
 
 %
 The following screening coefficients are implemented in \pkg{spareg}:
 %
 \begin{itemize}
-\item \code{screen_marglik()} -- computes the screening coefficients by the
+\item \code{screen_marglik()}--computes the screening coefficients by the
 coefficient of $\boldsymbol X_{j}$ for $j =1,\dots,p$  in a univariate GLM using the
 \fct{stats::glm} function.
 It allows to pass a list of controls through the \code{control} argument to
 \fct{stats::glm}
 e.g.,~\code{screen_marglik(control = list(family = binomial(probit)))}.
 %
-\item  \code{screen_cor()} -- computes the screening coefficients by the
+\item  \code{screen_cor()}--computes the screening coefficients by the
 correlation between $\boldsymbol y$ and $\boldsymbol X_{j}$ using the function \fct{stats::cor}. It
 allows to pass a list of controls through the \code{control} argument to
-\fct{stats::cor} -- e.g.,~\code{screen_cor(control = list(method = "spearman"))}.
+\fct{stats::cor}--e.g.,~\code{screen_cor(control = list(method = "spearman"))}.
 %
-\item  \code{screen_glmnet()} -- computes by default a ridge coefficient with a small penalty:
+\item  \code{screen_glmnet()}--computes by default a ridge coefficient with a small penalty:
 $$
-\hat\omega=: \text{argmin}_{\beta\in \mathbb{R}^p}\text{min}_{{\beta_0}
+\hat\omega:= \text{argmin}_{\beta\in \mathbb{R}^p}\text{min}_{{\beta_0}
 \in\mathbb{R}}\sum_{i=1}^n -\ell(\beta;y_i,\boldsymbol x_i) + \frac{\varepsilon}{2}
-\sum_{j=1}^p{\beta}_j^2, \, \varepsilon > 0
+\sum_{j=1}^p{\beta}_j^2, \, \varepsilon > 0.
 $$
 This function uses \code{glmnet()} of package
 \pkg{glmnet} \citep{pkg:glmnet, pkg:glmnet_glm} with
@@ -910,23 +950,21 @@ e.g.,~\code{screen_glmnet(control = list(alpha = 0.5))}.
 The following attributes can be passed to the \code{screen_*()} function through \code{...}:
 %
 \begin{itemize}
-\item \code{nscreen} number of variables to be retained
+\item \code{nscreen}--number of variables to be retained
 after screening; defaults to $2n$. If
 $2n > p$, no screening is performed.
 %
-\item \code{split_data_prop},
-proportion of the data to be used for computing the screening
-coefficient. The remaining data will be used for estimating the marginal
-models; default is to use
-the whole data for
-screening coefficient and the marginal model estimation.
+\item \code{split_data_prop}--proportion of the data to be used for
+computing the screening coefficient. The remaining data will be used for
+estimating the marginal models; default is to use the whole data for
+screening coefficients and the marginal model estimation.
 %
-\item \code{type} character -- either \code{"prob"} (for
-probabilistic screening -- default)  or \code{"fixed"} (for using a fixed set of
+\item \code{type}--either \code{"prob"} (for
+probabilistic screening--default)  or \code{"fixed"} (for using a fixed set of
 \code{nscreen} variables).
 %
-\item \code{reuse_in_rp} logical -- indicates whether the screening
-coefficient should be reused at a later stage in the construction of a data-dependent random
+\item \code{reuse_in_rp}--indicates whether the screening
+coefficients should be reused at a later stage in the construction of a data-dependent random
 projection. Defaults to \code{FALSE}. This attribute is ignored if a data-agnostic random projection is used.
 \end{itemize}
 %
@@ -945,7 +983,7 @@ function, the \code{control} list passed by the user in
 % \begin{itemize}
 % \item an optional character \code{name} used for printing;
 % %
-% \item \code{generate_fun()} -- function to generate a vector of screening coefficients of length $p$. Takes \code{x} (standardized predictors), \code{y}  (standardized responses), and \code{object} (the \class{screencoef} object itself).
+% \item \code{generate_fun()}--function to generate a vector of screening coefficients of length $p$. Takes \code{x} (standardized predictors), \code{y}  (standardized responses), and \code{object} (the \class{screencoef} object itself).
 % %
 % \item  \code{control}, which is the control list passed by the user in
 % \code{screen_*()}. These controls are arguments to be used in
@@ -972,7 +1010,7 @@ An example is presented in Section~\ref{sec-extensscrcoef}.
 Random projection objects are
 implemented as \proglang{S}3
 classes \class{randomprojection} and are created by functions like \code{rp_*()}.
-These functions take \code{...} and a list of controls \code{control} as arguments.
+These functions take the ellipsis \code{...} and a list of controls \code{control} as arguments.
 %
 % \begin{Code}
 % rp_*(..., control = list())
@@ -980,13 +1018,13 @@ These functions take \code{...} and a list of controls \code{control} as argumen
 %
 The package includes the following random projections:
 \begin{itemize}
-\item \code{rp_gaussian()} -- entries are iid from the normal distribution (defaults to standard normal).
+\item \code{rp_gaussian()}--entries are iid from the normal distribution (defaults to standard normal).
 %
-\item \code{rp_sparse()} -- sparse matrix as in \cite{ACHLIOPTAS2003JL};
+\item \code{rp_sparse()}--sparse matrix as in \cite{ACHLIOPTAS2003JL};
 $\psi$ can be specified
 via \code{control} e.g.,~\code{rp_sparse(control = list(psi = 1/3))}.  Defaults to  \code{psi = 1}.
 %
-\item \code{rp_cw()} -- sparse embedding random projection in
+\item \code{rp_cw()}--sparse embedding random projection in
 \cite{Clarkson2013LowRankApprox}.
 If the random projection is specified as \code{rp_cw(data = TRUE)} and the
 screening coefficient object has the attribute \code{reuse_in_rp = TRUE}, the
@@ -998,11 +1036,11 @@ Otherwise, if \code{rp_cw(data = TRUE)}, the data-driven modification to the CW 
 Common attributes which can be passed via \code{...} to the \code{rp_*()} functions include:
 %
 \begin{itemize}
-\item \code{mslow}: minimum dimension for projecting the predictors; defaults to
+\item \code{mslow}--minimum dimension for projecting the predictors; defaults to
 $\log(p)$. Note that for JL-type random projections, \code{mslow} can be chosen
 from JL bounds.
 %
-\item \code{msup}: maximum dimension for projecting the predictors; defaults to
+\item \code{msup}--maximum dimension for projecting the predictors; defaults to
 $n/2$ or. if $p < n/2$, to $p$.
 %
 \end{itemize}
@@ -1024,7 +1062,7 @@ matrix, and \code{control}, the list of controls passed by the user in
 As previously mentioned, objects of class \class{randomprojection}
 are constructed before the data are available. Consequently,
 settings that depend on the data cannot always be resolved by the
-constructor. Before calling \code{generate_fun()}, \code{spar()} calls
+constructor. Before calling \code{generate_fun()}, \fct{spar} calls
 \code{update_fun} to resolve such settings and to store any (data-dependent)
 information in the object (such as \class{family} or precomputed screening coefficients). If argument \code{update_fun} is not specified when using a constructor, the default will only add the family information to the  \class{randomprojection} object.
 Further optional elements include \code{name}, or function
@@ -1048,7 +1086,7 @@ generating matrices while \code{update_rpm_w_data()} modifies an already-generat
 % fact that screening can be employed pre-projection.
 % \item \code{x} and \code{y}, the matrix of standardized
 % predictors and vector of  (standardized)
-% responses -- can be \code{NULL} if the random projection to be generated is data-agnostic.
+% responses--can be \code{NULL} if the random projection to be generated is data-agnostic.
 % \end{itemize}
 % It returns a matrix or
 % a sparse matrix of class \class{dgCMatrix} of the \pkg{Matrix} package
@@ -1114,15 +1152,17 @@ The \pkg{spareg} package uses the \class{sparmodel} class to define marginal
 models for each ensemble element. These models assume a linear predictor
 (a linear combination of projected variables).
 Functions \code{spar_*()} create these objects and
-have arguments \code{...} (to be saved as attributes) and
+have arguments \code{...} (i.e.,~the ellipsis) and
 \code{control} (list used
-in the main function for building the model).
+in the main function for building the model). All arguments passed through the
+ellipsis will be saved as attributes of the object.
 
 The two functions implemented are
 \begin{itemize}
-\item \code{spar_glm()} fits unregularized GLMs using \code{stats::glm()} (default for Gaussian family with identity link).
-\item \code{spar_glmnet()}, which estimates as marginal models
-regularized GLMs using function \code{glmnet::glmnet()}
+\item \code{spar_glm()}--fits unregularized GLMs using \code{stats::glm()}
+(default for Gaussian family with identity link).
+\item \code{spar_glmnet()}--fits regularized GLMs using function
+\code{glmnet::glmnet()}
 (default for all other families using $\alpha=0$
 with the minimal penalty considered in \pkg{glmnet}\footnote{
   In package \pkg{glmnet} $\lambda_\text{min}=\lambda_\text{max}/100$ where
@@ -1130,14 +1170,14 @@ with the minimal penalty considered in \pkg{glmnet}\footnote{
   to zero and is calculated as the maximum absolute inner product of the
   standardized predictors and the scores evaluated at the null model, divided
   by the number of observations times $\alpha$. For ridge regression
-  $\alpha=0.001$ is used computational purposes.})
+  $\alpha=0.001$ is used for computational purposes.}).
 \end{itemize}
 By default, \code{spar_glm()} is used for Gaussian family with identity link,
 while \code{spar_glmnet()} is used for all other families.
 
 Similar to the already presented \proglang{S}3 objects, an object of class `\code{sparmodel}' is a list containing
- an optional character \code{name} for printing, \code{generate_fun()} -- a function used to generate the coefficients
-and intercept value for each model in the ensemble, \code{update_fun()} -- an (optional) function to modify the \class{sparmodel}
+ an optional character \code{name} for printing, \code{generate_fun()}--a function used to generate the coefficients
+and intercept value for each model in the ensemble, \code{update_fun()}--an (optional) function to modify the \class{sparmodel}
 object at the start of the SPAR algorithm (e.g.,~adjusting the \class{family}
 object for \pkg{glmnet} compatibility) and
 \code{control}, the list of controls passed by the user in \code{spar_*()}.
@@ -1153,11 +1193,10 @@ Methods \fct{print}, \fct{plot}, \fct{coef}, \fct{predict} are available for bot
 and `\code{spar.cv}' classes.
 %
 \subsubsection[print]{\fct{print}}
-The \fct{print} method returns information on $\nu_\text{best}$
-$M_\text{best}$, the number of active predictors
+The \fct{print} method returns information on $M_\text{best}$ and $\nu_\text{best}$, the number of active predictors
 (i.e.,~predictors which have at least a non-zero coefficient across the marginal models)
-and a summary of the non-zero non-standardized coefficients. For `\fct{spar.cv}'
-it shows  information for the $(\nu, M)$
+and a summary of the non-zero non-standardized coefficients. For `\code{spar.cv}'
+it shows  information for the $(M, \nu)$
 combination chosen by the best and the 1se rule.
 <<first_example>>=
 set.seed(12)
@@ -1176,17 +1215,17 @@ spar_cv <- spar.cv(example_data$x, example_data$y, nfolds = 3,
 \subsubsection[coef]{\fct{coef}}
 Method \fct{coef} extracts coefficients  with arguments:
 \begin{itemize}
-\item \code{nummod}, \code{nu}  -- the number of marginal models and threshold
-level to use in the calculation of the coefficients. Defaults to the value with
+\item \code{nu},\code{nummod}--threshold values and number of marginal models
+to use in the calculation of the coefficients. Defaults to the values with
 minimal validation error.
 %
-\item \code{aggregate} --  aggregation method for coefficients  across the
+\item \code{aggregate}--aggregation method for coefficients  across the
 \code{nummod} ensemble models. Options: \code{"mean"}
 (default),  \code{"median"} or \code{"none"}(skips the aggregation and returns
-the matrix of raw coefficients for each  marginal model -- useful
+the matrix of raw coefficients for each  marginal model--useful
 for understanding the variability of the coefficients across the ensemble models).
-\item For \class{spar.cv}, this method is only available for
-\code{precompute_mode = "precompute_all"}. In this case, \code{opt_par} chooses
+\item \code{opt_par}--only for \class{spar.cv} with
+\code{precompute_mode = "precompute_all"}. In this case, it chooses
 between \code{"best"} or \code{"1se"}.   Otherwise, coefficients cannot be
 generated without refitting on whole data with \code{"best"} or \code{"1se"}
 parameters by calling \fct{spar} with the desired $(M, \nu)$ combination.
@@ -1211,12 +1250,12 @@ get_intercept(coef(spar_res, nummod = 5, aggregate = "none"))
 Functionality for computing predictions is provided through the method
 \fct{predict} with arguments:
 \begin{itemize}
-\item \code{xnew} --	new predictor matrix,
+\item \code{xnew}--new predictor matrix.
 %
-\item \code{type} --	the type of predictions --  on
+\item \code{type}--the type of predictions, either on
 \code{"response"} level (default) or on \code{"link"} level.
 %
-\item  \code{avg_type} -- stage of aggregation:  at level of regression
+\item  \code{avg_type}--stage of aggregation:  at the level of regression
 coefficients (i.e.,~on the \code{link} level) or at the fitted values level
 (i.e.,~\code{response} level).
 % \begin{itemize}
@@ -1224,14 +1263,14 @@ coefficients (i.e.,~on the \code{link} level) or at the fitted values level
 %     \item \code{"response"}: combines models via the fitted values by taking computing the predictions of each model in the ensemble and then aggregating on the \emph{response level}.
 % \end{itemize}
 %
-\item \code{nummod}, \code{nu} --	number of models and threshold level used
-to compute the averaged coefficients; defaults to optimal values.
+\item \code{nu}, \code{nummod},  --	 threshold values and number of models
+used to compute the averaged coefficients; defaults to optimal values.
 %
-\item \code{aggregate} -- aggregation method (\code{"mean"} or \code{"median"}).
+\item \code{aggregate}--aggregation method (\code{"mean"} or \code{"median"}).
 Defaults to mean aggregation.
 %
-\item For \class{spar.cv}, this method is only available for
-\code{precompute_mode = "precompute_all"}. In this case, \code{opt_par} chooses
+\item \code{opt_par}--only for \class{spar.cv} objects fitted with
+\code{precompute_mode = "precompute_all"}. In this case,it chooses
 between \code{"best"} or \code{"1se"}.   Otherwise, predictions cannot be
 generated without refitting on whole data with \code{"best"} or \code{"1se"}
 parameters. To generate predictions, \fct{spar} can be called to refit the
@@ -1247,40 +1286,48 @@ ensembles with the desired $(M, \nu)$ combination.
 %
 Plotting functionality is provided through the \fct{plot} method with arguments:
 \begin{itemize}
-\item \code{plot\_type} -- one of:
+\item \code{plot\_type}--one of:
 \begin{itemize}
 \item \code{"val_measure"} plots the (cross-)validation \code{measure} for
 either a grid of \code{nu} values for a fixed number of models \code{nummod} or
-viceversa.
+vice versa.
 %
 \item \code{"val_numactive"} plots the number of active variables for either a grid
-of \code{nu} values for a fixed number of models \code{nummod} or viceversa.
+of \code{nu} values for a fixed number of models \code{nummod} or vice versa.
 %
 \item \code{"res_vs_fitted"} produces a residuals-vs-fitted plot. The residuals
 are computed as $r_i=y_i- \widehat y_i$, where $\widehat y_i$ is the prediction computed
 on response level (available for \class{spar} objects and
 \class{spar.cv} object with \code{precompute_mode = "precompute_all"}).
 %
-\item \code{"coefs"}  produces a plot of the value of the standardized
-coefficients for each predictor in each marginal model (before thresholding).
+\item \code{"coefs"}  produces a plot of the standardized
+coefficient values for each predictor in each marginal model (before thresholding).
 For each predictor, the coefficients are sorted from largest to
-smallest in absolute value across the marginal models and their value is
+smallest in absolute value across the marginal models and their values are
 represented in the plot using a color scale  (available for \class{spar}
 objects and \class{spar.cv} object with \code{precompute_mode = "precompute_all"}).
 \end{itemize}
-\item \code{plot_along} -- for
+\item \code{plot_along}--for
 \code{plot_type = "val_measure"} or
-\code{"val_numactive"} indicates whether to vary \code{nu} or \code{nummod} on the $x$~axis;.
+\code{"val_numactive"} only, it indicates whether to vary \code{nu} or \code{nummod} on the $x$~axis.
 %
-\item \code{nummod} -- fixed value for number of models when
+\item \code{nummod}--fixed value for number of models when
 \code{plot_along = "nu"} for \code{plot_type = "val_measure"} or
 \code{"val_numactive"};  if \code{plot_type = "res_vs_fitted"}, it is used in \code{predict()}.
 %
-\item \code{nu} -- fixed value for  $\nu$ when \code{plot_along = "nummod"}
+\item \code{nu}--fixed value for  $\nu$ when \code{plot_along = "nummod"}
 for \code{plot_type = "val_measure"} or \code{"val_numactive"}; if
 \code{plot_type = "res_vs_fitted"}, it is used in  \code{predict()}.
-\item \code{xfit} and \code{yfit} -- predictor matrix and response vector for \code{plot_type = "res_vs_fitted"}, as well as \code{prange}, \code{coef_order} --
-optional customization parameters for \code{plot_type = "coefs"}.
+\item \code{xfit} and \code{yfit}--predictor matrix and response vector for \code{plot_type = "res_vs_fitted"}.
+%%
+\item \code{prange}, \code{coef_order}--only for \code{plot_type = "coefs"}, optional customization parameters. Use \code{prange} to select a specific
+range of predictors to display, and \code{coef_order} to rearrange their order.
+%%
+\item \code{opt_par}--only for \code{plot_type = "res_vs_fitted"} and
+\class{spar.cv} objects fitted with
+\code{precompute_mode = "precompute_all"}. It indicates whether
+predictions should be computed using the \code{"best"} or \code{"1se"}
+selection rule.
 \end{itemize}
 %
 The \fct{plot} methods return objects of class \class{ggplot} \citep{ggplotR}.
@@ -1311,7 +1358,8 @@ p <- ggpubr::ggarrange(p1, p2, p3, p4,
   ncol = 2, nrow = 2)
 p
 @
-\caption{\fct{plot} methods for \class{spar} object. The red dots in the top
+\caption{\fct{plot} methods for \class{spar} object. They refer to the \code{plot\_type} of \code{"val\_measure"} (top left), \code{"val\_numactive"} (top right),  \code{"coefs"} (bottom left), and   \code{"res\_vs\_fitted"} (bottom right), respectively.
+The red dots in the top
 figures show the best $\nu$ chosen on the validation set for the optimal number
 of models.
 \label{fig:plot_example}}
@@ -1379,7 +1427,7 @@ screen_sirs <- constructor_screencoef(generate_fun = generate_scr_sirs,
 %
 We now call \code{spar()} with the newly created screening procedure.
 We consider the method SIRS of \cite{zhu2011model}, which ranks the predictors
-by their correlation with the rank-ordered response and we do not perform
+by their correlation with the rank-ordered response; we do not perform
 probabilistic variable screening but employ the top $2n$ variables in
 each marginal model.
 The employed random projection is \code{rp_sparse()} where we
@@ -1407,9 +1455,9 @@ simulate_haar <- function(m, p) {
 %
 \cite{cannings2017random} propose selecting ``good'' random projections
 to optimize out-of-sample prediction. Specifically, for each of the models in
-the ensemble, $B_2$ Haar random projections are generated. The projection with
+the ensemble, $B$ Haar random projections are generated. The projection with
 the lowest error on a test set (a random subset of proportion $\xi$ of the
-data) is selected for projecting the variables. While the $B_2$ projections are
+data) is selected for projecting the variables. While the $B$ projections are
 data-agnostic, the entire dataset is required to identify the best projection.
 
 In the implementation, we
@@ -1430,7 +1478,7 @@ through the ellipsis.
 <<update_cannings>>=
 update_rp_cannings <- function(object, x, y, family, ...) {
   if (is.null(object$control$alpha)) object$control$alpha <- 0
-  if (is.null(object$control$B2))  object$control$B2 <- 50
+  if (is.null(object$control$B))  object$control$B <- 50
   if (is.null(object$control$xi)) object$control$xi <- 0.25
   if (is.null(object$control$family)) object$control$family <- family
   object
@@ -1447,7 +1495,7 @@ generate_cannings <- function(object, x, y, m, included_vector, ...) {
   control_glm <-
     object$control[names(object$control) %in% names(formals(stats::glm.fit))]
   best_val <- Inf
-  for (b in seq_len(object$control$B2)) {
+  for (b in seq_len(object$control$B)) {
     RM <- simulate_haar(m, p)
     xrp <- tcrossprod(xtrain, RM)
     mod <- do.call(function(...)
@@ -1512,7 +1560,7 @@ using the package \pkg{robustbase} \citep{pkg:robustbase}.
 We define a \code{generate_fun()} that uses \code{robustbase::lmrob()} for Gaussian
 models with identity link and \code{robustbase::glmrob()}
 for other family-link combinations.
-The function must have by design the arguments \code{object} (of class \class{sparmodel}),
+The function must take by design the arguments \code{object} (of class \class{sparmodel}),
 \code{x} and \code{y} (standardized predictors and response vector passed by \code{spar()}),
 \code{z} (matrix of reduced predictors) as well as \code{...}.
 It outputs a list with two elements: \code{gammas} (vector of coefficients)
@@ -1549,12 +1597,10 @@ id_outliers_x <- sample(seq_len(np),  0.25 * np)
 x[id_outliers_x] <- x[id_outliers_x] + 50
 @
 %
-We then compare SPAR with robust GLM marginal models
-to standard GLMs,
-using  no screening, \code{rp_gaussian(msup = 25)} --
-to improve stability we override the default for \code{msup} of
-$n/2=\Sexpr{round(nrow(x)/2)}$ --
-and MAE as the selection criterion:
+We then compare standard GLMs to SPAR with robust GLM marginal models,
+using no screening,  \code{rp_gaussian(msup = 25)}---instead of the default
+\code{msup} of $n/2=50$ to improve stability---and MAE as the selection
+criterion.
 <<run_glmrob_glm>>=
 set.seed(1234)
 spar_rob_res <- spar(x, ypois, family = poisson(),
@@ -1586,11 +1632,13 @@ rbind("robglm" = get_measure(best_rob), "glm" = get_measure(best_glm))
 %
 \subsection{Face image data}
 %
-We illustrate \pkg{spareg} on the Isomap data set
+We illustrate \pkg{spareg} on the Isomap faces data set
 containing $n = 698$
-grayscale face images of size $p = 64 \times 64 = 4096$ together
-with horizontal looking direction angles as response. The data set is publicly
-available for download at
+grayscale face images of size $p = 64 \times 64 = 4096$
+of a single human face under varying poses and lighting conditions.
+The face orientation measured by the horizontal viewing angles
+is used as response variable.
+The data set is publicly available for download at
 \url{https://web.archive.org/web/20150922051706/http://isomap.stanford.edu/face_data.mat.Z}.
 <<urls, echo=FALSE>>=
 if (is_paper) {
@@ -1617,7 +1665,7 @@ if (is_paper) {
 }
 @
 %
-After downloading and uncompressing the \code{.mat} file, we import it into \proglang{R}
+After downloading and decompressing the \code{.mat} file, we import it into \proglang{R}
 using package \pkg{R.matlab} \citep{pkg:rmatlab}. Moreover, the data set
 contains (nearly) constant columns. Functions \code{spar()} and \code{spar.cv()}
 ignore constant columns from the estimation,
@@ -1651,7 +1699,7 @@ xtest <- as.matrix(x[testind, ]); ytest <- y[testind]
 We estimate the SPAR algorithm with cross-validation as in
 \cite{parzer2024sparse} (with \code{lambda.min.ratio = 0.001}
 to ensure convergence of the algorithm when computing the ridge screening
-coefficients) and use a grid of $M=5,10,20,50$ models.
+coefficients), and use a grid of $M=5,10,20,50$ models.
 <<echo=FALSE>>=
 if (is_paper) {
   file <- file.path(tmpdir, "faces_res.rda")
@@ -1731,15 +1779,16 @@ if (is_paper) {
 }
 @
 \caption{Mean squared error vs. a grid of threshold values $\nu$ for fixed
-number of models -- chosen by best (top) and 1SE rule (bottom) for the
-\emph{Isomap faces} data set.
+number of models, once for the number of models chosen by the best CV measure
+($M=20$, top panel) and one for the number of models chosen by the
+1se rule ($M=5$, bottom panel) for the \emph{Isomap faces} data set.
 Red points correspond to the best (minimal MSE) and sparsest ensemble model
-within 1SE of the best, respectively. Confidence bands represent one standard
+within 1se of the best, respectively. Confidence bands represent one standard
 deviation in the MSE across folds. \label{fig:facesplot_valmeasure}}
 \end{figure}
 %
 The coefficients of the different variables (in this example pixels) obtained by
-averaging over the coefficients in the marginal models can be extracted by \fct{coef}. For the ensemble chosen by the 1SE rule we have:
+averaging over the coefficients of the marginal models can be extracted by \fct{coef}. For the ensemble chosen by the 1se rule we have:
 %
 <<facecoef1se, eval=FALSE>>=
 face_coef_1se <- coef(spar_faces, opt_par = "1se")
@@ -1752,14 +1801,14 @@ if (is_paper) {
 }
 @
 %
-With this vector of coefficients we visualize
+We visualize, in the right panel of Figure~\ref{fig:faces_predictions},
 the effect of each pixel $\hat\beta^\text{1se}_j x^\text{new}_{i,j}$ in
-predicting the face orientation in a given image in the right panel of
-Figure~\ref{fig:faces_predictions}, where face contours and hairlines are most
-predictive for orientation.
+predicting the face orientation in the  image given in the left panel.
+We observe that the face contours and hairlines are most
+predictive of face orientation.
 %
 
-Finally we compare the performance of the estimated version of the SPAR algorithm
+Finally, we compare the performance of the estimated version of the SPAR algorithm
 with another version proposed in \cite{Dunson2020TargRandProj}, where the sparse
 random projection in \cite{ACHLIOPTAS2003JL} is combined with
 probabilistic marginal correlation screening and no thresholding is performed.
@@ -1872,7 +1921,7 @@ if (is_paper) {
 darwin_tmp <- read.csv("data.csv", stringsAsFactors = TRUE)
 @
 Before proceeding with the analysis, the data is screened for
-multivariate outliers using the DDC algorithm in package
+multivariate outliers using the detect deviating cells (DDC) algorithm in package
 \pkg{cellWise} \citep{rcellwise}.
 <<darwinimpute,eval=FALSE>>=
 darwin_orig <- list(y = as.numeric(darwin_tmp$class) - 1,
@@ -1902,7 +1951,7 @@ if (is_paper) {
 %
 We estimate the SPAR algorithm with the screening and random projection
 introduced in \cite{parzer2024glms} for binomial family and logit link,
-using $1-$area under the ROC curve as the cross-validation measure:
+using one minus area under the ROC curve as the cross-validation measure:
 <<spardarwin, eval=FALSE>>=
 set.seed(1234)
 spar_darwin <- spar.cv(darwin$x, darwin$y, family = binomial(logit),
@@ -1930,7 +1979,7 @@ if (is_paper) {
 No thresholding achieves the best measure and translates to almost all variables
 being active (some variables can be inactive at $\nu=0$
 as they may never be screened).
-The 1se rule  achieves that a much sparser model with a cross-validation measure
+The 1se rule  achieves a much sparser model with a cross-validation measure
 of around 0.075. The average number of active variables for the grid of thresholds
 $\nu$ and $M = 20$ models is obtained by the following call and
 shown in Figure~\ref{fig:darwin_activevars}.
@@ -1948,7 +1997,7 @@ if (is_paper) {
 }
 @
 \caption{Average number of active variables vs. threshold values
-$\nu$ and $M=20$ models for the \emph{Darwin} data set. The red points
+$\nu$ for $M=20$ models for the \emph{Darwin} data set. The red points
 correspond to the average number of active variables for the ensemble with the
 lowest cross-validation measure and to the one chosen by the 1se
 rule. \label{fig:darwin_activevars}}
@@ -1964,16 +2013,14 @@ following 18 covariates represent the same features for the second task and
 so on.
 The predictors naturally group by feature, allowing for a more intuitive
 assessment of how each feature (e.g., time spent on a task) relates to the
-likelihood of Alzheimer's disease. Reordering the coefficients by feature
--- rather than by task -- can be done by using the reordering argument
+likelihood of Alzheimer's disease. Reordering the coefficients by feature--rather than by task--can be done by using the reordering argument
 \code{coef\_order}. The resulting plot is shown in
 Figure~\ref{fig:darwin_coefs}.
 We add dashed vertical lines
-to separate the features,  and color indicates coefficient sign (blue/red).
+to separate the features,  and color indicates coefficient sign (blue for positive, red for negative).
 Consistent sign patterns across tasks suggest stable feature influences.
 The presence of distinct blocks of blue or red lines reveals that the features
-measured for different tasks generally exert a consistent --
-either positive or negative -- influence on the probability of Alzheimer’s disease.
+measured for different tasks generally exert a consistent--either positive or negative--influence on the probability of Alzheimer’s disease.
 Line height shows selection frequency, with important features appearing in most models.
 %%
 \begin{figure}[t!]
@@ -2008,26 +2055,28 @@ standardized, before thresholding. \label{fig:darwin_coefs}}
 \section{Conclusion} \label{sec-conclusion}
 
 Package \pkg{spareg} can be employed for modeling high-dimensional data in a GLM
-framework, especially in settings where the number of predictors is much higher
+framework, especially in settings where the number of predictors is much larger
 than the number of observations. The package provides an implementation of a
 computationally-efficient algorithm for sparse
 projected and average regression (SPAR),
 which combines variable screening and random projection in an ensemble of
 GLMs to reduce dimensionality of the predictors.
-Package \pkg{spareg} provides flexible classes for
+Package \pkg{spareg} provides flexible classes for:
 i)~specifying the
-coefficient based on which screening should be performed (both in a classical
-fashion, where the predictors with the highest screening coefficient
-are selected for subsequent analysis or in a probabilistic fashion, where
+coefficient based on which screening should be performed (either in a classical
+fashion, where the predictors with the largest screening coefficient
+are selected for subsequent analysis, or in a probabilistic fashion, where
 variables are sampled for inclusion with probabilities proportional
-to their screening coefficient), ii)~generating the random projection
-to be employed in each marginal model, iii)~specifying the marginal models to be
+to their screening coefficients),
+ii)~generating the random projection
+to be employed in each marginal model, and
+iii)~specifying the marginal models to be
 used in the ensemble. Screening coefficients based on
 marginal correlation between the predictors and the response, marginal
-coefficients from a GLM or ridge coefficients are provided in the package.
+coefficients from a GLM, and ridge coefficients are provided in the package.
 Moreover, several random projections are implemented:
-the Gaussian and sparse matrices which are data-agnostic and satisfy the JL
-lemma and the data-driven projection proposed in \cite{parzer2024sparse}
+the Gaussian and sparse matrices, which are data-agnostic and satisfy the JL
+lemma, and the data-driven projection proposed in \cite{parzer2024sparse}
 for linear
 regression and extended to GLMs in \cite{parzer2024glms}.  This data-driven
 approach, where information about the relationship among the responses and the
@@ -2037,19 +2086,18 @@ ridge coefficients obtained with a small penalty, has the
 advantage of ensuring that the true
 regression coefficients can be recovered approximately after the projection.
 Methodologically, the SPAR algorithm with ridge screening coefficients and
-the data-driven random projection  \citep[as proposed in][]{parzer2024glms}
+data-driven random projection  of \cite{parzer2024glms}
 has been demonstrated to perform effectively in terms of predictive power and
 variable ranking in settings with correlated predictors and across different
 degrees of sparsity of the coefficient
-vector, making it a suitable method for high-dimensional settings with correlated
+vector, making it a suitable method for applications with high-dimensional correlated
 predictors where the sparsity of the problem is unknown. This is the motivation
 behind setting the random projection in \cite{parzer2024glms} as a default
 in \pkg{spareg}.
 
 Moreover, the flexibility and adaptability of the \pkg{spareg} package in
-dealing with different types of screening, random projection and types of
-GLMs, make it an
-attractive choice for practitioners and researchers in a
+dealing with different types of screening, random projection and GLMs
+make it an attractive choice for practitioners and researchers in a
 wide variety of data settings.
 It encourages exploration
 of new methods for variable screening and random projections or the
