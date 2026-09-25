@@ -78,7 +78,11 @@ Ignored if \code{nus} is provided. Defaults to \code{20L}.}
 
 \item{nus}{An optional vector of thresholds \eqn{\nu}.
 If \code{NULL}, \code{nnu} values between \code{0} and the maximum absolute marginal
-coefficient equally spaced  on the quantile scale are used.}
+coefficient equally spaced  on the probability scale are used (i.e.,
+we use as grid for the thresholds
+zero and \code{nnu-1} quantiles of the
+absolute values of the estimated non-zero coefficients
+from the marginal models).}
 
 \item{nummods}{A vector of integers specifying the number of marginal models to consider for validation.
 Defaults to \code{20L}.}
