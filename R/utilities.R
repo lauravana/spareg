@@ -137,7 +137,6 @@ compute_default_lambda_min_ratio <- function(x, y, family) {
   tmp_sc <- apply(x, 2, function(col) sqrt(var(col)*(n-1)/n))
   x2 <- scale(x, center = colMeans(x), scale = tmp_sc)
   ytX <- crossprod(y, x2[,tmp_sc > 0])
-  ytX <- crossprod(y, x2[,tmp_sc > 0])
   lam_max <- 1000 * max(abs(ytX))/n *
     family$mu.eta(family$linkfun(mean(y)))/
     family$variance(mean(y))
