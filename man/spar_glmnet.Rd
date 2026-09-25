@@ -33,5 +33,5 @@ spar_res <- spar(example_data$x, example_data$y,
 
 }
 \seealso{
-\code{\link[=sparmodel-class]{sparmodel}} \code{\link[glmnet:glmnet]{glmnet::glmnet}}
+\code{\link[=sparmodel-class]{sparmodel}}, \code{\link[glmnet:glmnet]{glmnet::glmnet}}
 }

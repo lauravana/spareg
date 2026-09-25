@@ -59,21 +59,6 @@
 #'   model = model_glmnet
 #' )
 #'
-#' if (requireNamespace("robustbase", quietly = TRUE)) {
-#'   model_glmrob <- constructor_sparmodel(
-#'     name = "glmrob",
-#'     generate_fun = function(object, x, y, z, ...) {
-#'       glmrob_res <- robustbase::glmrob(y ~ z, ...)
-#'       list(gammas = coef(glmrob_res)[-1], intercept = coef(glmrob_res)[1])
-#'     }
-#'   )
-#'   spar_res_robust <- spar(
-#'     example_data$x,
-#'     example_data$y,
-#'     model = model_glmrob()
-#'   )
-#' }
-#'
 #' @seealso
 #' [`constructor_sparmodel`], [`spar_glm`], [`spar_glmnet`], [`spar`]
 #'

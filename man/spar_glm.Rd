@@ -30,5 +30,5 @@ spar_res <- spar(example_data$x, example_data$y,
   model = spar_glm())
 }
 \seealso{
-\code{\link[=sparmodel-class]{sparmodel}} \code{\link[stats:glm]{stats::glm}}
+\code{\link[=sparmodel-class]{sparmodel}}, \code{\link[stats:glm]{stats::glm}}
 }

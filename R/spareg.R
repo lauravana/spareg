@@ -39,7 +39,7 @@
 #' @param avg_type The type of averaging for marginal models. Options:
 #'   - `"link"` (default): Averaging on the link scale.
 #'   - `"response"`: Averaging on the response scale.
-#' @param parallelA logical indicating whether to use parallel
+#' @param parallel A logical indicating whether to use parallel
 #'        estimation of the marginal models. Defaults to `FALSE`.
 #' @param inds An optional list of index vectors corresponding to variables retained after screening for each marginal model.
 #'   Must have length `max(nummods)`.

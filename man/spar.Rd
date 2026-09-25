@@ -97,6 +97,9 @@ Defaults to \code{20L}.}
 \item \code{"response"}: Averaging on the response scale.
 }}
 
+\item{parallel}{A logical indicating whether to use parallel
+estimation of the marginal models. Defaults to \code{FALSE}.}
+
 \item{inds}{An optional list of index vectors corresponding to variables retained after screening for each marginal model.
 Must have length \code{max(nummods)}.}
 
@@ -106,9 +109,6 @@ Must have length \code{max(nummods)}.}
 \item{seed}{An optional integer seed for reproducibility. Default: \code{NULL}.}
 
 \item{...}{Additional arguments for backward compatibility.}
-
-\item{parallelA}{logical indicating whether to use parallel
-estimation of the marginal models. Defaults to \code{FALSE}.}
 }
 \value{
 An object of class \code{\link{spar}} with the following components:
