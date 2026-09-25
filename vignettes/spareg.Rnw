@@ -844,10 +844,10 @@ Furthermore, \code{spar()} has the specific arguments \code{xval} and  \code{yva
 Function~\code{spar.cv()} has specific arguments
 \code{nfolds}, the
 number of folds to be used (defaults to 10) and
-\code{fast\_fit = c("fix_rpm_and_inds", "fix_rpm", "none")},
+\code{precompute_mode = c("precompute_all", "precompute_rpm", "full_cv")},
 indicating whether to use the same random projection matrix and/or
 the same indices for screening across folds
-(defaults to \code{"fix_rpm_and_inds"}).
+(defaults to \code{"precompute_all"}).
 %
 If one of the first two options is selected,  \code{spar.cv()} uses a
 lightweight version of \code{spar()} in each fold to reduce computational
@@ -856,13 +856,8 @@ the full dataset before cross-validation and remain fixed throughout. This is
 achieved by an initial call to \code{spar()} on the entire dataset.
 If data-driven projections are used, the training data for each fold will be
 used to update the corresponding entries of the projection matrix.
-If \code{fast_fit = "none"} is selected, the random projection and screening
+If \code{precompute_mode = "full_cv"} is selected, the random projection and screening
 indicators are recomputed in each fold.
-A brief simulation study in Appendix~\ref{app:cv-fast-fit} shows that the
-differences in terms of predictive performance and runtimes
-among the \code{fast_fit} options are in general not large for the investigated
-settings. However, if
-users want to avoid target leakage \code{fast_fit = "none"} should be selected.
 %
 \subsection[Extensible S3 objects]{Extensible \proglang{S}3 objects}\label{sec:soft:S3}
 The \code{spar()} framework is organized around a common extensible structure comprising three method-specification objects:
@@ -1034,7 +1029,7 @@ constructor. Before calling \code{generate_fun()}, \code{spar()} calls
 information in the object (such as \class{family} or precomputed screening coefficients). If argument \code{update_fun} is not specified when using a constructor, the default will only add the family information to the  \class{randomprojection} object.
 Further optional elements include \code{name}, or function
 \code{update_rpm_w_data()}, which specifies how to update the pre-computed
-matrices (when \code{fast_fit} is \code{fix_rpm_and_inds} or \code{fix_rpm})  with data information in each fold of the cross-validation procedure.
+matrices (when \code{precompute_mode} is \code{precompute_all} or \code{precompute_rpm})  with data information in each fold of the cross-validation procedure.
 Note that \code{update_fun()} updates the RP specification before
 generating matrices while \code{update_rpm_w_data()} modifies an already-generated matrix, usually during cross-validation.
 % \begin{itemize}
@@ -1191,7 +1186,7 @@ minimal validation error.
 the matrix of raw coefficients for each  marginal model -- useful
 for understanding the variability of the coefficients across the ensemble models).
 \item For \class{spar.cv}, this method is only available for
-\code{fast_fit = "fix_rpm_and_inds"}. In this case, \code{opt_par} chooses
+\code{precompute_mode = "precompute_all"}. In this case, \code{opt_par} chooses
 between \code{"best"} or \code{"1se"}.   Otherwise, coefficients cannot be
 generated without refitting on whole data with \code{"best"} or \code{"1se"}
 parameters by calling \fct{spar} with the desired $(M, \nu)$ combination.
@@ -1236,7 +1231,7 @@ to compute the averaged coefficients; defaults to optimal values.
 Defaults to mean aggregation.
 %
 \item For \class{spar.cv}, this method is only available for
-\code{fast_fit = "fix_rpm_and_inds"}. In this case, \code{opt_par} chooses
+\code{precompute_mode = "precompute_all"}. In this case, \code{opt_par} chooses
 between \code{"best"} or \code{"1se"}.   Otherwise, predictions cannot be
 generated without refitting on whole data with \code{"best"} or \code{"1se"}
 parameters. To generate predictions, \fct{spar} can be called to refit the
@@ -1264,14 +1259,14 @@ of \code{nu} values for a fixed number of models \code{nummod} or viceversa.
 \item \code{"res_vs_fitted"} produces a residuals-vs-fitted plot. The residuals
 are computed as $r_i=y_i- \widehat y_i$, where $\widehat y_i$ is the prediction computed
 on response level (available for \class{spar} objects and
-\class{spar.cv} object with \code{fast_fit = "fix_rpm_and_inds"}).
+\class{spar.cv} object with \code{precompute_mode = "precompute_all"}).
 %
 \item \code{"coefs"}  produces a plot of the value of the standardized
 coefficients for each predictor in each marginal model (before thresholding).
 For each predictor, the coefficients are sorted from largest to
 smallest in absolute value across the marginal models and their value is
 represented in the plot using a color scale  (available for \class{spar}
-objects and \class{spar.cv} object with \code{fast_fit = "fix_rpm_and_inds"}).
+objects and \class{spar.cv} object with \code{precompute_mode = "precompute_all"}).
 \end{itemize}
 \item \code{plot_along} -- for
 \code{plot_type = "val_measure"} or
@@ -2189,42 +2184,5 @@ rMSPE (bottom left panel), pAUC (bottom right panel).
 \label{fig:bench_sim_p}}
 \end{figure}
 
-
-
-
-\subsection{Comparison of fast fitting options in cross-validation} \label{app:cv-fast-fit}
-
-We perform a simulation study by generating synthetic datasets with 100
-training and 100 validation samples, and 1000 predictors,
-where the first 25 coefficients are non-zero.
-We test two configurations
-\code{rp\_gaussian()} + \code{screen\_marglik()}, and
-\code{rp\_cw(data=TRUE)} + \code{screen\_glmnet()}.
-For each configuration, three fast-fit options are evaluated:
-\code{"fix\_rpm\_and\_inds"} (fixing both random projection matrices and screened indices, default),
-\code{"fix\_rpm"} (fixing only the random projection matrices but computing the
-screening coefficients on each fold)
-and
-\code{"none"} (full cross-validation),
-
-The performance is measured using mean squared prediction error (MSE) for Gaussian models
-and deviance for logistic models, while runtime is recorded for computational
-efficiency. The experiment is repeated 50 times. Results are
-visualized in Figure~\ref{fig:cvmodes}.
-We observe that the performance is
-similar across the three fast-fit modes,
-and the runtime is also rather similar.
-%
-\begin{figure}[t!]
-\centering
-\includegraphics[width = 0.7\textwidth]{sim_cv/cv_p1000_nrep50_runtime}
-\includegraphics[width = 0.7\textwidth]{sim_cv/cv_p1000_nrep50_metric}
-\caption{Test error and runtimes across different \code{fast\_fit} options
-for Gaussian (bottom row) and
-binomial (top row) GLMs for
-(\code{rp\_gaussian()} + \code{screen\_marglik()} and
-\code{rp\_cw(data=TRUE)} + \code{screen\_glmnet()}.\label{fig:cvmodes}}
-\end{figure}
-%
 \fi
 \end{document}

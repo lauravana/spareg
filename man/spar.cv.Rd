@@ -20,7 +20,7 @@ spar.cv(
   avg_type = c("link", "response"),
   parallel = FALSE,
   seed = NULL,
-  fast_fit = c("fix_rpm_and_inds", "fix_rpm", "none"),
+  precompute_mode = c("precompute_all", "precompute_rpm", "full_cv"),
   ...
 )
 
@@ -39,7 +39,7 @@ spareg.cv(
   avg_type = c("link", "response"),
   parallel = FALSE,
   seed = NULL,
-  fast_fit = c("fix_rpm_and_inds", "fix_rpm", "none"),
+  precompute_mode = c("precompute_all", "precompute_rpm", "full_cv"),
   ...
 )
 }
@@ -89,7 +89,7 @@ estimation of the marginal models. Defaults to FALSE.}
 
 \item{seed}{integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.}
 
-\item{fast_fit}{character, one of \code{c("fix_rpm_and_inds", "fix_rpm", "none")}, indicating whether to use the same random projection matrix and/or the same indices for screening across folds. Defaults to \code{"fix_rpm_and_inds"}.}
+\item{precompute_mode}{character, one of \code{c("precompute_all", "precompute_rpm", "full_cv")}, indicating whether to use the same random projection matrix and/or the same indices for screening across folds. Defaults to \code{"precompute_all"}.}
 
 \item{...}{further arguments mainly to ensure back-compatibility}
 }
@@ -124,7 +124,7 @@ screening in each marginal model of length  \code{max(nummods)}. If kept fixed, 
 \item \code{rp} an object of class \code{'randomprojection'}
 \item \code{screencoef} an object of class \code{'screeningcoef'}
 \item \code{model} an object of class \code{'sparmodel'}
-\item \code{fast_fit} character, one of \code{c("fix_rpm_and_inds", "fix_rpm", "none")}, indicating whether the same random projection matrix and/or the same indices for screening across folds were used.
+\item \code{precompute_mode} character, one of \code{c("precompute_all", "precompute_rpm", "full_cv")}, indicating whether the same random projection matrix and/or the same indices for screening across folds were used.
 \item \code{seed} integer seed used at the beginning of the algorithm.
 }
 }
