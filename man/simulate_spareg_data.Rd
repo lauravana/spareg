@@ -41,13 +41,13 @@ Default to NULL, in which case the values -3, -2, -1, 1, 2, 3 will be used.}
 \value{
 A list with the following components:
 \describe{
-\item{x}{Training design matrix (n x p).}
-\item{y}{Training response vector (length n).}
-\item{xtest}{Test design matrix (ntest x p).}
-\item{ytest}{Test response vector (length ntest).}
+\item{x}{Training design matrix \verb{(n x p)}.}
+\item{y}{Training response vector (length \code{n}).}
+\item{xtest}{Test design matrix (\verb{ntest x p}).}
+\item{ytest}{Test response vector (length \code{ntest}).}
 \item{mu}{Intercept used in data generation.}
-\item{beta}{True coefficient vector (length p).}
-\item{sigma2}{Noise variance used in data generation. Equals beta' Sigma beta / snr.}
+\item{beta}{True coefficient vector (length \code{p}).}
+\item{sigma2}{Noise variance used in data generation. Equals \eqn{\beta' \Sigma \beta}/\code{snr}.}
 }
 }
 \description{

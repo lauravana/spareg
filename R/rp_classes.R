@@ -1,65 +1,155 @@
+#' Random Projection Object Class
+#'
+#' @description
+#' The `'randomprojection'` class' represents a configuration for generating and managing random projection matrices in the **SPAR (Sparse Projected Averaged Regression)** framework. Objects of this class encapsulate:
+#'   - Functions for generating, updating, and modifying random projection matrices.
+#'   - Control parameters for the random projection process.
+#'   - Metadata (e.g., name, attributes) for customization.
+#'
+#' @details
+#' Objects of class `'randomprojection'` are created using the `constructor_randomprojection` function. They are used in the `spar` and `spar.cv` functions to define how predictors are projected into a lower-dimensional space.
+#'
+#' The class includes the following components:
+#'   - **`name`**: A character string describing the random projection method (e.g., `"rp_gaussian"`, `"rp_sparse"`).
+#'   - **`generate_fun`**: A function to generate the random projection matrix. This function must accept arguments like `object`, `x`, `y`, `m`, `included_vector`, and `...`.
+#'   - **`update_fun`**: A function to update the `randomprojection` object with data-specific information. This function must accept arguments like `object`, `x`, `y`, `family`, and `...`.
+#'   - **`update_rpm_w_data`**: A function to update an already-generated random projection matrix with data-dependent information. This function must accept arguments like `rpm`, `object`, `included_vector`, `x`, `y`, `family`, and `...`.
+#'   - **`control`**: A list of control parameters for the random projection process (e.g., `mslow`, `msup`, `psi`).
+#'
+#' @section Attributes:
+#' The following attributes are commonly used in `randomprojection` objects:
+#'   - **`mslow`**: Integer. The minimum dimension for projection. Default: `\eqn{\log(p)}`.
+#'   - **`msup`**: Integer. The maximum dimension for projection. Default: `\eqn{n/2}`.
+#'   - **`data`**: Logical. If `TRUE`, the projection matrix is updated with data-dependent coefficients (e.g., for `rp_cw`).
+#'
+#' @section Usage:
+#' `'randomprojection'` objects are typically created using predefined constructors like:
+#'   - `rp_gaussian()`: Gaussian random projection.
+#'   - `rp_sparse()`: Sparse random projection (Achlioptas, 2003).
+#'   - `rp_cw()`: Sparse Embedding (Clarkson-Woodruff) random projection.
+#'
+#' Users can also define custom random projection methods by providing their own `generate_fun`, `update_fun`, and `update_rpm_w_data` functions to `constructor_randomprojection`.
+#'
+#' @examples
+#' rp_gauss <- rp_gaussian(mslow = 5, msup = 10)
+#' example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+#' spar_res <- spar(
+#'   example_data$x,
+#'   example_data$y,
+#'   xval = example_data$xtest,
+#'   yval = example_data$ytest,
+#'   rp = rp_gauss
+#' )
+#'
+#' @seealso
+#' [`constructor_randomprojection`], [`rp_gaussian`], [`rp_sparse`], [`rp_cw`], [`spar`]
+#'
+#' @references{
+#'  \insertRef{ACHLIOPTAS2003JL}{spareg}
+#'
+#'   \insertRef{Clarkson2013LowRankApprox}{spareg}
+#'
+#'   \insertRef{parzer2024glms}{spareg}.
+#' }
+#'
+#' @name randomprojection-class
+NULL
+
+#' Default Update Function for Random Projection Objects
+#'
+#' @description
+#' A default function to update a [`randomprojection-class`] object with the family information.
+#' This function is used internally by `constructor_randomprojection` if no custom `update_fun` is provided.
+#'
+#' @param object An object of class [`randomprojection-class`].
+#' @param x A matrix of standardized predictors (unused in this default function).
+#' @param y A vector of standardized responses (unused in this default function).
+#' @param family A [`stats::family`] object specifying the GLM family and link function.
+#' @param ... Additional arguments (ignored).
+#'
+#' @return
+#' The updated \code{'randomprojection'} object with the
+#' `family_string` attribute set.
+#'
 #' @keywords internal
-update_rp <- function(...) {
-  args <- list2(...)
-  if (is.null(attr(args$rp, "family"))) {
-    family_string <- paste0(args$family$family, "(", args$family$link, ")")
-    attr(args$rp, "family_string") <- family_string
-  }
-  args$rp
+update_rp_default <- function(object, x, y, family, ...) {
+  family_string <- paste0(family$family, "(", family$link, ")")
+  attr(object, "family_string") <- family_string
+  object
 }
 
+#' Default Function to Update Random Projection Matrices
+#'
+#' @description
+#' A default function that returns the input random projection matrix unchanged.
+#' This function is used internally by `constructor_randomprojection` if no custom `update_rpm_w_data` is provided.
+#'
+#' @param rpm A random projection matrix.
+#' @param object An object of class [`randomprojection-class`] (unused in this default function).
+#' @param included_vector A vector of column indices for variables included in the projection (unused in this default function).
+#' @param x A matrix of standardized predictors (unused in this default function).
+#' @param y A vector of standardized responses (unused in this default function).
+#' @param family A [`stats::family`] object (unused in this default function).
+#' @param ... Additional arguments (ignored).
+#'
+#' @return
+#' The input `rpm` matrix, unchanged.
+#'
+#' @keywords internal
+update_rpm_identity <- function(rpm, object, included_vector, x, y, family, ...) {
+  return(rpm)
+}
 
 #' Constructor Function for Building \code{'randomprojection'} Object
 #'
 #' Creates an object class \code{'randomprojection'} using arguments passed by user.
-#' @param generate_fun function for generating the random projection matrix. This
-#' function should have with arguments \code{rp}, which is a \code{'randomprojection'}
-#' object, \code{m}, the target dimension and a vector of indexes
-#' \code{included_vector}, \code{x} matrix of predictors and \code{y} matrix of predictors.
-#' Vector \code{included_vector} shows the column index of the original variables in the
-#' \code{x} matrix to be projected using the random projection. This is needed
-#' due to the fact that screening is employed pre-projection.
 #' @param name optional string describing the random projection method. This is used for printing.
-
-#' @param update_fun optional function for updating the \code{'randomprojection'} object with
-#' information from the data. This
-#' function should have arguments \code{rp}, which is a \code{'randomprojection'}
-#' object and `x` (the matrix of predictors)
-#' and `y` (the vector of responses).
-#' If `update_fun` is not provided,
-#' the internal function `update_rp()` is
-#' used as the default which only manipulates the
-#'  family string.
-#' @param update_rpm_w_data optional function for updating the random projection matrix with data.
-#' This can be used for the case where a list of random projection matrices is
-#' provided by argument \code{RPMs}. In this case, the random structure is kept
-#' fixed, but the data-dependent part gets updated with the provided data. Defaults
-#' to NULL. If not provided, the values of the provided RPMs do not change.
-#' @param control list of controls for random projection. Can include minimum and
-#' maximum dimension for the projection defaults to
-#' \code{list(mslow = NULL, msup = NULL)}
-#' @return a function which in turn creates an object of class \code{'randomprojection'}
+#' @param generate_fun A function for generating the random projection matrix. This function must accept the following arguments:
+#'   - `object`: An object of class [`randomprojection-class`].
+#'   - `x`: A matrix of standardized predictors.
+#'   - `y`: A vector of standardized responses.
+#'   - `m`: The target dimension for the projection.
+#'   - `included_vector`: A vector of column indices for the variables to be included in the projection.
+#'   - `...`: Additional arguments passed from `spar()` or other functions.' due to the fact that screening is employed pre-projection.
+#' @param update_fun A function for updating the [`randomprojection-class`] object with data-specific information.
+#'   This function must accept:
+#'   - `object`: An object of class [`randomprojection-class`].
+#'   - `x`: A matrix of standardized predictors.
+#'   - `y`: A vector of standardized responses.
+#'   - `family`: A [`stats::family`] object.
+#'   - `...`: Additional arguments passed from `spar()`.
+#'   If not provided, the default `update_rp_default` is used.
+#' @param update_rpm_w_data A function for updating an already-generated random projection matrix with data-dependent information.
+#'   This function must accept:
+#'   - `rpm`: The random projection matrix to update.
+#'   - `object`: An object of class [`randomprojection-class`].
+#'   - `included_vector`: A vector of column indices for the variables included in the projection.
+#'   - `x`: A matrix of standardized predictors.
+#'   - `y`: A vector of standardized responses.
+#'   - `family`: A [`stats::family`] object.
+#'   - `...`: Additional arguments passed from `spar()`.
+#'   If not provided, the default `update_rpm_identity` is used, which leaves the matrix unchanged.
+#' @param control A list of control parameters for the random projection. Default: `list()`.
+#'   These parameters are passed to `generate_fun`, `update_fun`, and `update_rpm_w_data`.
+#' @return Returns a function that, when called, creates and returns an object of class [`randomprojection-class`].
 #' @details
-#' Specification of function `update_rpm_w_data()` is particularly relevant for the cross-validation procedure,
-#'  which employs the random projection matrices generated by calling the
-#'  \code{spar()} function on the whole data set
-#'   before starting the cross-validation exercise. For example, in our
-#'   implementation of the data-driven \code{rp_cw(data = TRUE)},
-#'    in each fold, we only update the list of \code{RPMs} by adjusting the
-#'    diagonal elements to the vector of screening coefficients computed on
-#'    the training data for the current fold, but do not modify the
-#'    random elements of the projection matrices in each fold, to reduce the
-#'    computational burden.
+#' The `update_rpm_w_data` function is particularly relevant for cross-validation procedures where
+#' random projection matrices are precomputed (e.g., `precompute_mode = "precompute_all"` or `precompute_mode = "precompute_rpm"`).
+#' In such cases, the cross-validation procedure uses the precomputed matrices, but you may want to update
+#' data-dependent entries (e.g., diagonal elements) with the training data in each fold.
+#' For example, in `rp_cw(data = TRUE)`, the diagonal elements of the projection matrices are updated
+#' to reflect screening coefficients computed on the training data for each fold, while the random elements remain unchanged.
+#'
 #' @examples
-#' generate_cauchy <- function(rp, m, included_vector, x = NULL, y = NULL) {
+#' generate_cauchy <- function(object, x, y, m, included_vector, ...) {
 #'   p <- length(included_vector)
-#'   control_rcauchy <- c(rp$control[names(rp$control) %in% names(formals(rcauchy))],
-#'     attributes(rp)[names(attributes(rp)) %in% names(formals(rcauchy))])
+#'   control_rcauchy <- c(object$control[names(object$control) %in% names(formals(rcauchy))],
+#'     attributes(object)[names(attributes(object)) %in% names(formals(rcauchy))])
 #'   control_rcauchy <-  control_rcauchy[!duplicated(names(control_rcauchy))]
-#' vals <- do.call(function(...)
-#'   rcauchy(m * p, ...), control_rcauchy)
-#'  RM <- matrix(vals, nrow = m, ncol = p)
-#'  return(RM)
+#'   vals <- do.call(function(...)
+#'     rcauchy(m * p, ...), control_rcauchy)
+#'   RM <- matrix(vals, nrow = m, ncol = p)
+#'   return(RM)
 #' }
 #' rp_cauchy <- constructor_randomprojection(
 #'   generate_fun = generate_cauchy, name = "rp_cauchy")
@@ -68,23 +158,16 @@ update_rp <- function(...) {
 #'   yval = example_data$ytest, rp = rp_cauchy(scale = 1/400))
 #' spar_res
 #' @export
-constructor_randomprojection <- function(generate_fun,
-                                         name = NULL,
-                                         update_fun = NULL,
-                                         update_rpm_w_data = NULL,
+constructor_randomprojection <- function(name = NULL,
+                                         generate_fun,
+                                         update_fun = update_rp_default,
+                                         update_rpm_w_data = update_rpm_identity,
                                          control = list()) {
   ## Checks
-  stopifnot("Function generate_fun needs arguments rp, m, included_vector, x, y."=
-              names(formals(generate_fun)) %in% c("rp", "m", "included_vector", "x", "y"))
-  if (!is.null(update_fun)) {
-    stopifnot("Function update_fun should have as argument .... All arguments of spar are passed through ..."=names(formals(update_fun)) %in% c("..."))
-  } else {
-    update_fun <- update_rp
-  }
-  if (!is.null(update_rpm_w_data)) {
-    stopifnot(
-      "Function update_rpm_w_data should have arguments rpm,  rp, included_vector."=names(formals(update_rpm_w_data)) %in% c("rpm", "rp", "included_vector"))
-  }
+  stopifnot("Function generate_fun needs arguments object,x,y,m,included_vector and ...(ellipsis)."=
+              names(formals(generate_fun)) %in% c("object", "m", "included_vector", "x", "y", "..."))
+  stopifnot("Function update_fun should have as argument object, x, y, family, ..." = names(formals(update_fun)) %in% c("object","x", "y", "family", "..."))
+  stopifnot("Function update_rpm_w_data should have arguments rpm, object, included_vector, x, y, family, ... ."=names(formals(update_rpm_w_data)) %in% c("rpm", "object", "included_vector", "x", "y", "family", "..."))
   ## Function to return
   function(..., control = list()) {
     out <- list(name = name,
@@ -103,21 +186,21 @@ constructor_randomprojection <- function(generate_fun,
 #'
 #' Gaussian Random Projection Matrix
 #'
-#' @param rp object of class  \code{'randomprojection'}
+#' @param object object of class  \code{'randomprojection'}.
+#' @param x matrix of standardized predictors.
+#' @param y vector of standardized response variable.
 #' @param m goal dimension, which will be randomly sampled in the SPAR algorithm
 #' @param included_vector integer vector of column indices for the variables to be
 #' included in the random projection. These indices are produced in the
 #' screening step of the SPAR algorithm.
-#' @param x matrix of predictors
-#' @param y vector of response variable
-#' @return matrix with m rows and
+#' @return Returns a matrix with \eqn{m} rows and
 #'  \code{length(included_vector)} columns sampled from the normal distribution.
 #' @keywords internal
-generate_gaussian <- function(rp, m, included_vector, x = NULL, y = NULL) {
+generate_gaussian <- function(object,x = NULL, y = NULL, m, included_vector, ...) {
   p <- length(included_vector)
   control_rnorm <- c(
-    rp$control[names(rp$control) %in% names(formals(rnorm))],
-    attributes(rp)[names(attributes(rp)) %in% names(formals(rnorm))])
+    object$control[names(object$control) %in% names(formals(rnorm))],
+    attributes(object)[names(attributes(object)) %in% names(formals(rnorm))])
   # remove duplicates
   control_rnorm <-  control_rnorm[!duplicated(names(control_rnorm))]
 
@@ -139,7 +222,7 @@ generate_gaussian <- function(rp, m, included_vector, x = NULL, y = NULL) {
 #' @param control list of arguments to be used in functions
 #' \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}
 #'
-#' @return object of class \code{'randomprojection'} which is a list with
+#' @return Returns an object of class \code{'randomprojection'} which is a list with
 #' elements \code{name},
 #' \code{generate_fun},  \code{update_fun},  \code{control}
 #'
@@ -171,20 +254,20 @@ rp_gaussian <- constructor_randomprojection(
 #'
 #' Sparse Random Projection Matrix
 #'
-#' @param rp object of class  \code{'randomprojection'}
+#' @param object object of class  \code{'randomprojection'}
+#' @param x matrix of standardized predictors
+#' @param y vector of standardized response variable
 #' @param m goal dimension, which will be randomly sampled in the SPAR algorithm
 #' @param included_vector integer vector of column indices for the variables to be
 #' included in the random projection. These indices are produced in the
 #' screening step of the SPAR algorithm.
-#' @param x matrix of predictors
-#' @param y vector of response variable
-#' @return (possibly sparse) matrix with m rows and
+#' @return Returns a (possibly sparse) matrix with m rows and
 #'  \code{length(included_vector)} columns.
 #' @keywords internal
-generate_sparse <- function(rp, m, included_vector, x = NULL, y = NULL) {
+generate_sparse <-  function(object,x = NULL, y = NULL, m, included_vector, ...)  {
   p <- length(included_vector)
-  psi <- rp$control$psi
-  if (is.null(psi)) psi <- attr(rp, "psi")
+  psi <- object$control$psi
+  if (is.null(psi)) psi <- attr(object, "psi")
   if (is.null(psi)) psi <- 1
   if (psi > 1 | psi <= 0) stop("For a sparse rpm, psi should lie in interval (0,1].")
   v <- sample(c(-1, 0, 1), size = m * p,
@@ -249,25 +332,26 @@ rp_sparse <- constructor_randomprojection(
 #'
 #' Sparse Embedding Matrix
 #'
+#' @param object object of class  \code{'randomprojection'}
+#' @param x matrix of standardized predictors
+#' @param y vector of standardized response variable
 #' @param m goal dimension, which will be randomly sampled in the SPAR algorithm
 #' @param included_vector integer vector of column indices for the variables to be
 #' included in the random projection. These indices are produced in the
 #' screening step of the SPAR algorithm.
-#' @param x matrix of predictors
-#' @param y vector of response variable
 #' @return (possibly sparse) matrix with m rows and
 #'  \code{length(included_vector)} columns.
 #' @keywords internal
-generate_cw <- function(rp, m, included_vector, x = NULL, y = NULL) {
+generate_cw <-  function(object, x, y, m, included_vector, ...)  {
   p <- length(included_vector)
-  use_data <- attr(rp, "data")
+  use_data <- attr(object, "data")
   if (is.null(use_data)) {
     diagvals <- sample(c(-1, 1), p, replace = TRUE)
   } else {
     if (use_data) {
-      if (is.null(attr(rp, "diagvals")))
+      if (is.null(attr(object, "diagvals")))
         stop("Must provide vector of coefficients for data-driven RP.")
-      diagvals <- attr(rp, "diagvals")[included_vector]
+      diagvals <- attr(object, "diagvals")[included_vector]
     } else {
       diagvals <- sample(c(-1, 1), p, replace = TRUE)
     }
@@ -290,64 +374,64 @@ generate_cw <- function(rp, m, included_vector, x = NULL, y = NULL) {
   return(RM)
 }
 
-update_rp_cw <- function(...) {
+update_rp_cw <- function(object, x, y, family, ...) {
   args <- list2(...)
-  n <- NROW(args$x)
-  p <- NCOL(args$x)
+  n <- NROW(x)
+  p <- NCOL(x)
   if (attr(args$screencoef, "reuse_in_rp") &&
       !is.null(attr(args$screencoef, "importance"))) {
     scr_coef <- attr(args$screencoef, "importance")
     inc_probs <- attr(args$screencoef, "inc_prob")
-    attr(args$rp, "diagvals") <- scr_coef/max(inc_probs)
+    attr(object, "diagvals") <- scr_coef/max(inc_probs)
   } else {
-    if (is.null(args$rp$control$family)) {
-      family_string <- paste0(args$family$family, "(", args$family$link, ")")
-      args$rp$control$family_string <- family_string
+    if (!is.null(object$control$family)) {
+      stopifnot("Family provided in control should be of class family." = class(object$control$family) == "family")
+      fam <- object$control$family
+      object$control$family <- NULL
+    } else {
+      fam <- family
     }
-    family <- args$family
-    if (family$family=="gaussian" & family$link=="identity") {
+    object$control$family_string <- paste0(fam$family, "(", fam$link, ")")
+    if (fam$family=="gaussian" & fam$link=="identity") {
       fit_family <- "gaussian"
     } else {
-      if (family$family=="binomial" & family$link=="logit") {
+      if (fam$family=="binomial" & fam$link=="logit") {
         fit_family <- "binomial"
-      } else if (family$family=="poisson" & family$link=="log") {
+      } else if (fam$family=="poisson" & fam$link=="log") {
         fit_family <- "poisson"
       } else {
-        fit_family <- family
+        fit_family <- fam
       }
     }
-    if (family$family=="gaussian") {
+    if (fam$family=="gaussian") {
       dev.ratio_cutoff <- 0.999
     } else {
       dev.ratio_cutoff <- 0.8
     }
 
-    if (is.null(args$rp$control$alpha)) args$rp$control$alpha <-  0
-    if (is.null(args$rp$control$lambda.min.ratio)) {
-      tmp_sc <- apply(args$x, 2, function(col) sqrt(var(col)*(n-1)/n))
-      x2 <- scale(args$x, center = colMeans(args$x), scale = tmp_sc)
-      ytX <- crossprod(args$y, x2[,tmp_sc > 0])
-      lam_max <- 1000 * max(abs(ytX))/n *
-        family$mu.eta(family$linkfun(mean(args$y)))/
-        family$variance(mean(args$y))
-      args$rp$control$lambda.min.ratio <- min(0.01, 1e-4 / lam_max)
+    if (is.null(object$control$alpha)) object$control$alpha <-  0
+    if (is.null(object$control$lambda.min.ratio)) {
+      object$control$lambda.min.ratio <-
+        compute_default_lambda_min_ratio(
+          x, y, family = fam)
     }
 
-    control_glmnet <- args$rp$control[names(args$rp$control)  %in% names(formals(glmnet))]
+    control_glmnet <- object$control[names(object$control)  %in% names(formals(glmnet))]
     glmnet_res <- do.call(function(...)
-      glmnet(x = args$x, y = args$y, family = fit_family, ...), control_glmnet)
+      glmnet(x = x, y = y, family = fit_family, ...), control_glmnet)
 
     lam <- min(glmnet_res$lambda[glmnet_res$dev.ratio <= dev.ratio_cutoff])
     scr_coef <- coef(glmnet_res,s=lam)[-1]
     inc_probs <- abs(scr_coef)
     max_inc_probs <- max(inc_probs)
-    attr(args$rp, "diagvals") <- scr_coef/max_inc_probs
+    attr(object, "diagvals") <- scr_coef/max_inc_probs
   }
-  return(args$rp)
+  return(object)
 }
 
-update_rpm_w_data_cw <- function(rpm, rp, included_vector) {
-  rpm@x <-  attr(rp, "diagvals")[included_vector]
+
+update_rpm_w_data_cw <- function(rpm, object, included_vector, x, y, family, ...) {
+  rpm@x <-  attr(object, "diagvals")[included_vector]
   return(rpm)
 }
 
@@ -414,12 +498,22 @@ rp_cw <- constructor_randomprojection(
 
 #' Print Method for a \code{'randomprojection'} Object
 #'
-#' Print method for a \code{'randomprojection'} object
-#' @param x object of class \code{'randomprojection'}
-#' @param ... further arguments passed to or from other methods
-#' @return text summary
+#' @description
+#' Prints a summary of a [`randomprojection-class`] object, including its name, and key attributes
+#' such as `mslow` and `msup`.
+#'
+#' @param x An object of class [`randomprojection-class`].
+#' @param ... Additional arguments (ignored).
+#'
+#' @return
+#' Invisibly returns the input object `x`.
+#'
+#' @examples
+#' rp <- rp_gaussian(mslow = 5, msup = 10)
+#' print(rp)
 #'
 #' @export
+#' @method print randomprojection
 print.randomprojection <- function(x, ...) {
   if (!is.null(x$name)) cat(paste0("Name: ", x$name), "\n")
   cat("Main attributes:", "\n")

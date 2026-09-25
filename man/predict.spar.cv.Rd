@@ -47,12 +47,12 @@ Vector of predictions
 }
 \description{
 Predict responses for new predictors from \code{'spar.cv'} object.
-Only allowed if \code{fast_fit = "fix_rpm_and_inds"} is used when calling \code{spar.cv}.
+Only allowed if \code{precompute_mode = "precompute_all"} is used when calling \code{spar.cv}.
 In this case the ensemble obtained on the whole data is used for the
 combination of threshold and number of models using the best or the 1se identified through cross-validation.
 Otherwise predictions cannot be generated without refitting on whole data with
-best or 1se parameters. To be able to generate predictions in case \code{fast_fit = "fix_rpm"}
-or \code{fast_fit = "none"}, use \code{spar()} to refit with the desired (nu, M) combination.
+best or 1se parameters. To be able to generate predictions in case \code{precompute_mode = "precompute_rpm"}
+or \code{precompute_mode = "full_cv"}, use \code{spar()} to refit with the desired (nu, M) combination.
 }
 \examples{
 \donttest{

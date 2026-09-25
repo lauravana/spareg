@@ -14,7 +14,7 @@ projection matrix}
 \code{generate_fun}, \code{update_fun}, \code{update_rpm_w_data}}
 }
 \value{
-object of class \code{'randomprojection'} which is a list with
+Returns an object of class \code{'randomprojection'} which is a list with
 elements \code{name},
 \code{generate_fun},  \code{update_fun},  \code{control}
 }

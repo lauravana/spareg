@@ -132,3 +132,14 @@ compute_val_summary <- function(val_res) {
   return(val_sum)
 }
 
+compute_default_lambda_min_ratio <- function(x, y, family) {
+  n <- NROW(x)
+  tmp_sc <- apply(x, 2, function(col) sqrt(var(col)*(n-1)/n))
+  x2 <- scale(x, center = colMeans(x), scale = tmp_sc)
+  ytX <- crossprod(y, x2[,tmp_sc > 0])
+  lam_max <- 1000 * max(abs(ytX))/n *
+    family$mu.eta(family$linkfun(mean(y)))/
+    family$variance(mean(y))
+  lambda.min.ratio <- min(0.01, 1e-4 / lam_max)
+  return(lambda.min.ratio)
+}

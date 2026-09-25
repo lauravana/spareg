@@ -7,19 +7,20 @@
 \method{print}{coefspar}(x, digits = 4L, show = 6L, ...)
 }
 \arguments{
-\item{x}{An object of class \code{'coefspar'}, typically created by a custom model function.}
+\item{x}{A  \code{'coefspar'} object.}
 
-\item{digits}{integer digits to be printed, defaults to 4L.}
+\item{digits}{The number of significant digits for numeric output. Default: \code{4L}.}
 
-\item{show}{integer number of coefficients to be shown, defaults to 6L.}
+\item{show}{The number of coefficients to display. Default: \code{6L}.}
 
-\item{...}{Additional arguments passed to or from other methods (ignored here).}
+\item{...}{Additional arguments passed to or from other methods.}
 }
 \value{
 Invisibly returns the input object \code{x}.
 }
 \description{
-Print method showing the basic components of a  \code{'coefspar'} object.
+Prints a summary of coefficients from a \code{'coefspar'} object, including the selected \eqn{M} and \eqn{\nu},
+and the number of active variables.
 }
 \examples{
 example_data <- simulate_spareg_data(n = 100, p = 2000, ntest = 100)

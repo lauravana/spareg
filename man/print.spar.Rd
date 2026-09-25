@@ -2,22 +2,23 @@
 % Please edit documentation in R/spareg.R
 \name{print.spar}
 \alias{print.spar}
-\title{Summary of \code{'spar'} Object}
+\title{Print summary of \code{'spar'} Object}
 \usage{
 \method{print}{spar}(x, digits = 4L, ...)
 }
 \arguments{
-\item{x}{result of \link{spar} function of class  \code{'spar'}.}
+\item{x}{A \code{'spar'} object.}
 
-\item{digits}{integer digits to be printed, defaults to 4L.}
+\item{digits}{The number of significant digits for numeric output. Default: \code{4L}.}
 
-\item{...}{further arguments passed to or from other methods}
+\item{...}{Additional arguments passed to or from other methods.}
 }
 \value{
-text summary
+Invisibly returns the input object \code{x}.
 }
 \description{
-Print summary of \code{'spar'} object
+Prints a summary of a \code{\link{spar}} object, including the validation
+measure, optimal \eqn{M} and \eqn{\nu}, and the number of active predictors.
 }
 \examples{
 example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)

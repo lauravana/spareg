@@ -3,10 +3,13 @@
 * Updated plot methods to display the original scale for the threshold parameter when plot_along = "nu".
 * Remove the duplicated warning message in the parallel = TRUE case.
 * Made the name argument optional in constructor functions.
-* Extended fast fitting options in spar.cv to include (using new argument fast_fit):
-    - Fixing only the random projections in advance -- fast_fit = "fix_rpm".
-    - Sampling both screening indicators and random projections in each fold of the full cross-validation -- fast_fit = "none".
-* Restricted plot.spar.cv, coef.spar.cv, predict.spar.cv to be used only for fast_fit = "fix_rpm_and_inds".
+* Extended fast fitting options in spar.cv to include (using new argument precompute_mode):
+    - Fixing screening indicators and random projections in advance -- precompute_mode = "precompute_all".
+    - Fixing only the random projections in advance -- precompute_mode = "precompute_rpm".
+    - Sampling both screening indicators and random projections in each fold of the full cross-validation -- precompute_mode = "full_cv".
+* Restricted plot.spar.cv, coef.spar.cv, predict.spar.cv to be used only for precompute_mode = "precompute_all".
+* Improved consistency across the S3 classes randomprojection, screencoef and sparmodel. They all now rely on an update function and a generate function.
+* Changed thresholding to beta[abs(beta) <= nu] <- 0 instead of beta[abs(beta) < nu] <- 0
 
 # spareg 1.1.1
 

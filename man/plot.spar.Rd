@@ -19,38 +19,54 @@
 )
 }
 \arguments{
-\item{x}{result of spar function of class  \code{'spar'}.}
+\item{x}{A \code{'spar'} object.}
 
-\item{plot_type}{one of  \code{c("val_measure", "val_numactive", "res_vs_fitted", "coefs")}.}
+\item{plot_type}{The type of plot. Options:
+\itemize{
+\item \code{"val_measure"} (default): Validation measure vs. \code{nus} or \code{nummods}.
+\item \code{"val_numactive"}: Number of active variables vs. \code{nus} or \code{nummods}.
+\item \code{"res_vs_fitted"}: Residuals vs. fitted values.
+\item \code{"coefs"}: Heatmap of coefficients.
+}}
 
-\item{plot_along}{one of \code{c("nu","nummod")}; ignored when  \code{plot_type = "res_vs_fitted"}.}
+\item{plot_along}{The variable to plot along the x-axis. Options:
+\itemize{
+\item \code{"nu"} (default): Threshold values.
+\item \code{"nummod"}: Number of marginal models.
+Ignored if \code{plot_type = "res_vs_fitted"} or \code{plot_type = "coefs"}.
+}}
 
-\item{nummod}{fixed value for number of models when  \code{plot_along = "nu"}
-for  \code{plot_type = "val_measure"} or  \code{"val_numactive"};
-same as for \code{\link{predict.spar}} when  \code{plot_type="res_vs_fitted"}.}
+\item{nummod}{The number of models to fix when \code{plot_along = "nu"}. If \code{NULL}, the optimal value is used.
+The value will be used in \code{\link{predict.spar}} when \code{plot_type="res_vs_fitted"}.}
 
-\item{nu}{fixed value for \eqn{\nu} when  \code{plot_along="nummod"} for
-\code{plot_type = "val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res_vs_fitted"}.}
+\item{nu}{The threshold value to fix when \code{plot_along = "nummod"}. If \code{NULL}, the optimal value is used.
+The value will be used in \code{\link{predict.spar}} when \code{plot_type="res_vs_fitted"}.}
 
-\item{xfit}{data used for predictions in  \code{"res_vs_fitted"}. Needed as the \code{"spar"} objects do not store the original data.}
+\item{xfit}{The predictor data for fitted values (required if \code{plot_type = "res_vs_fitted"}).}
 
-\item{yfit}{data used for predictions in  \code{"res_vs_fitted"}.Needed as the \code{"spar"} objects do not store the original data.}
+\item{yfit}{The response data for fitted values (required if \code{plot_type = "res_vs_fitted"}).}
 
-\item{prange}{optional vector of length 2 for  \code{"coefs"}-plot to give
-the limits of the predictors' plot range; defaults to  \code{c(1, p)}.}
+\item{prange}{A vector of length 2 specifying the range of predictors to plot (for \code{plot_type = "coefs"}).
+Default: \code{c(1, p)}.}
 
-\item{coef_order}{optional index vector of length p for \code{plot_type = "coefs"} to give
-the order of the predictors; defaults to \code{1 : p}.}
+\item{coef_order}{An optional vector specifying the order of coefficients for \code{plot_type = "coefs"}.
+Default: \code{1:p} (original order).}
 
-\item{digits}{number of significant digits to be displayed in the axis; defaults to 2L.}
+\item{digits}{The number of significant digits for axis labels. Default: \code{2L}.}
 
-\item{...}{further arguments passed to or from other methods}
+\item{...}{Additional arguments passed to or from other methods.}
 }
 \value{
-\code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
+Returns a \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object.
 }
 \description{
-Plot values of validation measure or number of active variables over different thresholds or number of models for \code{'spar'} object, or residuals vs fitted
+Creates diagnostic plots for a \code{'spar'}] object, including:
+\itemize{
+\item Validation measure vs. \code{nus} or \code{nummods}.
+\item Number of active variables vs. \code{nus} or \code{nummods}.
+\item Residuals vs. fitted values.
+\item Coefficient heatmap.
+}
 }
 \examples{
 example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)

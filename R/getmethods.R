@@ -64,8 +64,8 @@ get_model.spar <- function(object, ...) {
 #' @param opt_par A character string specifying the selection criterion:
 #'   - `"best"`: Selects the model with the minimum validation measure.
 #'   - `"1se"`: Selects the simplest model within 1 standard error of the best model.
-#' @param x A matrix or data frame of predictors. Required if `fast_fit != "fix_rpm_and_inds"`.
-#' @param y A response vector. Required if `fast_fit != "fix_rpm_and_inds"`.
+#' @param x A matrix or data frame of predictors. Required if `precompute_mode != "precompute_all"`.
+#' @param y A response vector. Required if `precompute_mode != "precompute_all"`.
 #' @param xval A matrix or data frame of validation predictors. If `NULL`, `x` is used.
 #' @param yval A validation response vector. If `NULL`, `y` is used.
 #' @param ... Additional arguments passed to `spar()` for re-estimation.
@@ -73,7 +73,7 @@ get_model.spar <- function(object, ...) {
 #'   - `betas`: Coefficients of the selected model.
 #'   - `intercepts`: Intercepts for the selected model.
 #'   - `val_res`: Validation results filtered for the selected `nummod` and `nu`.
-#'   - Additional fields like `xscale`, `yscale`, `xcenter`, and `ycenter` if `fast_fit == "fix_rpm_and_inds"`.
+#'   - Additional fields like `xscale`, `yscale`, `xcenter`, and `ycenter` if `precompute_mode == "precompute_all"`.
 #' @examples
 #' \donttest{
 #' example_data <- simulate_spareg_data(n = 50, p = 200, ntest = 50)
@@ -96,7 +96,7 @@ get_model.spar.cv <- function(object, opt_par = c("best", "1se"),
                    par1se$nummod)
   nu <- ifelse(opt_nunum == "best", parbest$nu, par1se$nu)
 
-  if (object$fast_fit == "fix_rpm_and_inds" && is.null(xval) && is.null(yval)) {
+  if (object$precompute_mode == "precompute_all" && is.null(xval) && is.null(yval)) {
     betas_std <- object$fitted_objects[[1]]$betas_std
     final_coef <- betas_std[, seq_len(nummod), drop=FALSE]
     final_coef[abs(final_coef) < nu] <- 0
@@ -124,7 +124,7 @@ get_model.spar.cv <- function(object, opt_par = c("best", "1se"),
     class(object) <- c("spar", "spar.cv")
   } else {
     if (is.null(x) | is.null(y)) {
-      stop(sprintf("If fast_fit != 'fix_rpm_and_inds', x and y must be provided for re-estimating the model with the %s (nu, M) combination.",
+      stop(sprintf("If precompute_mode != 'precompute_all', x and y must be provided for re-estimating the model with the %s (nu, M) combination.",
                    opt_nunum))
     }
     if (is.null(xval) | is.null(yval)) {
@@ -133,7 +133,7 @@ get_model.spar.cv <- function(object, opt_par = c("best", "1se"),
     }
     # Re-estimation of the model with the selected (nu, M) combination
     final_model <- spar(x = x, y = y,
-                        family = eval(parse(text = object$family)),
+                        family = object$family,
                         model = object$model,
                         rp = object$rp, screencoef = object$screencoef,
                         xval = xval, yval = yval,
