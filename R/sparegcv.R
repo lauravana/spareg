@@ -304,10 +304,12 @@ plot.spar.cv <- function(x,
     if (plot_along=="nu") {
       if (is.null(nummod)) {
         mynummod <- my_val_sum$nummod[which.min(my_val_sum$Meas)]
-        tmp_title <- "Fixed optimal nummod="
+        tmp_title <- "Optimal~number~of~models~M[best]=="
       } else {
-        tmp_title <- "Fixed given nummod="
+        tmp_title <- "Given~number~of~models~M=="
       }
+      tmp_title_text <- paste0(tmp_title,mynummod)
+
       tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$Meas)
       allowed_ind <- tmp_df$Meas<=tmp_df$Meas[ind_min]+
@@ -321,10 +323,11 @@ plot.spar.cv <- function(x,
         ggplot2::geom_line() +
         ggplot2::theme_bw() +
         ggplot2::labs(x=expression(nu),y=spar_res$measure) +
+        ggplot2::geom_vline(xintercept = tmp_df$nu[ind_min],linetype=2,linewidth=0.5)+
         ggplot2::geom_point(data=data.frame(x=tmp_df$nu[ind_min],
                                             y=tmp_df$Meas[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red") +
-        ggplot2::ggtitle(paste0(tmp_title,mynummod)) +
+        ggplot2::ggtitle(parse(text = tmp_title_text)) +
         ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$Meas-.data$sd_measure,
                                           ymax=.data$Meas+.data$sd_measure),
                              alpha=0.2,linetype=2,show.legend = FALSE) +
@@ -341,11 +344,15 @@ plot.spar.cv <- function(x,
     } else {
       if (is.null(nu)) {
         nu <- my_val_sum$nu[which.min(my_val_sum$Meas)]
-        tmp_title <- "Fixed optimal "
+        tmp_title <- "Optimal~threshold~nu[best]=="
       } else {
-        tmp_title <- "Fixed given "
+        tmp_title <- "Given~threshold~nu=="
       }
-      tmp_df <- my_val_sum[my_val_sum$nu==nu, ]
+      tmp_title_text <- paste0(tmp_title, round(nu, 3))
+
+      nu_grid <- max(spar_res$nus[spar_res$nus <= nu])
+      tmp_df <- my_val_sum[my_val_sum$nu==nu_grid, ]
+
       ind_min <- which.min(tmp_df$Meas)
       allowed_ind <- tmp_df$Meas<=tmp_df$Meas[ind_min]+
         tmp_df$sd_measure[ind_min]
@@ -358,7 +365,8 @@ plot.spar.cv <- function(x,
         ggplot2::labs(y=spar_res$measure) +
         ggplot2::geom_point(data=data.frame(x=tmp_df$nummod[ind_min],y=tmp_df$Meas[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red")+
-        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3)))) +
+        ggplot2::ggtitle(parse(text = tmp_title_text)) +
+        ggplot2::geom_vline(xintercept = tmp_df$nummod[ind_min],linetype=2,linewidth=0.5)+
         ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$Meas-.data$sd_measure,
                                           ymax=.data$Meas+.data$sd_measure),
                              alpha=0.2,linetype=2,show.legend = FALSE)+
@@ -381,12 +389,13 @@ plot.spar.cv <- function(x,
     if (plot_along=="nu") {
       if (is.null(nummod)) {
         mynummod <- my_val_sum$nummod[which.min(my_val_sum$Meas)]
-        tmp_title <- "Fixed optimal nummod="
+        tmp_title <- "Optimal~number~of~models~M[best]=="
       } else {
-        tmp_title <- "Fixed given nummod="
+        tmp_title <- "Given~number~of~models~M=="
       }
       tmp_df <- my_val_sum[my_val_sum$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$Meas)
+      tmp_title_text <- paste0(tmp_title,mynummod)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sd_measure[ind_min]
       ind_1se <- which.min(tmp_df$numactive[allowed_ind])
@@ -395,20 +404,24 @@ plot.spar.cv <- function(x,
         ggplot2::geom_point() +
         ggplot2::geom_line() +
         ggplot2::labs(x=expression(nu)) +
+        ggplot2::geom_vline(xintercept = tmp_df$nu[ind_min],linetype=2,linewidth=0.5)+
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
                             color=2,show.legend = FALSE,
                             data=data.frame(x = c(tmp_df$nu[ind_min],tmp_df$nu[allowed_ind][ind_1se]),
                                             y = c(tmp_df$numactive[ind_min],tmp_df$numactive[allowed_ind][ind_1se]))) +
         ggplot2::theme_bw() +
-        ggplot2::ggtitle(paste0(tmp_title,mynummod))
+        ggplot2::ggtitle(parse(text = tmp_title_text))
     } else {
       if (is.null(nu)) {
         nu <- my_val_sum$nu[which.min(my_val_sum$Meas)]
-        tmp_title <- "Fixed optimal "
+        tmp_title <- "Optimal~threshold~nu[best]=="
       } else {
-        tmp_title <- "Fixed given "
+        tmp_title <- "Given~threshold~nu=="
       }
-      tmp_df <- my_val_sum[my_val_sum$nu==nu, ]
+      tmp_title_text <- paste0(tmp_title,nu)
+      nu_grid <- max(spar_res$nus[spar_res$nus <= nu])
+      tmp_df <- my_val_sum[my_val_sum$nu==nu_grid, ]
+
       ind_min <- which.min(tmp_df$Meas)
 
       allowed_ind <- tmp_df$Meas<tmp_df$Meas[ind_min]+tmp_df$sd_measure[ind_min]
@@ -418,13 +431,15 @@ plot.spar.cv <- function(x,
                              ggplot2::aes(x=.data$nummod,y=.data$numactive)) +
         ggplot2::geom_point() +
         ggplot2::geom_line() + ggplot2::theme_bw() +
+        ggplot2::geom_vline(xintercept = tmp_df$nummod[ind_min],linetype=2,linewidth=0.5)+
         ggplot2::geom_point(ggplot2::aes(x = .data$x, y = .data$y),
                             color=2,show.legend = FALSE,
                             data=data.frame(x = c(tmp_df$nummod[ind_min],tmp_df$nummod[allowed_ind][ind_1se]),
                                             y = c(tmp_df$numactive[ind_min],tmp_df$numactive[allowed_ind][ind_1se]))) +
         ggplot2::scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
                                     minor_breaks = NULL)+
-        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),list(txt=tmp_title,v=round(nu,3))))
+        ggplot2::ggtitle(parse(text = tmp_title_text))
+
 
     }
   }
@@ -544,7 +559,7 @@ print.spar.cv <- function(x, digits = 4L, ...) {
 #' This function extracts coefficients only if
 #' \code{precompute_mode = "precompute_all"}. In this case, coefficients
 #' are derived from the initial run on the full dataset using the optimal
-#' \eqn{M} and \eq{\nu} combination identified via cross-validation
+#' \eqn{M} and \eqn{\nu} combination identified via cross-validation
 #' (best or 1se rule). For other modes (\code{"precompute_proj"} or
 #' \code{"full_cv"}), coefficients cannot be directly extracted because
 #' screening or projections vary across folds. To obtain coefficients in

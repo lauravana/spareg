@@ -414,14 +414,15 @@ validate_spar <- function(fitted_objects, xval, yval, nus, nummods, measure, avg
   val.meas <- get_val_measure_function(measure, fitted_objects$family)
 
   # Initialize validation results
-  val_res <- data.frame(nnu = NULL, nu = NULL, nummod = NULL, numactive = NULL, measure = NULL)
+  val_res <- data.frame(nnu = NULL, nu = NULL, nummod = NULL,
+                        numactive = NULL, measure = NULL)
 
   # Loop over nummods
   tabnummodres <- lapply(nummods, function(nummod) {
     tabres <- lapply(seq_along(nus), function(l) {
       thresh <- nus[l]
       tmp_coef <- fitted_objects$betas_std[, seq_len(nummod), drop = FALSE]
-      tmp_coef[abs(tmp_coef) < thresh] <- 0
+      tmp_coef[abs(tmp_coef) <= thresh] <- 0
       tmp_beta <- Matrix(0, nrow = p, ncol = nummod)
       tmp_beta[fitted_objects$xscale > 0, ] <- fitted_objects$yscale * tmp_coef / (fitted_objects$xscale[fitted_objects$xscale > 0])
       if (avg_type == "link") {
@@ -489,27 +490,28 @@ spar_algorithm <- function(x, y, family, model, rp, screencoef,
 #' Coef Method for \code{'spar'} Object
 #'
 #' Extracts coefficients from \code{'spar'} object
-#' @param object result of [spar] function of class \code{'spar'}.
+#' @param object result of [spar] of class \code{'spar'}.
 #' @param nummod number of models used to form coefficients; value with minimal
 #'        validation \code{measure} is used if not provided.
-#' @param nu threshold level used to form coefficients; value with minimal
+#' @param nu threshold level used to compute the coefficients; value with minimal
 #'        validation \code{measure} is used if not provided.
-#' @param aggregate character, one of c("mean", "median", "none"), giving the method of aggregating
-#'        the coefficients over the marginal models. If set to "none",
+#' @param aggregate character, one of \code{c("mean", "median", "none")},
+#'        giving the method of aggregating
+#'        the coefficients over the marginal models. If set to \code{"none"},
 #'        the coefficients are not aggregated over the marginal models and a
-#'        matrix of coefficients, one column for each marginal model is returned.
+#'        matrix of coefficients, one column for each marginal model, is returned.
 #'        Otherwise
 #'        the coefficients are aggregated using the specified method (mean or median).
 #'        Defaults to mean aggregation.
-#' @param ... further arguments passed to or from other methods
+#' @param ... further arguments passed to or from other methods.
 #' @return object of class  \code{'coefspar'} which is a list with elements
 #' \itemize{
 #'  \item \code{intercept} average intercept value or vector intercepts (one for
 #'  each marginal model) if \code{aggregate = "none"}.
-#'  \item \code{beta} vector of length p of averaged coefficients or a
-#'        p x \code{max(nummods)} matrix of coefficients if \code{agregate = "none"}.
-#'  \item \code{nummod} number of models based on which the coefficients are computed
-#'  \item \code{nu}  threshold based on which the coefficients are computed
+#'  \item \code{beta} vector of length \eqn{p} of averaged coefficients or a
+#'        \eqn{p} x \code{max(nummods)} matrix of coefficients if \code{agregate = "none"}.
+#'  \item \code{nummod} number of models based on which the coefficients are computed.
+#'  \item \code{nu}  threshold based on which the coefficients are computed.
 #' }
 #' @seealso [print.coefspar], [summary.coefspar]
 #' @examples
@@ -899,13 +901,14 @@ plot.spar <- function(x,
     if (plot_along=="nu") {
       if (is.null(nummod)) {
         mynummod <- spar_res$val_res$nummod[which.min(spar_res$val_res$measure)]
-        tmp_title <- "Fixed optimal nummod="
+        tmp_title <- "Optimal~number~of~models~M[best]=="
       } else {
-        tmp_title <- "Fixed given nummod="
+        tmp_title <- "Given~number~of~models~M=="
       }
-
       tmp_df <- spar_res$val_res[spar_res$val_res$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$measure)
+
+      tmp_title_text <- paste0(tmp_title,mynummod)
 
       res <- ggplot2::ggplot(data = tmp_df,
                              ggplot2::aes(x=.data$nu,y=.data$measure)) +
@@ -914,19 +917,24 @@ plot.spar <- function(x,
         ggplot2::theme_bw() +
         ggplot2::labs(x=expression(nu),
                       y=spar_res$measure) +
+        ggplot2::geom_vline(xintercept = tmp_df$nu[ind_min],linetype=2,linewidth=0.5)+
         ggplot2::geom_point(data=data.frame(x=tmp_df$nu[ind_min],
                                             y=tmp_df$measure[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red") +
-        ggplot2::ggtitle(paste0(tmp_title,mynummod))
+        ggplot2::ggtitle(parse(text = tmp_title_text))
     } else {
       if (is.null(nu)) {
         nu <- spar_res$val_res$nu[which.min(spar_res$val_res$measure)]
-        tmp_title <- "Fixed optimal "
+        tmp_title <- "Optimal~threshold~nu[best]=="
       } else {
-        tmp_title <- "Fixed given "
+        tmp_title <- "Given~threshold~nu=="
       }
-      tmp_df <- spar_res$val_res[spar_res$val_res$nu == nu, ]
+
+      nu_grid <- max(spar_res$nus[spar_res$nus <= nu])
+      tmp_df <- spar_res$val_res[which(spar_res$val_res$nu==nu_grid), ]
       ind_min <- which.min(tmp_df$measure)
+      tmp_title_text <- paste0(tmp_title, round(nu, 3))
+
 
       res <- ggplot2::ggplot(data = tmp_df,
                              ggplot2::aes(x=.data$nummod,y=.data$measure)) +
@@ -934,24 +942,25 @@ plot.spar <- function(x,
         ggplot2::geom_line() +
         ggplot2::theme_bw() +
         ggplot2::labs(y=spar_res$measure) +
+        ggplot2::geom_vline(xintercept = tmp_df$nummod[ind_min],linetype=2,linewidth=0.5)+
         ggplot2::geom_point(data = data.frame(x = tmp_df$nummod[ind_min],
                                               y = tmp_df$measure[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red")+
         scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
                            minor_breaks = NULL)+
-        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),
-                                    list(txt=tmp_title,v=round(nu,3))))
-    }
+        ggplot2::ggtitle(parse(text = tmp_title_text))
+      }
   } else if (plot_type=="val_numactive") {
     if (plot_along=="nu") {
       if (is.null(nummod)) {
         mynummod <- spar_res$val_res$nummod[which.min(spar_res$val_res$measure)]
-        tmp_title <- "Fixed optimal nummod="
+        tmp_title <- "Optimal~number~of~models~M[best]=="
       } else {
-        tmp_title <- "Fixed given nummod="
+        tmp_title <- "Given~number~of~models~M=="
       }
       tmp_df <- spar_res$val_res[spar_res$val_res$nummod==mynummod, ]
       ind_min <- which.min(tmp_df$measure)
+      tmp_title_text <- paste0(tmp_title,mynummod)
 
       res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nu,y=.data$numactive)) +
         ggplot2::geom_point() +
@@ -962,18 +971,22 @@ plot.spar <- function(x,
         #                            labels=formatC(spar_res$val_res$nu[seq(1,nrow(spar_res$val_res),1)],
         #                                           format = "e", digits = digits)) +
         ggplot2::labs(x=expression(nu)) +
+        ggplot2::geom_vline(xintercept = tmp_df$nu[ind_min],linetype=2,linewidth=0.5)+
         ggplot2::geom_point(data=data.frame(x=tmp_df$nu[ind_min],y=tmp_df$numactive[ind_min]),
                             ggplot2::aes(x=.data$x,y=.data$y),col="red")+
-        ggplot2::ggtitle(paste0(tmp_title,mynummod))
+        ggplot2::ggtitle(parse(text = tmp_title_text))
     } else {
       if (is.null(nu)) {
         nu <- spar_res$val_res$nu[which.min(spar_res$val_res$measure)]
-        tmp_title <- "Fixed optimal "
+        tmp_title <- "Optimal~threshold~nu[best]=="
       } else {
-        tmp_title <- "Fixed given "
+        tmp_title <- "Given~threshold~nu=="
       }
-      tmp_df <- spar_res$val_res[spar_res$val_res$nu==nu, ]
+
+      nu_grid <- max(spar_res$nus[spar_res$nus <= nu])
+      tmp_df <- spar_res$val_res[which(spar_res$val_res$nu==nu_grid), ]
       ind_min <- which.min(tmp_df$measure)
+      tmp_title_text <- paste0(tmp_title, round(nu, 3))
 
       res <- ggplot2::ggplot(data = tmp_df,ggplot2::aes(x=.data$nummod,y=.data$numactive)) +
         ggplot2::geom_point() +
@@ -983,10 +996,10 @@ plot.spar <- function(x,
           data=data.frame(x=tmp_df$nummod[ind_min],
                           y=tmp_df$numactive[ind_min]),
           ggplot2::aes(x = .data$x,y=.data$y),col="red")+
+        ggplot2::geom_vline(xintercept = tmp_df$nummod[ind_min],linetype=2,linewidth=0.5)+
         scale_x_continuous(breaks=seq(min(tmp_df$nummod), max(tmp_df$nummod),1),
                            minor_breaks = NULL)+
-        ggplot2::ggtitle(substitute(paste(txt,nu,"=",v),
-                                    list(txt=tmp_title,v=round(nu,3))))
+        ggplot2::ggtitle(parse(text = tmp_title_text))
     }
   } else if (plot_type=="coefs") {
     p <- nrow(spar_res$betas)
