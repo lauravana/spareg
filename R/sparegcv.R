@@ -564,7 +564,7 @@ print.spar.cv <- function(x, digits = 4L, ...) {
 #' \code{"full_cv"}), coefficients cannot be directly extracted because
 #' screening or projections vary across folds. To obtain coefficients in
 #' these cases, refit the model on the full dataset using \code{spar()}
-#' with the selected $M$ and $\nu$  values.
+#' with the selected \eqn{M} and \eqn{\nu}  values.
 #' @param object result of [spar.cv] function of class \code{'spar.cv'}. Refitting
 #' can be done using \code{get_model()}.
 #' @param nummod optional number of models used to form coefficients.

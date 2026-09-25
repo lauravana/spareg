@@ -15,7 +15,7 @@ update_rpm_identity <- function(rpm, object, included_vector, x, y, family, ...)
 #' Creates an object class \code{'randomprojection'} using arguments passed by user.
 #' @param name optional string describing the random projection method. This is used for printing.
 #' @param generate_fun function for generating the random projection matrix. This
-#' function should have with arguments \code{object}, which is a \code{'randomprojection'}
+#' function should have arguments \code{object}, which is a \code{'randomprojection'}
 #' object, \code{x} matrix of standardized predictors and
 #'  \code{y} vector of standardized responses computed by `spar()`,
 #'  \code{m} (the target dimension) and a vector of indexes
@@ -28,22 +28,22 @@ update_rpm_identity <- function(rpm, object, included_vector, x, y, family, ...)
 #' information from the data passed to `spar()`. This
 #' function should have arguments \code{object}, which is a \code{'randomprojection'}
 #' object, `x, y` (the predictor matrix and response vector supplied by
-#' \code{spar()}; both have already been standardized by `spar()`;)
+#' \code{spar()} where both have already been standardized by `spar()`)
 #' `family` and `...`, whereas all other potentially relevant arguments of `spar()`
-#' are passed internally to this function through `...`.
+#' are passed internally to this function through the ellipsis.
 #' If `update_fun` is not provided, the internal function `update_rp()` is
-#' used as the default which only manipulates the family string.
+#' used as the default which only manipulates the family.
 #' @param update_rpm_w_data optional function for updating an already-generated projection matrix with data dependent information.
 #' This can be used for the case where a list of random projection matrices is
-#' provided by argument \code{RPMs}. This
+#' provided to \code{spar()} by argument \code{RPMs}. This
 #' function should have arguments \code{rpm} (the already generated projection matrix),
 #' \code{object}, which is a \code{'randomprojection'}, \code{included_vector}
 #' (integer vector of column indices for the variables to be
 #' included in the random projection),
 #' `x, y` (the predictor matrix and response vector supplied by
-#' \code{spar()}; both have already been standardized by `spar()`;)
+#' \code{spar()} where both have already been standardized by `spar()`)
 #' `family` and `...`, whereas all other potentially relevant arguments of `spar()`
-#' are passed internally to this function through `...`.
+#' are passed internally to this function through the ellipsis.
 #' If not provided, the values of the provided RPMs do not change.
 #' @param control list of controls for the generation of the random projection matrix.
 #' Defaults to \code{list()}.

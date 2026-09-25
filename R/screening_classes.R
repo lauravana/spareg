@@ -13,14 +13,14 @@ update_screen_default <- function(object, x, y, family, ...) {
 #'    `x`, `y` (the predictor matrix and response vector supplied by `spar()`
 #'      where both have already been standardized by `spar()`),
 #'    \code{'screencoef'} object and `...`, whereas all other potentially
-#'    relevant arguments of `spar()` are passed internally to this function through `...`.
+#'    relevant arguments of `spar()` are passed internally to this function through the ellipsis.
 #' @param update_fun optional function for updating the \code{'screencoef'} object with
 #' information from the data passed to `spar()`. This
 #' function should have arguments \code{object}, which is a \code{'screencoef'}
-#' object, `x`, `y` (the predictor matrix and response vector supplied by `spar()`.
-#' Both have already been standardized by `spar()`),
+#' object, `x`, `y` (the predictor matrix and response vector supplied by `spar()`
+#' where both have already been standardized by `spar()`),
 #' `family` and `...`, whereas all other potentially relevant arguments of `spar()`
-#' are passed internally to this function through `...`.
+#' are passed internally to this function through the ellipsis.
 #' If `update_fun` is not provided, the object remains unchanged.
 #' @return a function which in turn creates an object of class \code{'screencoef'}
 #' @description
