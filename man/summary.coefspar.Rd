@@ -9,15 +9,15 @@
 \arguments{
 \item{object}{An object of class \code{coefspar}.}
 
-\item{digits}{integer digits to be printed, defaults to 4L.}
+\item{digits}{Number of digits to be printed. Defaults to \code{4L}.}
 
-\item{...}{Additional arguments (ignored).}
+\item{...}{Additional arguments passed to or from other methods.}
 }
 \value{
-Invisibly returns \code{object}.
+Invisibly returns input \code{object}.
 }
 \description{
-Provides a summary of a \code{coefspar} object.
+Provides a detailed summary of a \code{coefspar} object, including coefficient statistics.
 }
 \examples{
 example_data <- simulate_spareg_data(n = 100, p = 2000, ntest = 100)
@@ -25,4 +25,5 @@ spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
   yval = example_data$ytest, nummods=c(5, 10))
 summary(coef(spar_res))
 summary(coef(spar_res, aggregate = "none"))
+
 }

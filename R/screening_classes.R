@@ -1,30 +1,105 @@
+#' Screening Coefficient Object Class
+#'
+#' @description
+#' The `'screencoef'` class represents a configuration for computing and managing **screening coefficients**
+#' in the **SPAR (Sparse Projected Averaged Regression)** framework. Objects of this class encapsulate:
+#'   - Functions for generating and updating screening coefficients.
+#'   - Control parameters for the screening process.
+#'   - Metadata (e.g., name, attributes) for customization.
+#'
+#' Screening coefficients are used to reduce the dimensionality of the predictor space by selecting
+#' the most relevant variables before applying random projections.
+#'
+#' @details
+#' Objects of class `screencoef` are created using the `constructor_screencoef` function. They are used in the
+#' `spar` and `spar.cv` functions to define how predictors are screened.
+#'
+#' The class includes the following components:
+#'   - **`name`**: A character string describing the screening method (e.g., `"screen_marglik"`, `"screen_cor"`, `"screen_glmnet"`).
+#'   - **`generate_fun`**: A function to compute the screening coefficients. This function must accept:
+#'     - `x`: A matrix of standardized predictors.
+#'     - `y`: A vector of standardized responses.
+#'     - `object`: An object of class `screencoef`.
+#'     - `...`: Additional arguments passed from `spar()`.
+#'   - **`update_fun`**: A function to update the `screencoef` object with data-specific information. This function must accept:
+#'     - `object`: An object of class `screencoef`.
+#'     - `x`: A matrix of standardized predictors.
+#'     - `y`: A vector of standardized responses.
+#'     - `family`: A [`stats::family`] object.
+#'     - `...`: Additional arguments passed from `spar()`.
+#'     If not provided, the default `update_screen_default` is used, which leaves the object unchanged.
+#'   - **`control`**: A list of control parameters for the screening process (e.g., `nscreen`, `split_data_prop`).
+#'
+#' @section Attributes:
+#' The following attributes are commonly used in `screencoef` objects:
+#'   - **`type`**: Character. The type of screening to employ:
+#'     - `"prob"`: Probabilistic screening (variables are selected probabilistically based on their screening coefficients).
+#'     - `"fixed"`: Fixed screening (the top `nscreen` variables are selected).
+#'     Default: `"prob"`.
+#'   - **`nscreen`**: Integer. The number of variables to retain after screening. Default: `2n` (twice the number of observations).
+#'   - **`split_data_prop`**: Numeric. The proportion of data to use for computing screening coefficients.
+#'     The remaining data is used for fitting the marginal models. Default: `1` (use all data).
+#'   - **`reuse_in_rp`**: Logical. If `TRUE`, the screening coefficients are reused in the construction of the random projection.
+#'     Default: `FALSE`.
+#'   - **`importance`**: Numeric vector. The screening coefficients computed from the data.
+#'   - **`inc_prob`**: Numeric vector. The inclusion probabilities for probabilistic screening (normalized screening coefficients).
+#'
+#' @section Screening Methods:
+#' The following predefined screening methods are available:
+#'   - **`screen_marglik`**: Screening based on marginal likelihood in univariate GLMs.
+#'     Uses [`stats::glm`] to fit a separate GLM for each predictor and extracts the coefficients.
+#'   - **`screen_cor`**: Screening based on correlation between predictors and the response.
+#'     Uses [`stats::cor`] to compute correlation coefficients.
+#'   - **`screen_glmnet`**: Screening based on penalized regression coefficients from [`glmnet::glmnet`].
+#'     Uses Lasso or Ridge regression to compute coefficients.
+#'
+#' Users can also define custom screening methods by providing their own `generate_fun` and `update_fun` functions
+#' to `constructor_screencoef`.
+#'
+#' @examples
+#' screen_marglik_obj <- screen_marglik(nscreen = 500, type = "prob")
+#' example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
+#' spar_res <- spar(
+#'   example_data$x,
+#'   example_data$y,
+#'   xval = example_data$xtest,
+#'   yval = example_data$ytest,
+#'   screencoef = screen_marglik_obj
+#' )
+#'
+#' @seealso
+#' [`constructor_screencoef`], [`screen_marglik`], [`screen_cor`], [`screen_glmnet`], [`spar`]
+#'
+#' @name screencoef-class
+NULL
+
 #' @keywords internal
 update_screen_default <- function(object, x, y, family, ...) {
   object
 }
 
 
-#' Constructor Function for Building \code{'screencoef'} Objects
+#' Constructor Function for Building [`screencoef-class`] Objects
 #'
-#' Creates an object class \code{'screencoef'} using arguments passed by user.
+#' Creates an object class [`screencoef-class`]  using arguments passed by user.
 #' @param name character
-#' @param generate_fun function for generating the screening coefficient. This
+#' @param generate_fun function responsible for computing the screening coefficients. This
 #'    function should have arguments
 #'    `x`, `y` (the predictor matrix and response vector supplied by `spar()`
 #'      where both have already been standardized by `spar()`),
 #'    \code{'screencoef'} object and `...`, whereas all other potentially
 #'    relevant arguments of `spar()` are passed internally to this function through the ellipsis.
-#' @param update_fun optional function for updating the \code{'screencoef'} object with
+#' @param update_fun optional function for updating the [`screencoef-class`]  object with
 #' information from the data passed to `spar()`. This
-#' function should have arguments \code{object}, which is a \code{'screencoef'}
+#' function should have arguments \code{object}, which is a [`screencoef-class`]
 #' object, `x`, `y` (the predictor matrix and response vector supplied by `spar()`
 #' where both have already been standardized by `spar()`),
 #' `family` and `...`, whereas all other potentially relevant arguments of `spar()`
 #' are passed internally to this function through the ellipsis.
 #' If `update_fun` is not provided, the object remains unchanged.
-#' @return a function which in turn creates an object of class \code{'screencoef'}
+#' @return Returns a function that, when called, creates and returns an object of class `'screencoef'`.
 #' @description
-#' The created function will return a object of class \code{'screencoef'} which
+#' The created function will return a object of class [`screencoef-class`]  which
 #' constitutes of a list. The attributes of the generating object will include by
 #' default \code{type}, which can take one of two values \code{"prob"} (indicating
 #' probabilistic screening should be employed),
@@ -137,23 +212,10 @@ generate_scrcoef_marglik <- function(object, x, y, ...) {
 #' will be saved as attributes of the \code{'screencoef'} object.
 #' Note that if \code{family} is not provided in \code{control},
 #' the \code{family} used in [spar]  or [spar.cv]  will be used.
-#' The following attributes are relevant for  [spar] and [spar.cv]:
-#' \itemize{
-#' \item \code{nscreen} integer giving the number of variables to be retained
-#' after screening; if not specified, defaults to $2n$.
-#' \item \code{split_data_prop}, double between 0 and 1 which indicates the
-#' proportion of the data that should be used for computing the screening
-#' coefficient. The remaining data will be used for estimating the marginal
-#' models in the SPAR algorithm; if not specified, the whole data will be used
-#' for estimating the screening coefficient and the marginal models.
-#' \item \code{type} character - either \code{"prob"} (indicating that
-#' probabilistic screening should be employed)  or \code{"fixed"} (indicating
-#' that a fixed set of \code{nscreen} variables should be employed across the
-#' ensemble); defaults to \code{type = "prob"}.
-#' \item \code{reuse_in_rp} logical - indicates whether the screening
-#' coefficient should be reused at a later stage in the construction of the random
-#' projection. Defaults to \code{FALSE}.
-#' }
+#'
+#' @seealso
+#' [`constructor_screencoef`], [`screencoef-class`]
+#'
 #' @examples
 #' example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
@@ -212,23 +274,9 @@ generate_scrcoef_cor <- function(object, x, y, ...) {
 #' Arguments related to the screening procedure can
 #' be passed to the \code{screen_cor()} function through \code{...}, and
 #' will be saved as attributes of the \code{'screencoef'} object.
-#' The following attributes are relevant for [spar] and [spar.cv]:
-#' \itemize{
-#' \item \code{nscreen} integer giving the number of variables to be retained
-#' after screening; if not specified, defaults to $2n$.
-#' \item \code{split_data_prop}, double between 0 and 1 which indicates the
-#' proportion of the data that should be used for computing the screening
-#' coefficient. The remaining data will be used for estimating the marginal
-#' models in the SPAR algorithm; if not specified, the whole data will be used
-#' for estimating the screening coefficient and the marginal models.
-#' \item \code{type} character - either \code{"prob"} (indicating that
-#' probabilistic screening should be employed)  or \code{"fixed"} (indicating
-#' that a fixed set of \code{nscreen} variables should be employed across the
-#' ensemble); defaults to \code{type = "prob"}.
-#' \item \code{reuse_in_rp} logical - indicates whether the screening
-#' coefficient should be reused at a later stage in the construction of the random
-#' projection. Defaults to \code{FALSE}.
-#' }
+#'
+#' @seealso
+#' [`constructor_screencoef`], [`screencoef-class`]
 #'
 #' @examples
 #' example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)
@@ -339,23 +387,9 @@ generate_scrcoef_glmnet <- function(object, x, y, ...) {
 #' Arguments related to the screening procedure can
 #' be passed to the \code{screen_glmnet()} function through \code{...}, and
 #' will be saved as attributes of the \code{'screencoef'} object.
-#' The following attributes are relevant for [spar] and [spar.cv]:
-#' \itemize{
-#' \item \code{nscreen} integer giving the number of variables to be retained
-#' after screening; if not specified, defaults to $2n$.
-#' \item \code{split_data_prop}, double between 0 and 1 which indicates the
-#' proportion of the data that should be used for computing the screening
-#' coefficient. The remaining data will be used for estimating the marginal
-#' models in the SPAR algorithm; if not specified, the whole data will be used
-#' for estimating the screening coefficient and the marginal models.
-#' \item \code{type} character - either \code{"prob"} (indicating that
-#' probabilistic screening should be employed)  or \code{"fixed"} (indicating
-#' that a fixed set of \code{nscreen} variables should be employed across the
-#' ensemble); defaults to \code{type = "prob"}.
-#' \item \code{reuse_in_rp} logical - indicates whether the screening
-#' coefficient should be reused at a later stage in the construction of the random
-#' projection. Defaults to \code{FALSE}.
-#' }
+#'
+#' @seealso
+#' [`constructor_screencoef`], [`screencoef-class`]
 #'
 #' @examples
 #' example_data <- simulate_spareg_data(n = 200, p = 2000, ntest = 100)

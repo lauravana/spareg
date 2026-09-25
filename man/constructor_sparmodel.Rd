@@ -2,7 +2,7 @@
 % Please edit documentation in R/sparmodel_classes.R
 \name{constructor_sparmodel}
 \alias{constructor_sparmodel}
-\title{Constructor Function for Building \code{'sparmodel'} Object}
+\title{Constructor Function for Building \code{\link[=sparmodel-class]{sparmodel}} Object}
 \usage{
 constructor_sparmodel(
   name = NULL,
@@ -15,24 +15,28 @@ constructor_sparmodel(
 
 \item{generate_fun}{function for estimating the marginal models which returns the
 function should have arguments  a
-\code{'sparmodel'} \code{object}, \code{x} and \code{y} (matrix of predictors and
+\code{\link[=sparmodel-class]{sparmodel}} \code{object}, \code{x} and \code{y} (matrix of predictors and
 vector of responses supplied by \code{spar()}, which have already been standardized),
-\code{z} (the matrix of projected predictors) and \code{...}.}
+\code{z} (the matrix of projected predictors) and \code{...},
+whereas all other potentially relevant arguments of \code{spar()}
+are passed internally to this function through the ellipsis.}
 
-\item{update_fun}{optional function for updating the \code{'sparmodel'} object
-before the
-start of the algorithm.}
+\item{update_fun}{optional function for updating the \code{\link[=sparmodel-class]{sparmodel}} object. This
+function should have arguments \code{object}, which is a \code{'screencoef'}
+object, \code{x}, \code{y} (the predictor matrix and response vector supplied by \code{spar()}
+where both have already been standardized by \code{spar()}),
+\code{family} and \code{...}, whereas all other potentially relevant arguments of \code{spar()}
+are passed internally to this function through the ellipsis.}
 }
 \value{
-a function which in turn creates an
-object of class \code{'sparmodel'}.
+Returns a function that, when called, creates and returns an object of class \code{\link[=sparmodel-class]{sparmodel}}.
 }
 \description{
-The created function will return a object of class \code{'sparmodel'} which
+The created function will return a object of class \code{\link[=sparmodel-class]{sparmodel}} which
 constitutes of a list.
 }
 \details{
-Creates an object of class \code{'sparmodel'} using arguments passed by user.
+Creates an object of class \code{\link[=sparmodel-class]{sparmodel}} using arguments passed by user.
 }
 \examples{
 model_glmrob <- function(object, x, y, z, ...) {

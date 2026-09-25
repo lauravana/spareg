@@ -35,7 +35,7 @@ Defaults to mean aggregation.}
 \item{...}{further arguments passed to or from other methods}
 }
 \value{
-Vector of predictions
+Returns a vector of predictions.
 }
 \description{
 Predict responses for new predictors from \code{'spar'} object

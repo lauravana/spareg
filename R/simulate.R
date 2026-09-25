@@ -1,5 +1,6 @@
 #' Simulate Sparse Regression Data
 #'
+#' @description
 #' Generates synthetic data for sparse linear regression problems.
 #' Returns training and test sets along with model parameters.
 #'
@@ -18,13 +19,13 @@
 #'
 #' @return A list with the following components:
 #' \describe{
-#'   \item{x}{Training design matrix (n x p).}
-#'   \item{y}{Training response vector (length n).}
-#'   \item{xtest}{Test design matrix (ntest x p).}
-#'   \item{ytest}{Test response vector (length ntest).}
+#'   \item{x}{Training design matrix `(n x p)`.}
+#'   \item{y}{Training response vector (length `n`).}
+#'   \item{xtest}{Test design matrix (`ntest x p`).}
+#'   \item{ytest}{Test response vector (length `ntest`).}
 #'   \item{mu}{Intercept used in data generation.}
-#'   \item{beta}{True coefficient vector (length p).}
-#'   \item{sigma2}{Noise variance used in data generation. Equals beta' Sigma beta / snr.}
+#'   \item{beta}{True coefficient vector (length `p`).}
+#'   \item{sigma2}{Noise variance used in data generation. Equals \eqn{\beta' \Sigma \beta}/`snr`.}
 #' }
 #'
 #' @examples

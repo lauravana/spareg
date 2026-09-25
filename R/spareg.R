@@ -1,87 +1,78 @@
 ###########################################
 ### Main implementation of sparse projected averaged regression (SPAR)
 ##########################################
-#' Sparse Projected Averaged Regression
+#' Sparse Projected Averaged Regression (SPAR)
 #'
-#' Apply Sparse Projected Averaged Regression to high-dimensional data by
-#' building an ensemble of generalized linear models, where the high-dimensional
-#' predictors can be screened using a screening coefficient and then projected
-#' using data-agnostic or data-informed random projection matrices.
-#' This function performs the procedure for a given grid of thresholds \eqn{\nu}
-#' and a grid of the number of marginal models to be employed in the ensemble.
-#' This function is also used in the cross-validated procedure [spar.cv].
+#' Fits a **Sparse Projected Averaged Regression (SPAR)** model to high-dimensional data.
+#' SPAR builds an ensemble of generalized linear models (GLMs) where high-dimensional predictors
+#' are first screened (using a screening coefficient) and then projected using random projection matrices.
+#' This function evaluates the model over a grid of thresholds (`nus`) and a grid of the number of marginal models (`nummods`).
+#' It is also used internally by the cross-validated procedure [`spar.cv`].
 #'
-#' @param x n x p numeric matrix of predictor variables.
-#' @param y quantitative response vector of length n.
-#' @param family  a \link[stats]{family}  object used for the marginal generalized linear model,
+#' @param x An `n x p` numeric matrix of predictor variables.
+#' @param y A quantitative response vector of length `n`.
+#' @param family  A \link[stats]{family}  object used for the marginal generalized linear model,
 #'        default \code{gaussian("identity")}.
-#' @param model function creating a \code{'sparmodel'} object;
-#'   defaults to \code{spar_glm()} for gaussian family with identity link and to
-#'   \code{spar_glmnet()} for all other family-link combinations.
-#' @param rp function creating a \code{'randomprojection'} object. Defaults to NULL.
-#' In this case \code{rp_cw(data = TRUE)} is used.
-#' @param screencoef function creating a \code{'screeningcoef'} object. Defaults to NULL.
-#' In this case no screening is used.
-#' @param xval optional matrix of predictor variables observations used for
-#'        validation of threshold nu and number of models; \code{x} is used
-#'        if not provided.
-#' @param yval optional response observations used for validation of
-#'        threshold nu and number of models; \code{y} is used if not provided.
-#' @param nnu number of different threshold values \eqn{\nu} to consider for thresholding;
-#'        ignored when nus are given; defaults to 20.
-#' @param nus optional vector of \eqn{\nu}'s to consider for thresholding;
-#'         if not provided, \code{nnu} values ranging from 0 to the maximum absolute
-#'         marginal coefficient are used.
-#' @param nummods vector of numbers of marginal models to consider for
-#'        validation; defaults to \code{c(20)}.
-#' @param measure loss to use for validation; defaults to \code{"deviance"}
-#'        available for all families. Other options are \code{"mse"} or \code{"mae"}
-#'         (between responses and predicted means, for all families),
-#'         \code{"class"} (misclassification error) and
-#'         \code{"1-auc"} (one minus area under the ROC curve) both just for
-#'         binomial family.
-#' @param avg_type type of averaging the marginal models; either on link (default)
-#'        or on response level. This is used in computing the validation measure.
-#' @param parallel assuming a parallel backend is loaded and available, a
-#'        logical indicating whether the function should use it in parallelizing the
-#'        estimation of the marginal models. Defaults to FALSE.
-#' @param inds optional list of index-vectors corresponding to variables kept
-#'  after screening in each marginal model of length \code{max(nummods)};
-#'  dimensions need to fit those of RPMs.
-#' @param RPMs optional list of projection matrices used in each
-#' marginal model of length \code{max(nummods)}, diagonal elements will be
-#'  overwritten with a coefficient only depending on the given \code{x} and \code{y}.
-#' @param seed integer seed to be set at the beginning of the SPAR algorithm. Default to NULL, in which case no seed is set.
-#' @param ... further arguments mainly to ensure back-compatibility
-#' @returns object of class \code{'spar'} with elements
-#' \itemize{
-#'  \item \code{betas} p x \code{max(nummods)} sparse matrix of class
-#'  \code{'\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}'} containing the
-#'   standardized coefficients from each marginal model
-#'  \item \code{intercepts} used in each marginal model
-#'  \item \code{scr_coef} vector of length p with coefficients used for screening the standardized predictors
-#'  \item \code{inds} list of index-vectors corresponding to variables kept after screening in each marginal model of length max(nummods)
-#'  \item \code{RPMs} list of projection matrices used in each marginal model of length \code{max(nummods)}
-#'  \item \code{val_res} \code{data.frame} with validation results (validation measure
-#'   and number of active variables) for each element of \code{nus} and \code{nummods}
-#'  \item \code{val_set} logical flag, whether validation data were provided;
-#'  if \code{FALSE}, training data were used for validation
-#'  \item \code{family}  a character corresponding to \link[stats]{family}  object used for the marginal generalized linear model e.g.,
-#'  \code{"gaussian(identity)"}
-#'  \item \code{nus} vector of \eqn{\nu}'s considered for thresholding
-#'  \item \code{nummods} vector of numbers of marginal models considered for validation
-#'  \item \code{ycenter} empirical mean of initial response vector
-#'  \item \code{yscale} empirical standard deviation of initial response vector
-#'  \item \code{xcenter} p-vector of empirical means of initial predictor variables
-#'  \item \code{xscale} p-vector of empirical standard deviations of initial predictor variables
-#'  \item \code{avg_type} character, averaging type for computing the validation measure
-#'  \item \code{measure} character, type of validation measure used
-#'  \item \code{rp} an object of class \code{"randomprojection"}
-#'  \item \code{screencoef} an object of class \code{"screeningcoef"}
-#'  \item \code{x_rows_for_fitting_marginal_models} vector of row indicators from
-#'  \code{x} which were used for fitting the marginal models, if screening was performed
-#'  using \code{screencoef} with \code{split_data_prop} argument. Is \code{NULL} otherwise.
-#' }
+#' @param model A function that creates a \code{'sparmodel'} object. Defaults to:
+#'   - \code{spar_glm()} for gaussian family with identity link.
+#'   - \code{spar_glmnet()} for all other family-link combinations.
+#' @param rp A function that creates a \code{'randomprojection'} object. Defaults to `NULL`.
+#' If `NULL`, \code{rp_cw(data = TRUE)} is used.
+#' @param screencoef function that creates a \code{'screencoef'} object. Defaults to `NULL`.
+#' If `NULL`, no screening is used.
+#' @param xval An optional matrix of predictor variables used for
+#'        validation. If `NULL`, \code{x} is used.
+#' @param yval An optional response vector for validation.
+#' If `NULL`, \code{y} is used.
+#' @param nnu number of different threshold values \eqn{\nu} for thresholding.
+#'        Ignored if `nus` is provided. Defaults to `20L`.
+#' @param nus An optional vector of thresholds \eqn{\nu}.
+#'         If `NULL`, `nnu` values between `0` and the maximum absolute marginal
+#'         coefficient equally spaced  on the quantile scale are used.
+#' @param nummods A vector of integers specifying the number of marginal models to consider for validation.
+#'         Defaults to \code{20L}.
+#' @param measure The loss function for validation. Options:
+#'  - \code{"deviance"} (default, available for all families).
+#'  - \code{"mse"} or \code{"mae"} (mean squared/absolute error, for all families).
+#'  - \code{"class"} (misclassification error, for binomial family only).
+#'  - \code{"1-auc"} (one minus area under the ROC curve for binomial family only).
+#' @param avg_type The type of averaging for marginal models. Options:
+#'   - `"link"` (default): Averaging on the link scale.
+#'   - `"response"`: Averaging on the response scale.
+#' @param parallelA logical indicating whether to use parallel
+#'        estimation of the marginal models. Defaults to `FALSE`.
+#' @param inds An optional list of index vectors corresponding to variables retained after screening for each marginal model.
+#'   Must have length `max(nummods)`.
+#' @param RPMs An optional list of projection matrices for each marginal model.
+#'   Must have length `max(nummods)`.
+#' @param seed An optional integer seed for reproducibility. Default: `NULL`.
+#' @param ... Additional arguments for backward compatibility.
+#'
+#' @returns
+#' An object of class [`spar`] with the following components:
+#'   - **`betas`**: A `p x max(nummods)` sparse matrix of standardized coefficients for each marginal model.
+#'   - **`intercepts`**: Intercepts for each marginal model.
+#'   - **`scr_coef`**: A vector of length `p` with screening coefficients for standardized predictors.
+#'   - **`inds`**: A list of index vectors for variables retained after screening.
+#'   - **`RPMs`**: A list of projection matrices for each marginal model.
+#'   - **`val_res`**: A `data.frame` with validation results (measure and number of active variables) for each \eqn{M} and \eqn{\nu}.
+#'   - **`val_set`**: A logical flag indicating whether validation data were provided.
+#'   - **`family`**: The family object used for the GLM.
+#'   - **`nus`**: The vector of thresholds considered.
+#'   - **`nummods`**: The vector of numbers of marginal models considered.
+#'   - **`ycenter`**: The empirical mean of the initial response vector.
+#'   - **`yscale`**: The empirical standard deviation of the initial response vector.
+#'   - **`xcenter`**: A vector of empirical means for the initial predictors.
+#'   - **`xscale`**: A vector of empirical standard deviations for the initial predictors.
+#'   - **`avg_type`**: The averaging type used for validation.
+#'   - **`measure`**: The validation measure used.
+#'   - **`rp`**: The `'randomprojection'` object.
+#'   - **`screencoef`**: The `'screencoef'` object.
+#'   - **`x_rows_for_fitting_marginal_models`**: A vector of row indices from `x` used for fitting marginal models (if screening splits data).
+
+#' @details
+#' If a parallel backend (e.g., `doParallel`) is registered and `parallel = TRUE`,
+#' the [`foreach`] package is used to parallelize the estimation of marginal models.
 #' If a parallel backend is registered and \code{parallel = TRUE},
 #' the \link[foreach]{foreach} function
 #' is used to estimate the marginal models in parallel.
@@ -125,8 +116,8 @@
 #' @importFrom ROCR prediction performance
 #'
 spar <- function(x, y, family = gaussian("identity"), model = NULL, rp = NULL,
-                 screencoef = NULL, xval = NULL, yval = NULL, nnu = 20, nus = NULL,
-                 nummods = c(20), measure = c("deviance","mse","mae","class","1-auc"),
+                 screencoef = NULL, xval = NULL, yval = NULL, nnu = 20L, nus = NULL,
+                 nummods = 20L, measure = c("deviance","mse","mae","class","1-auc"),
                  avg_type = c("link", "response"),
                  parallel = FALSE, inds = NULL, RPMs = NULL, seed = NULL, ...) {
   # Set up and checks ----
@@ -504,14 +495,14 @@ spar_algorithm <- function(x, y, family, model, rp, screencoef,
 #'        the coefficients are aggregated using the specified method (mean or median).
 #'        Defaults to mean aggregation.
 #' @param ... further arguments passed to or from other methods.
-#' @return object of class  \code{'coefspar'} which is a list with elements
+#' @return Returns an object of class  \code{'coefspar'}, which is a list with elements
 #' \itemize{
-#'  \item \code{intercept} average intercept value or vector intercepts (one for
+#'  \item \code{intercept}: The average intercept value or vector intercepts (one for
 #'  each marginal model) if \code{aggregate = "none"}.
-#'  \item \code{beta} vector of length \eqn{p} of averaged coefficients or a
+#'  \item \code{beta}: Vector of length \eqn{p} of averaged coefficients or a
 #'        \eqn{p} x \code{max(nummods)} matrix of coefficients if \code{agregate = "none"}.
-#'  \item \code{nummod} number of models based on which the coefficients are computed.
-#'  \item \code{nu}  threshold based on which the coefficients are computed.
+#'  \item \code{nummod}: Number of models based on which the coefficients are computed.
+#'  \item \code{nu}:  Threshold value based on which the coefficients are computed.
 #' }
 #' @seealso [print.coefspar], [summary.coefspar]
 #' @examples
@@ -602,14 +593,17 @@ coef.spar <- function(object,
 
 #' Print Method for \code{'coefspar'} Object
 #'
-#' Print method showing the basic components of a  \code{'coefspar'} object.
+#' Prints a summary of coefficients from a `'coefspar'` object, including the selected \eqn{M} and \eqn{\nu},
+#' and the number of active variables.
 #'
-#' @param x An object of class \code{'coefspar'}, typically created by a custom model function.
-#' @param digits integer digits to be printed, defaults to 4L.
-#' @param show integer number of coefficients to be shown, defaults to 6L.
-#' @param ... Additional arguments passed to or from other methods (ignored here).
+#' @param x A  \code{'coefspar'} object.
+#' @param digits The number of significant digits for numeric output. Default: `4L`.
+#' @param show The number of coefficients to display. Default: `6L`.
+#' @param ... Additional arguments passed to or from other methods.
 #'
-#' @return Invisibly returns the input object \code{x}.
+#' @return
+#' Invisibly returns the input object \code{x}.
+#'
 #' @examples
 #' example_data <- simulate_spareg_data(n = 100, p = 2000, ntest = 100)
 #' spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
@@ -699,18 +693,22 @@ print.coefspar <- function(x, digits = 4L, show = 6L, ...) {
 
 #' Summary Method for \code{'coefspar'} Object
 #'
-#' Provides a summary of a \code{coefspar} object.
+#' Provides a detailed summary of a \code{coefspar} object, including coefficient statistics.
 #'
 #' @param object An object of class \code{coefspar}.
-#' @param digits integer digits to be printed, defaults to 4L.
-#' @param ... Additional arguments (ignored).
-#' @return Invisibly returns \code{object}.
+#' @param digits Number of digits to be printed. Defaults to `4L`.
+#' @param ... Additional arguments passed to or from other methods.
+#'
+#' @return
+#' Invisibly returns input \code{object}.
+#'
 #' @examples
 #' example_data <- simulate_spareg_data(n = 100, p = 2000, ntest = 100)
 #' spar_res <- spareg(example_data$x, example_data$y, xval = example_data$xtest,
 #'   yval = example_data$ytest, nummods=c(5, 10))
 #' summary(coef(spar_res))
 #' summary(coef(spar_res, aggregate = "none"))
+#'
 #' @export
 #' @method summary coefspar
 summary.coefspar <- function(object, digits = 4L, ...) {
@@ -775,7 +773,7 @@ summary.coefspar <- function(object, digits = 4L, ...) {
 #'        the aggregation over the ensembles is done using the specified method (mean or median).
 #'        Defaults to mean aggregation.
 #' @param ... further arguments passed to or from other methods
-#' @return Vector of predictions
+#' @return Returns a vector of predictions.
 #' @examples
 #' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,
@@ -834,26 +832,37 @@ predict.spar <- function(object,
 #' Plot Method for \code{'spar'} Object
 #'
 #' @description
-#' Plot values of validation measure or number of active variables over different thresholds or number of models for \code{'spar'} object, or residuals vs fitted
+#' Creates diagnostic plots for a `'spar'`] object, including:
+#'   - Validation measure vs. `nus` or `nummods`.
+#'   - Number of active variables vs. `nus` or `nummods`.
+#'   - Residuals vs. fitted values.
+#'   - Coefficient heatmap.
 #'
-#' @param x result of spar function of class  \code{'spar'}.
-#' @param plot_type one of  \code{c("val_measure", "val_numactive", "res_vs_fitted", "coefs")}.
-#' @param plot_along one of \code{c("nu","nummod")}; ignored when  \code{plot_type = "res_vs_fitted"}.
-#' @param nummod fixed value for number of models when  \code{plot_along = "nu"}
-#'               for  \code{plot_type = "val_measure"} or  \code{"val_numactive"};
-#'               same as for \code{\link{predict.spar}} when  \code{plot_type="res_vs_fitted"}.
-#' @param nu fixed value for \eqn{\nu} when  \code{plot_along="nummod"} for
-#'  \code{plot_type = "val_measure"} or  \code{"val_numactive"}; same as for \code{\link{predict.spar}} when  \code{plot_type="res_vs_fitted"}.
-#' @param xfit data used for predictions in  \code{"res_vs_fitted"}. Needed as the \code{"spar"} objects do not store the original data.
-#' @param yfit data used for predictions in  \code{"res_vs_fitted"}.Needed as the \code{"spar"} objects do not store the original data.
-#' @param prange optional vector of length 2 for  \code{"coefs"}-plot to give
-#'  the limits of the predictors' plot range; defaults to  \code{c(1, p)}.
-#' @param coef_order optional index vector of length p for \code{plot_type = "coefs"} to give
-#'  the order of the predictors; defaults to \code{1 : p}.
-#' @param digits number of significant digits to be displayed in the axis; defaults to 2L.
-#' @param ... further arguments passed to or from other methods
 #'
-#' @return \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object
+#' @param x A \code{'spar'} object.
+#' @param plot_type The type of plot. Options:
+#'   - `"val_measure"` (default): Validation measure vs. `nus` or `nummods`.
+#'   - `"val_numactive"`: Number of active variables vs. `nus` or `nummods`.
+#'   - `"res_vs_fitted"`: Residuals vs. fitted values.
+#'   - `"coefs"`: Heatmap of coefficients.
+#' @param plot_along The variable to plot along the x-axis. Options:
+#'   - `"nu"` (default): Threshold values.
+#'   - `"nummod"`: Number of marginal models.
+#'   Ignored if `plot_type = "res_vs_fitted"` or `plot_type = "coefs"`.
+#' @param nummod The number of models to fix when `plot_along = "nu"`. If `NULL`, the optimal value is used.
+#'   The value will be used in \code{\link{predict.spar}} when \code{plot_type="res_vs_fitted"}.
+#' @param nu The threshold value to fix when `plot_along = "nummod"`. If `NULL`, the optimal value is used.
+#'   The value will be used in \code{\link{predict.spar}} when \code{plot_type="res_vs_fitted"}.
+#' @param xfit The predictor data for fitted values (required if `plot_type = "res_vs_fitted"`).
+#' @param yfit The response data for fitted values (required if `plot_type = "res_vs_fitted"`).
+#' @param prange A vector of length 2 specifying the range of predictors to plot (for `plot_type = "coefs"`).
+#'   Default: `c(1, p)`.
+#' @param coef_order An optional vector specifying the order of coefficients for `plot_type = "coefs"`.
+#'   Default: `1:p` (original order).
+#' @param digits The number of significant digits for axis labels. Default: `2L`.
+#' @param ... Additional arguments passed to or from other methods.
+#'
+#' @return Returns a \code{'\link[ggplot2:ggplot]{ggplot2::ggplot}'}  object.
 #'
 #' @import ggplot2
 #' @examples
@@ -1040,13 +1049,19 @@ plot.spar <- function(x,
   return(res)
 }
 
-#' Summary of \code{'spar'} Object
+#' Print summary of \code{'spar'} Object
 #'
-#' Print summary of \code{'spar'} object
-#' @param x result of [spar] function of class  \code{'spar'}.
-#' @param digits integer digits to be printed, defaults to 4L.
-#' @param ... further arguments passed to or from other methods
-#' @return text summary
+#' @description
+#' Prints a summary of a [`spar`] object, including the validation
+#' measure, optimal \eqn{M} and \eqn{\nu}, and the number of active predictors.
+#'
+#' @param x A \code{'spar'} object.
+#' @param digits The number of significant digits for numeric output. Default: `4L`.
+#' @param ... Additional arguments passed to or from other methods.
+#'
+#' @return
+#' Invisibly returns the input object `x`.
+#'
 #' @examples
 #' example_data <- simulate_spareg_data(n = 100, p = 400, ntest = 100)
 #' spar_res <- spar(example_data$x, example_data$y, xval = example_data$xtest,

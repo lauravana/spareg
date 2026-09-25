@@ -7,11 +7,11 @@
 generate_gaussian(object, x = NULL, y = NULL, m, included_vector, ...)
 }
 \arguments{
-\item{object}{object of class  \code{'randomprojection'}}
+\item{object}{object of class  \code{'randomprojection'}.}
 
-\item{x}{matrix of standardized predictors}
+\item{x}{matrix of standardized predictors.}
 
-\item{y}{vector of standardized response variable}
+\item{y}{vector of standardized response variable.}
 
 \item{m}{goal dimension, which will be randomly sampled in the SPAR algorithm}
 
@@ -20,7 +20,7 @@ included in the random projection. These indices are produced in the
 screening step of the SPAR algorithm.}
 }
 \value{
-matrix with m rows and
+Returns a matrix with \eqn{m} rows and
 \code{length(included_vector)} columns sampled from the normal distribution.
 }
 \description{

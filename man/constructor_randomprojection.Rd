@@ -15,62 +15,56 @@ constructor_randomprojection(
 \arguments{
 \item{name}{optional string describing the random projection method. This is used for printing.}
 
-\item{generate_fun}{function for generating the random projection matrix. This
-function should have with arguments \code{object}, which is a \code{'randomprojection'}
-object, \code{x} matrix of standardized predictors and
-\code{y} vector of standardized responses computed by \code{spar()},
-\code{m} (the target dimension) and a vector of indexes
-\code{included_vector}, as well as \code{...}
-(which allows passing any information from other objects used in the algorithm).
-Vector \code{included_vector} shows the column index of the original variables in the
-\code{x} matrix to be projected using the random projection. This is needed
-due to the fact that screening is employed pre-projection.}
+\item{generate_fun}{A function for generating the random projection matrix. This function must accept the following arguments:
+\itemize{
+\item \code{object}: An object of class \code{\link[=randomprojection-class]{randomprojection}}.
+\item \code{x}: A matrix of standardized predictors.
+\item \code{y}: A vector of standardized responses.
+\item \code{m}: The target dimension for the projection.
+\item \code{included_vector}: A vector of column indices for the variables to be included in the projection.
+\item \code{...}: Additional arguments passed from \code{spar()} or other functions.' due to the fact that screening is employed pre-projection.
+}}
 
-\item{update_fun}{optional function for updating the \code{'randomprojection'} object with
-information from the data passed to \code{spar()}. This
-function should have arguments \code{object}, which is a \code{'randomprojection'}
-object, \verb{x, y} (the predictor matrix and response vector supplied by
-\code{spar()}; both have already been standardized by \code{spar()};)
-\code{family} and \code{...}, whereas all other potentially relevant arguments of \code{spar()}
-are passed internally to this function through \code{...}.
-If \code{update_fun} is not provided, the internal function \code{update_rp()} is
-used as the default which only manipulates the family string.}
+\item{update_fun}{A function for updating the \code{\link[=randomprojection-class]{randomprojection}} object with data-specific information.
+This function must accept:
+\itemize{
+\item \code{object}: An object of class \code{\link[=randomprojection-class]{randomprojection}}.
+\item \code{x}: A matrix of standardized predictors.
+\item \code{y}: A vector of standardized responses.
+\item \code{family}: A \code{\link[stats:family]{stats::family}} object.
+\item \code{...}: Additional arguments passed from \code{spar()}.
+If not provided, the default \code{update_rp_default} is used.
+}}
 
-\item{update_rpm_w_data}{optional function for updating an already-generated projection matrix with data dependent information.
-This can be used for the case where a list of random projection matrices is
-provided by argument \code{RPMs}. This
-function should have arguments \code{rpm} (the already generated projection matrix),
-\code{object}, which is a \code{'randomprojection'}, \code{included_vector}
-(integer vector of column indices for the variables to be
-included in the random projection),
-\verb{x, y} (the predictor matrix and response vector supplied by
-\code{spar()}; both have already been standardized by \code{spar()};)
-\code{family} and \code{...}, whereas all other potentially relevant arguments of \code{spar()}
-are passed internally to this function through \code{...}.
-If not provided, the values of the provided RPMs do not change.}
+\item{update_rpm_w_data}{A function for updating an already-generated random projection matrix with data-dependent information.
+This function must accept:
+\itemize{
+\item \code{rpm}: The random projection matrix to update.
+\item \code{object}: An object of class \code{\link[=randomprojection-class]{randomprojection}}.
+\item \code{included_vector}: A vector of column indices for the variables included in the projection.
+\item \code{x}: A matrix of standardized predictors.
+\item \code{y}: A vector of standardized responses.
+\item \code{family}: A \code{\link[stats:family]{stats::family}} object.
+\item \code{...}: Additional arguments passed from \code{spar()}.
+If not provided, the default \code{update_rpm_identity} is used, which leaves the matrix unchanged.
+}}
 
-\item{control}{list of controls for the generation of the random projection matrix.
-Defaults to \code{list()}.}
+\item{control}{A list of control parameters for the random projection. Default: \code{list()}.
+These parameters are passed to \code{generate_fun}, \code{update_fun}, and \code{update_rpm_w_data}.}
 }
 \value{
-a function which in turn creates an object of class \code{'randomprojection'}
+Returns a function that, when called, creates and returns an object of class \code{\link[=randomprojection-class]{randomprojection}}.
 }
 \description{
 Creates an object class \code{'randomprojection'} using arguments passed by user.
 }
 \details{
-Specification of function \code{update_rpm_w_data()} is particularly relevant for
-the cross-validation procedure with \code{precompute_mode = "precompute_all"} or \code{precompute_mode = "precompute_rpm"}.
-With these settings, the  cross-validation procedure employs the random
-projection matrices generated by calling \code{spar()} on the whole data set
-before starting the cross-validation exercise in each fold. However, one might
-want to update the data-dependent entries in the random projection with the training data in each fold.
-In implementation of the data-driven \code{rp_cw(data = TRUE)},
-in each fold, \code{update_rpm_w_data()} only updates the list of \code{RPMs} by
-adjusting the diagonal elements to the vector of screening coefficients
-computed on the training data for the current fold, but do not modify the
-random elements of the projection matrices in each fold, to reduce the
-computational burden.
+The \code{update_rpm_w_data} function is particularly relevant for cross-validation procedures where
+random projection matrices are precomputed (e.g., \code{precompute_mode = "precompute_all"} or \code{precompute_mode = "precompute_rpm"}).
+In such cases, the cross-validation procedure uses the precomputed matrices, but you may want to update
+data-dependent entries (e.g., diagonal elements) with the training data in each fold.
+For example, in \code{rp_cw(data = TRUE)}, the diagonal elements of the projection matrices are updated
+to reflect screening coefficients computed on the training data for each fold, while the random elements remain unchanged.
 }
 \examples{
 generate_cauchy <- function(object, x, y, m, included_vector, ...) {

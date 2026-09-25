@@ -20,7 +20,7 @@ included in the random projection. These indices are produced in the
 screening step of the SPAR algorithm.}
 }
 \value{
-(possibly sparse) matrix with m rows and
+Returns a (possibly sparse) matrix with m rows and
 \code{length(included_vector)} columns.
 }
 \description{

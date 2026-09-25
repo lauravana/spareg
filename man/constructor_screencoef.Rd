@@ -2,7 +2,7 @@
 % Please edit documentation in R/screening_classes.R
 \name{constructor_screencoef}
 \alias{constructor_screencoef}
-\title{Constructor Function for Building \code{'screencoef'} Objects}
+\title{Constructor Function for Building \code{\link[=screencoef-class]{screencoef}} Objects}
 \usage{
 constructor_screencoef(
   name = NULL,
@@ -13,34 +13,34 @@ constructor_screencoef(
 \arguments{
 \item{name}{character}
 
-\item{generate_fun}{function for generating the screening coefficient. This
+\item{generate_fun}{function responsible for computing the screening coefficients. This
 function should have arguments
 \code{x}, \code{y} (the predictor matrix and response vector supplied by \code{spar()}
 where both have already been standardized by \code{spar()}),
 \code{'screencoef'} object and \code{...}, whereas all other potentially
-relevant arguments of \code{spar()} are passed internally to this function through \code{...}.}
+relevant arguments of \code{spar()} are passed internally to this function through the ellipsis.}
 
-\item{update_fun}{optional function for updating the \code{'screencoef'} object with
+\item{update_fun}{optional function for updating the \code{\link[=screencoef-class]{screencoef}}  object with
 information from the data passed to \code{spar()}. This
-function should have arguments \code{object}, which is a \code{'screencoef'}
-object, \code{x}, \code{y} (the predictor matrix and response vector supplied by \code{spar()}.
-Both have already been standardized by \code{spar()}),
+function should have arguments \code{object}, which is a \code{\link[=screencoef-class]{screencoef}}
+object, \code{x}, \code{y} (the predictor matrix and response vector supplied by \code{spar()}
+where both have already been standardized by \code{spar()}),
 \code{family} and \code{...}, whereas all other potentially relevant arguments of \code{spar()}
-are passed internally to this function through \code{...}.
+are passed internally to this function through the ellipsis.
 If \code{update_fun} is not provided, the object remains unchanged.}
 }
 \value{
-a function which in turn creates an object of class \code{'screencoef'}
+Returns a function that, when called, creates and returns an object of class \code{'screencoef'}.
 }
 \description{
-The created function will return a object of class \code{'screencoef'} which
+The created function will return a object of class \code{\link[=screencoef-class]{screencoef}}  which
 constitutes of a list. The attributes of the generating object will include by
 default \code{type}, which can take one of two values \code{"prob"} (indicating
 probabilistic screening should be employed),
 \code{"fixed"} (indicating that the top \code{nscreen} variables should be employed).
 }
 \details{
-Creates an object class \code{'screencoef'} using arguments passed by user.
+Creates an object class \code{\link[=screencoef-class]{screencoef}}  using arguments passed by user.
 }
 \examples{
 generate_scr_sirs <- function(y, x, object, ...) {

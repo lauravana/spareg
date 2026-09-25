@@ -33,14 +33,14 @@ Defaults to mean aggregation.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-object of class  \code{'coefspar'} which is a list with elements
+Returns an object of class  \code{'coefspar'}, which is a list with elements
 \itemize{
-\item \code{intercept} average intercept value or vector intercepts (one for
+\item \code{intercept}: The average intercept value or vector intercepts (one for
 each marginal model) if \code{aggregate = "none"}.
-\item \code{beta} vector of length \eqn{p} of averaged coefficients or a
+\item \code{beta}: Vector of length \eqn{p} of averaged coefficients or a
 \eqn{p} x \code{max(nummods)} matrix of coefficients if \code{agregate = "none"}.
-\item \code{nummod} number of models based on which the coefficients are computed.
-\item \code{nu}  threshold based on which the coefficients are computed.
+\item \code{nummod}: Number of models based on which the coefficients are computed.
+\item \code{nu}:  Threshold value based on which the coefficients are computed.
 }
 }
 \description{

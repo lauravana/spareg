@@ -56,7 +56,7 @@ are derived from the initial run on the full dataset using the optimal
 \code{"full_cv"}), coefficients cannot be directly extracted because
 screening or projections vary across folds. To obtain coefficients in
 these cases, refit the model on the full dataset using \code{spar()}
-with the selected $M$ and $\nu$  values.
+with the selected \eqn{M} and \eqn{\nu}  values.
 }
 \examples{
 \donttest{

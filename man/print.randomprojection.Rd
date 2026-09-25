@@ -7,13 +7,19 @@
 \method{print}{randomprojection}(x, ...)
 }
 \arguments{
-\item{x}{object of class \code{'randomprojection'}}
+\item{x}{An object of class \code{\link[=randomprojection-class]{randomprojection}}.}
 
-\item{...}{further arguments passed to or from other methods}
+\item{...}{Additional arguments (ignored).}
 }
 \value{
-text summary
+Invisibly returns the input object \code{x}.
 }
 \description{
-Print method for a \code{'randomprojection'} object
+Prints a summary of a \code{\link[=randomprojection-class]{randomprojection}} object, including its name, and key attributes
+such as \code{mslow} and \code{msup}.
+}
+\examples{
+rp <- rp_gaussian(mslow = 5, msup = 10)
+print(rp)
+
 }
