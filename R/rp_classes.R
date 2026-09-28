@@ -109,8 +109,8 @@ update_rpm_identity <- function(rpm, object, included_vector, x, y, family, ...)
 #'   - `x`: A matrix of standardized predictors.
 #'   - `y`: A vector of standardized responses.
 #'   - `m`: The target dimension for the projection.
-#'   - `included_vector`: A vector of column indices for the variables to be included in the projection.
-#'   - `...`: Additional arguments passed from `spar()` or other functions.' due to the fact that screening is employed pre-projection.
+#'   - `included_vector`: A vector of column indices for the variables to be included in the projection. Needed because screening is employed pre-projection.
+#'   - `...`: Additional arguments passed from `spar()` or other functions.'
 #' @param update_fun A function for updating the [`randomprojection-class`] object with data-specific information.
 #'   This function must accept:
 #'   - `object`: An object of class [`randomprojection-class`].

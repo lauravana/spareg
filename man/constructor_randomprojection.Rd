@@ -21,8 +21,8 @@ constructor_randomprojection(
 \item \code{x}: A matrix of standardized predictors.
 \item \code{y}: A vector of standardized responses.
 \item \code{m}: The target dimension for the projection.
-\item \code{included_vector}: A vector of column indices for the variables to be included in the projection.
-\item \code{...}: Additional arguments passed from \code{spar()} or other functions.' due to the fact that screening is employed pre-projection.
+\item \code{included_vector}: A vector of column indices for the variables to be included in the projection. Needed because screening is employed pre-projection.
+\item \code{...}: Additional arguments passed from \code{spar()} or other functions.'
 }}
 
 \item{update_fun}{A function for updating the \code{\link[=randomprojection-class]{randomprojection}} object with data-specific information.
