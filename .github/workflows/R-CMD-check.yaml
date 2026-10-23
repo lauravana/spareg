@@ -27,6 +27,7 @@ on:
 
 name: R-CMD-check
 
+
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
@@ -47,6 +48,13 @@ jobs:
       R_KEEP_PKG_SOURCE: yes
 
     steps:
+      - name: Install dependencies
+        run: |
+          remotes::install_deps(dependencies = TRUE)
+          remotes::install_cran("rcmdcheck")
+          tinytex::parse_install( text = "! LaTeX Error: File orcidlink.sty' not found.") tinytex::parse_install( text = "! LaTeX Error: File orcidlink.sty' not found.")
+          shell: Rscript {0}
+    
       - uses: actions/checkout@v3
       
       - uses: r-lib/actions/setup-tinytex@v2
